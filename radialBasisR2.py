@@ -3,7 +3,10 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from matplotlib import rc
+import matplotlib
 import scipy
+
+FONT_SIZE=14
 
 def printMat(mat):
     print('\n'.join([''.join(['{:10.3}\t'.format(item) for item in row]) for row in mat]))
@@ -14,9 +17,13 @@ def f(x):
 
 # gaus RBF (GS)
 def gausRBF(a, r):
-    #return r
-    #return math.e**(-((a*r)**2))
-    return math.sqrt(1 + (a*r)**2)
+    return math.e**(-((a*r)**2))
+
+def multiQuadRBF(a, r):
+    return math.sqrt(1 + (a * r) ** 2)
+
+def invMultiQuadRBF(a, r):
+    return (1+r**2)**(a/2)
 
 # todo: other RBFunctions here...
 
@@ -52,25 +59,53 @@ fy = list(map(f,fx))
 px = [0., 2., 4., 6., 8., 10.]
 py = list(map(f,px))
 
+#a1 = 1.8
+#rbf1 = invMultiQuadRBF
 a1 = 1.
-coeff1 = rbf_calc_coefficiants(a1, px, py, gausRBF)
+rbf1 = gausRBF
+coeff1 = rbf_calc_coefficiants(a1, px, py, rbf1)
 
-a2 = 0.17
-coeff2 = rbf_calc_coefficiants(a2, px, py, gausRBF)
+a2 = 0.24
+rbf2 = gausRBF
+coeff2 = rbf_calc_coefficiants(a2, px, py, rbf2)
+
+a3 = 1.
+rbf3 = invMultiQuadRBF
+coeff3 = rbf_calc_coefficiants(a3, px, py, rbf3)
+
+a4 = 1.8
+rbf4 = invMultiQuadRBF
+coeff4 = rbf_calc_coefficiants(a4, px, py, rbf4)
 
 rbfy1 = np.zeros((len(fx), 1))
 rbfy2 = np.zeros((len(fx), 1))
+rbfy3 = np.zeros((len(fx), 1))
+rbfy4 = np.zeros((len(fx), 1))
 for i in range(0, len(fx)):
-    rbfy1[i] = rbfSolution(fx[i], px, coeff1, gausRBF, a1)
-    rbfy2[i] = rbfSolution(fx[i], px, coeff2, gausRBF, a2)
+    rbfy1[i] = rbfSolution(fx[i], px, coeff1, rbf1, a1)
+    rbfy2[i] = rbfSolution(fx[i], px, coeff2, rbf2, a2)
+    rbfy3[i] = rbfSolution(fx[i], px, coeff3, rbf3, a3)
+    rbfy4[i] = rbfSolution(fx[i], px, coeff4, rbf4, a4)
 
-#rc('text', usetex=True)
-#rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
-plt.plot(fx, fy, 'b-', label=r'f_{original}')
-plt.plot(fx, rbfy1, 'g-', label=r'f_{rbf} mit a = 1')
-plt.plot(fx, rbfy2, 'r--', label=r'f_{rbf} mit a = 0.17')
-plt.plot(px, py, 'r*', label=r'Stuetzstellen')
-plt.legend()
-
+fig, ax = plt.subplots()
+rc('text', usetex=True)
+font = {'family' : 'sans-serif',
+        'size'   : FONT_SIZE}
+rc('font', **font)
+rc('xtick', labelsize=FONT_SIZE)
+rc('ytick', labelsize=FONT_SIZE)
+ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
+ax.plot(fx, rbfy1, 'b--', label=r'$f_{gaus-RBF}$ mit $a = '+str(a1)+'$')
+ax.plot(fx, rbfy2, 'b:', label=r'$f_{gaus-RBF}$ mit $a = '+str(a2)+'$')
+ax.plot(fx, rbfy3, 'c--', label=r'$f_{imq-RBF}$ mit $a = '+str(a3)+'$')
+ax.plot(fx, rbfy4, 'c:', label=r'$f_{imq-RBF}$ mit $a = '+str(a4)+'$')
+ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
+ax.legend(loc=3, ncol=2, mode="expand")
+ax.set_xlabel('Eingang', fontdict=font)
+ax.set_ylabel('Ausgang', fontdict=font)
+ax.tick_params(labelsize=16., length=6, width=2)
+fig.set_size_inches(8, 5)
+plt.tight_layout()
+plt.savefig('dataOut/radialBasisR2.svg')
+plt.savefig('dataOut/radialBasisR2.pdf')
 plt.show()
-
