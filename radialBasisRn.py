@@ -55,80 +55,81 @@ def rbfSolution(x, knownCoord, coefficients, rbf, rbf_const):
     return res
 
 
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-rc('text', usetex=True)
-font = {'family' : 'sans-serif',
-        #'weight' : 'bold',
-        'size'   : 16}
-rc('font', **font)
+if __name__ == '__main__':
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    rc('text', usetex=True)
+    font = {'family' : 'sans-serif',
+            #'weight' : 'bold',
+            'size'   : 16}
+    rc('font', **font)
 
-# the smooth whole function
-fx = np.linspace(-2, 12, 201)
-fy = np.linspace(-2, 12, 201)
-fz = np.zeros((len(fx), len(fy)))
-for iX in range(0,len(fx)):
-    for iY in range(0,len(fy)):
-        fz[iX][iY] = f(fx[iX], fy[iY])
+    # the smooth whole function
+    fx = np.linspace(-2, 12, 201)
+    fy = np.linspace(-2, 12, 201)
+    fz = np.zeros((len(fx), len(fy)))
+    for iX in range(0,len(fx)):
+        for iY in range(0,len(fy)):
+            fz[iX][iY] = f(fx[iX], fy[iY])
 
-plotX, plotY = np.meshgrid(fx, fy)
-fig = plt.figure()
-ax = fig.gca(projection='3d')
-surf1 = ax.plot_wireframe(plotX, plotY, fz, color='r', label=r'$f_{original}$', rcount=20, ccount=20, linewidths=1, alpha=0.5)#, rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
+    plotX, plotY = np.meshgrid(fx, fy)
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+    surf1 = ax.plot_wireframe(plotX, plotY, fz, color='r', label=r'$f_{original}$', rcount=20, ccount=20, linewidths=1, alpha=0.5)#, rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
 
-# now we pretend we only know a view points
-knownParams = []
-pxEdge = [0., 2., 4., 6., 8., 10.]
-pyEdge = [0., 2., 4., 6., 8., 10.]
-px=[]
-py=[]
-pz=[]
-for iX in range(0,len(pxEdge)):
-    for iY in range(0,len(pyEdge)):
-        px.append(pxEdge[iX])
-        py.append(pyEdge[iY])
-        pz.append(f(pxEdge[iX],pyEdge[iY]))
-knownParams.append(px)
-knownParams.append(py)
+    # now we pretend we only know a view points
+    knownParams = []
+    pxEdge = [0., 2., 4., 6., 8., 10.]
+    pyEdge = [0., 2., 4., 6., 8., 10.]
+    px=[]
+    py=[]
+    pz=[]
+    for iX in range(0,len(pxEdge)):
+        for iY in range(0,len(pyEdge)):
+            px.append(pxEdge[iX])
+            py.append(pyEdge[iY])
+            pz.append(f(pxEdge[iX],pyEdge[iY]))
+    knownParams.append(px)
+    knownParams.append(py)
 
-scat1 = ax.scatter(py, px, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
+    scat1 = ax.scatter(py, px, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
-a1 = 1.
-coeff1 = rbf_calc_coefficiants(a1, knownParams, pz, gausRBF)
+    a1 = 1.
+    coeff1 = rbf_calc_coefficiants(a1, knownParams, pz, gausRBF)
 
-a2 = 0.17
-coeff2 = rbf_calc_coefficiants(a2, knownParams, pz, gausRBF)
+    a2 = 0.17
+    coeff2 = rbf_calc_coefficiants(a2, knownParams, pz, gausRBF)
 
-rbfz1 = np.zeros((len(fx), len(fy)))
-rbfz2 = np.zeros((len(fx), len(fy)))
-for iX in range(0,len(fx)):
-    for iY in range(0,len(fy)):
-        coords = [fx[iX], fy[iY]]
-        rbfz1[iX][iY] = rbfSolution(coords, knownParams, coeff1, gausRBF, a1)
-        rbfz2[iX][iY] = rbfSolution(coords, knownParams, coeff2, gausRBF, a2)
+    rbfz1 = np.zeros((len(fx), len(fy)))
+    rbfz2 = np.zeros((len(fx), len(fy)))
+    for iX in range(0,len(fx)):
+        for iY in range(0,len(fy)):
+            coords = [fx[iX], fy[iY]]
+            rbfz1[iX][iY] = rbfSolution(coords, knownParams, coeff1, gausRBF, a1)
+            rbfz2[iX][iY] = rbfSolution(coords, knownParams, coeff2, gausRBF, a2)
 
-surf2 = ax.plot_wireframe(plotX, plotY, rbfz1, color='b', label=r'$f_{RBF}$', rcount=20, ccount=20, linewidths=1, alpha=0.5)#, rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
+    surf2 = ax.plot_wireframe(plotX, plotY, rbfz1, color='b', label=r'$f_{RBF}$', rcount=20, ccount=20, linewidths=1, alpha=0.5)#, rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
 
-ax.view_init(20, 50)
-rc('xtick', labelsize=16)
-rc('ytick', labelsize=16)
-ax.set_xlabel('Eingang 1', fontdict=font)
-ax.set_ylabel('Eingang 2', fontdict=font)
-ax.set_zlabel('Ausgang', fontdict=font)
-ax.xaxis._axinfo['label']['space_factor'] = 4
-ax.tick_params(labelsize=16., length=6, width=2)
-fig.set_size_inches(8, 5)
-#plt.tight_layout()
-ax.legend()
-ax.autoscale_view(tight=True)
-plt.savefig('dataOut/radialBasisRn.svg')
-plt.savefig('dataOut/radialBasisRn.pdf')
+    ax.view_init(20, 50)
+    rc('xtick', labelsize=16)
+    rc('ytick', labelsize=16)
+    ax.set_xlabel('Eingang 1', fontdict=font)
+    ax.set_ylabel('Eingang 2', fontdict=font)
+    ax.set_zlabel('Ausgang', fontdict=font)
+    ax.xaxis._axinfo['label']['space_factor'] = 4
+    ax.tick_params(labelsize=16., length=6, width=2)
+    fig.set_size_inches(8, 5)
+    #plt.tight_layout()
+    ax.legend()
+    ax.autoscale_view(tight=True)
+    plt.savefig('dataOut/radialBasisRn.svg')
+    plt.savefig('dataOut/radialBasisRn.pdf')
 
-#for angle in range(0, 360):
-#    ax.view_init(30, angle)
-#    plt.draw()
-#    print(str(angle))
-#    plt.pause(.001)
-plt.show()
+    #for angle in range(0, 360):
+    #    ax.view_init(30, angle)
+    #    plt.draw()
+    #    print(str(angle))
+    #    plt.pause(.001)
+    plt.show()
 
 
