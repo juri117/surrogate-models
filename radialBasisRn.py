@@ -58,7 +58,7 @@ def rbfSolution(x, knownCoord, coefficients, rbf, rbf_const):
 if __name__ == '__main__':
     fig = plt.figure()
     ax = fig.gca(projection='3d')
-    rc('text', usetex=True)
+    #rc('text', usetex=True)
     font = {'family' : 'sans-serif',
             #'weight' : 'bold',
             'size'   : 16}

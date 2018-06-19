@@ -89,7 +89,7 @@ if __name__ == '__main__':
         rbfy4[i] = rbfSolution(fx[i], px, coeff4, rbf4, a4)
 
     fig, ax = plt.subplots()
-    rc('text', usetex=True)
+    #rc('text', usetex=True)
     font = {'family' : 'sans-serif',
             'size'   : FONT_SIZE}
     rc('font', **font)

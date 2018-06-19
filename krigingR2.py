@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 import matplotlib
 import scipy
+from scipy.optimize import minimize
 
 FONT_SIZE=14
 font = {'family':'sans-serif', 'size':FONT_SIZE}
@@ -20,18 +21,18 @@ def f(x):
     return math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4
 
 #calcs the correlation matrix
-def calc_corMat(x, theta, p, plot_it=False):
-    n = len(x)
+def calc_corMat(knwon_x, theta, p, plot_it=False):
+    n = len(knwon_x)
     corMat = np.zeros((n, n))
     diff = []
     expFunc = []
     for row in range(0, n):
         for column in range(0, n):
-            corMat[row][column] = math.exp(-theta * abs(x[row] - x[column]) ** p)
+            corMat[row][column] = math.exp(-theta * abs(knwon_x[row] - knwon_x[column]) ** p)
             # since this is a symetric mat...
             # corMat[column][row] = corMat[row][column]
-            diff.append(x[row] - x[column])
-            expFunc.append(math.exp(-theta * abs(x[row] - x[column]) ** p))
+            diff.append(knwon_x[row] - knwon_x[column])
+            expFunc.append(math.exp(-theta * abs(knwon_x[row] - knwon_x[column]) ** p))
 
     if plot_it:
         fig, ax = plt.subplots()
@@ -49,60 +50,65 @@ def calc_corMat(x, theta, p, plot_it=False):
     return corMat
 
 #calcs the likelyhood
-def calc_likelihood(x, y, theta, p):
-    corMat = calc_corMat(x, theta, p)
-    n = len(y)
-    y = np.array(y)
+def calc_likelihood(known_x, known_val, theta, p):
+    corMat = calc_corMat(known_x, theta, p)
+    n = len(known_val)
+    known_val = np.array(known_val)
     LnDetCorMat = np.log(np.linalg.det(corMat))
     one = np.ones((n, 1)).flatten()
-    mu = (np.transpose(one) @ np.linalg.inv(corMat) @ y) / (np.transpose(one) @ np.linalg.inv(corMat) @ one)
-    SigmaSqr = (np.transpose(y - one * mu) @ np.linalg.inv(corMat) @ (y - one * mu)) / n
+    mu = (np.transpose(one) @ np.linalg.inv(corMat) @ known_val) / (np.transpose(one) @ np.linalg.inv(corMat) @ one)
+    SigmaSqr = (np.transpose(known_val - one * mu) @ np.linalg.inv(corMat) @ (known_val - one * mu)) / n
     NegLnLike = (-1) * (-(n / 2) * np.log(SigmaSqr) - 0.5 * LnDetCorMat)
     return NegLnLike
 
-def predict(x_pred, x, y, theta, p):
-    n = len(y)
-    corMat = calc_corMat(x, theta, p)
+def calc_likelihood_opti(params, *args):
+    return calc_likelihood(args[0], args[1], params[0], args[2])
+
+def predict(x_pred, knwon_x, knwon_val, theta, p):
+    n = len(knwon_val)
+    corMat = calc_corMat(knwon_x, theta, p)
     one = np.ones((n, 1)).flatten()
-    mu = (np.transpose(one) @ np.linalg.inv(corMat) @ y) / (np.transpose(one) @ np.linalg.inv(corMat) @ one)
+    mu = (np.transpose(one) @ np.linalg.inv(corMat) @ knwon_val) / (np.transpose(one) @ np.linalg.inv(corMat) @ one)
     psi = np.ones((n, 1)).flatten()
     for i in range(0, len(psi)):
-        psi[i] = math.exp(-theta * abs(x[i] - x_pred) ** p)
-    fx = mu + np.transpose(psi) @ np.linalg.inv(corMat) @ (y - one * mu)
+        psi[i] = math.exp(-theta * abs(knwon_x[i] - x_pred) ** p)
+    fx = mu + np.transpose(psi) @ np.linalg.inv(corMat) @ (knwon_val - one * mu)
     return fx
 
 if __name__ == '__main__':
     # the smooth whole function
-    fx = np.linspace(0, 10, 1001)
+    fx = np.linspace(1, 11, 1001)
     fy = list(map(f,fx))
-
     # now we pretend we only know a view points
-    px = [0., 2., 4., 6., 8., 10.]
+    px = [1., 3., 5., 7., 9., 11.]
     py = list(map(f,px))
-
-
     #first fixed exponent here
     p = 2.
     #first fixed factor here
-    theta = 1.
+    theta = .5
 
-
-    standardDeviation = np.std(py)
-    sigma = standardDeviation
-    #covMat = (sigma**2) * corMat.copy()
-    #printMat(corMat, octave=True)
-
-    #U = np.linalg.cholesky(corMat)
+    #standardDeviation = np.std(py)
+    #sigma = standardDeviation
 
     NegLnLike = calc_likelihood(px, py, theta, p)
     print('negLnLike = ' + str(NegLnLike))
 
-    thetas = np.linspace(0.01, 1000, 1000)
+    thetas = np.linspace(0.01, 10, 5000+1)
     likely = []
     for thet in thetas:
-        likely.append(calc_likelihood(px, py, thet, 2))
-    #plt.plot(thetas, likely)
-    #plt.show()
+        likely.append(calc_likelihood(px, py, thet, p))
+
+    x0 = 1.
+    bnds = [(0.01, 1000.)]
+    res = minimize(calc_likelihood_opti, x0, args=(px, py, p), method='SLSQP', tol=1e-11, bounds=bnds)
+
+    bestTheta = res.x[0]
+    minLike = calc_likelihood(px, py, bestTheta, p)
+    print('minLike = '+str(minLike))
+    print('@theta = ' + str(bestTheta))
+    plt.semilogx(thetas, likely)
+    plt.semilogx(bestTheta, minLike, 'rx')
+    plt.show()
 
     fig, ax = plt.subplots()
     # rc('text', usetex=True)
@@ -114,8 +120,8 @@ if __name__ == '__main__':
     #fx = np.linspace(0., 10., 100+1)
     krigY = np.zeros((len(fx),1)).flatten()
     for i in range(0, len(fx)):
-        krigY[i] = predict(fx[i], px, py, theta, p)
-    ax.plot(fx, krigY, 'b-', label='prediction')
+        krigY[i] = predict(fx[i], px, py, bestTheta, p)
+    ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(bestTheta)+'$')
     #plt.show()
 
 
