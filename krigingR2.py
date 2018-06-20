@@ -111,45 +111,24 @@ if __name__ == '__main__':
     plt.show()
 
     fig, ax = plt.subplots()
-    # rc('text', usetex=True)
+    rc('text', usetex=True)
     rc('font', **font)
     rc('xtick', labelsize=FONT_SIZE)
     rc('ytick', labelsize=FONT_SIZE)
 
-
-    #fx = np.linspace(0., 10., 100+1)
     krigY = np.zeros((len(fx),1)).flatten()
     for i in range(0, len(fx)):
         krigY[i] = predict(fx[i], px, py, bestTheta, p)
     ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(bestTheta)+'$')
-    #plt.show()
-
-
-
-
-
-    """
-    dist = []
-    diff = []
-    for i in range(0, len(px)):
-        for i2 in range(i, len(px)):
-            dist.append(abs(px[i] - px[i2]))
-            diff.append(0.5 * (py[i] - py[i2])**2)
-    
-    plt.plot(dist, diff, 'bo')
-    plt.show()
-    """
-
-
 
     ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
-    ax.legend(loc=3, ncol=2, mode="expand")
+    ax.legend(loc='lower left', ncol=1)#, mode="expand")
     ax.set_xlabel('Eingang', fontdict=font)
     ax.set_ylabel('Ausgang', fontdict=font)
     ax.tick_params(labelsize=16., length=6, width=2)
     fig.set_size_inches(8, 5)
     plt.tight_layout()
-    plt.savefig('dataOut/radialBasisR2.svg')
-    plt.savefig('dataOut/radialBasisR2.pdf')
+    plt.savefig('dataOut/krigingR2.svg')
+    plt.savefig('dataOut/krigingR2.pdf')
     plt.show()

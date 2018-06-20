@@ -65,8 +65,8 @@ if __name__ == '__main__':
     rc('font', **font)
 
     # the smooth whole function
-    fx = np.linspace(-2, 12, 201)
-    fy = np.linspace(-2, 12, 201)
+    fx = np.linspace(-2, 12, 101)
+    fy = np.linspace(-2, 12, 101)
     fz = np.zeros((len(fx), len(fy)))
     for iX in range(0,len(fx)):
         for iY in range(0,len(fy)):

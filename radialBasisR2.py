@@ -89,7 +89,7 @@ if __name__ == '__main__':
         rbfy4[i] = rbfSolution(fx[i], px, coeff4, rbf4, a4)
 
     fig, ax = plt.subplots()
-    #rc('text', usetex=True)
+    rc('text', usetex=True)
     font = {'family' : 'sans-serif',
             'size'   : FONT_SIZE}
     rc('font', **font)
@@ -101,7 +101,8 @@ if __name__ == '__main__':
     ax.plot(fx, rbfy3, 'c--', label=r'$f_{imq-RBF}$ mit $a = '+str(a3)+'$')
     ax.plot(fx, rbfy4, 'c:', label=r'$f_{imq-RBF}$ mit $a = '+str(a4)+'$')
     ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
-    ax.legend(loc=3, ncol=2, mode="expand")
+    ax.legend(loc='lower left', ncol=2)#, mode="expand")
+    #ax.legend(loc='lower left', ncol=1)
     ax.set_xlabel('Eingang', fontdict=font)
     ax.set_ylabel('Ausgang', fontdict=font)
     ax.tick_params(labelsize=16., length=6, width=2)
