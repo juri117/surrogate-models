@@ -62,15 +62,20 @@ def calc_likelihood(known_x, known_val, theta, p):
     k = known_x.shape[0]
     n = known_x.shape[1]
     known_val = np.array(known_val)
-    LnDetCorMat = np.log(np.linalg.det(corMat))
+    #LnDetCorMat = np.log(np.linalg.det(corMat))
+    LnDetCorMat = np.linalg.slogdet(corMat)[1]
     one = np.ones((n, 1)).flatten()
     mu = (np.transpose(one) @ np.linalg.inv(corMat) @ known_val) / (np.transpose(one) @ np.linalg.inv(corMat) @ one)
     SigmaSqr = (np.transpose(known_val - one * mu) @ np.linalg.inv(corMat) @ (known_val - one * mu)) / n
     NegLnLike = (-1) * (-(n / 2) * np.log(SigmaSqr) - 0.5 * LnDetCorMat)
+    if NegLnLike == float('nan'):
+        print('Error: nan')
     return NegLnLike
 
 def calc_likelihood_opti(params, *args):
-    return calc_likelihood(args[0], args[1], params, args[2])
+    NegLnLike = calc_likelihood(args[0], args[1], params, args[2])
+    print(str(NegLnLike))
+    return NegLnLike
 
 def predict(x_pred, known_x, knwon_val, theta, p):
     k = known_x.shape[0]
@@ -117,16 +122,24 @@ if __name__ == '__main__':
 
     p = [2., 2.]
 
-    thetas = np.linspace(0.01, 10, 100 + 1)
+    #thetas = np.linspace(0.001, 0.1, 100 + 1)
+    thetas = np.logspace(-3, 1, num=20)
     likelyX1 = []
     likelyX2 = []
-    for thet in thetas:
-        likelyX1.append(calc_likelihood(knownParams, knownValues, [thet, 1.], p))
-        likelyX2.append(calc_likelihood(knownParams, knownValues, [1., thet], p))
+    likely = np.zeros((len(thetas), len(thetas)))
+    for i1 in range(0, len(thetas)):
+        print(str(i1) + ' / ' + str(len(thetas)))
+        for i2 in range(0, len(thetas)):
+            #likelyX1.append(calc_likelihood(knownParams, knownValues, [thetas[i1], thetas[i2]], p))
+            #likelyX2.append(calc_likelihood(knownParams, knownValues, [1., thet], p))
+            likely[i1][i2] = calc_likelihood(knownParams, knownValues, [thetas[i1], thetas[i2]], p)
 
     x0 = [1., 1.]
-    bnds = [(0.01, 1000.), (0.01, 1000.)]
-    res = minimize(calc_likelihood_opti, x0, args=(knownParams, knownValues, p), method='SLSQP', tol=1e-11, bounds=bnds)
+    bnds = [(0.0001, 1000.), (0.0001, 1000.)]
+    opt = {}
+    opt['disp'] = True
+    opt['maxiter'] = 99999
+    res = minimize(calc_likelihood_opti, x0, args=(knownParams, knownValues, p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
 
     bestThetaX1 = res.x[0]
     minLikeX1 = calc_likelihood(knownParams, knownValues, [bestThetaX1, 1.], p)
@@ -134,13 +147,22 @@ if __name__ == '__main__':
     minLikeX2 = calc_likelihood(knownParams, knownValues, [1., bestThetaX2], p)
     bestTheta = [res.x[0], res.x[1]]
     minLike = calc_likelihood(knownParams, knownValues, [bestThetaX1, bestThetaX2], p)
-    #print('minLike = ' + str(minLike))
-    #print('@theta = ' + str(bestTheta))
-    plt.semilogx(thetas, likelyX1, '-b')
-    plt.semilogx(thetas, likelyX2, '-g')
-    plt.semilogx(bestThetaX1, minLikeX1, 'bx')
-    plt.semilogx(bestThetaX2, minLikeX2, 'gx')
-    plt.semilogx([0, 1], [minLike, minLike], 'rx')
+    print('minLike = ' + str(minLike))
+    print('@theta1 = ' + str(bestThetaX1))
+    print('@theta2 = ' + str(bestThetaX2))
+    fig, ax = plt.subplots()
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    pcol = ax.pcolor(thetas, thetas, likely)
+    fig.colorbar(pcol)
+    ax.plot(bestThetaX1, bestThetaX2, 'rx')
+    #ax.plot([bestThetaX1], [bestThetaX2], 'rx')
+
+    #plt.semilogx(thetas, likelyX1, '-b')
+    #plt.semilogx(thetas, likelyX2, '-g')
+    #plt.semilogx(bestThetaX1, minLikeX1, 'bx')
+    #plt.semilogx(bestThetaX2, minLikeX2, 'gx')
+    #plt.semilogx([0, 1], [minLike, minLike], 'rx')
     plt.show()
 
 
