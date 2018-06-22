@@ -121,7 +121,7 @@ if __name__ == '__main__':
     rc('xtick', labelsize=FONT_SIZE)
     rc('ytick', labelsize=FONT_SIZE)
     ax.semilogx(thetas, likely[-1])
-    ax.semilogx(bestTheta, minLike, 'rx', label='Minimum')
+    ax.semilogx(bestTheta, minLike, 'rx', markersize=10, label='Minimum')
     ax.set_xlabel(r'$\theta$', fontdict=font)
     ax.set_ylabel(r'Likelihood', fontdict=font)
     ax.legend(loc='upper right', ncol=1)
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     krigY = np.zeros((len(fx),1)).flatten()
     for i in range(0, len(fx)):
         krigY[i] = predict(fx[i], px, py, bestTheta, bestP)
-    ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(bestTheta)+'$')
+    ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(bestTheta)+'$, $p = '+'{0:.1f}'.format(bestP)+'$')
 
     ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)

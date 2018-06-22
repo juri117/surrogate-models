@@ -30,30 +30,12 @@ def calc_corMat(known_x, theta, p, plot_it=False):
     diff = []
     expFunc = []
     for row in range(0, n):
-        for column in range(0, n):
+        for column in range(row, n):
             sum = 0.
             for ik in range(0, k):
                 sum += theta[ik] * (abs(known_x[ik][row] - known_x[ik][column])**p[ik])
             corMat[row][column] = math.exp(-sum)
-            # since this is a symetric mat...
-            #corMat[column][row] = corMat[row][column]
-            #diff.append(knwon_x[row] - knwon_x[column])
-            #expFunc.append(math.exp(-sum))
-    """
-    if plot_it:
-        fig, ax = plt.subplots()
-        # rc('text', usetex=True)
-        rc('font', **font)
-        rc('xtick', labelsize=FONT_SIZE)
-        rc('ytick', labelsize=FONT_SIZE)
-        plt.plot(diff, expFunc, 'bo', label='p=?, theta=?')
-        ax.legend(loc=1, ncol=1)  # , mode="expand")
-        ax.set_xlabel('x_i - x', fontdict=font)
-        ax.set_ylabel('exp(-\theta |x_i-x|^p)', fontdict=font)
-        ax.tick_params(labelsize=16., length=6, width=2)
-        plt.tight_layout()
-        plt.show()
-    """
+            corMat[column][row] = corMat[row][column]
     return corMat
 
 #calcs the likelyhood
@@ -69,6 +51,25 @@ def calc_likelihood(known_x, known_val, theta, p):
     SigmaSqr = (np.transpose(known_val - one * mu) @ np.linalg.inv(corMat) @ (known_val - one * mu)) / n
     NegLnLike = (-1) * (-(n / 2) * np.log(SigmaSqr) - 0.5 * LnDetCorMat)
     if NegLnLike == float('nan'):
+        print('Error: nan')
+    return NegLnLike
+
+def calc_likelihood_v2(known_x, known_val, theta, p):
+    corMat = calc_corMat(known_x, theta, p)
+    k = known_x.shape[0]
+    n = known_x.shape[1]
+    known_val = np.array(known_val)
+    U = np.linalg.cholesky(corMat)
+    U = np.transpose(U)
+    LnDetCorMat = 2 * sum(np.log(abs(np.diag(U))))
+    one = np.ones((n, 1)).flatten()
+    muTop = np.transpose(one) @ (np.linalg.solve(U, np.linalg.solve(np.transpose(U), known_val)))
+    muBut = np.transpose(one) @ (np.linalg.solve(U, np.linalg.solve(np.transpose(U), one)))
+    mu = muTop / muBut
+    SigmaSqr = (np.transpose(known_val - (one * mu)) @
+                np.linalg.solve(U, np.linalg.solve(np.transpose(U),(known_val - (one * mu)))))/n;
+    NegLnLike = (-1) * (-(n / 2) * np.log(SigmaSqr) - 0.5 * LnDetCorMat)
+    if np.isnan(NegLnLike):
         print('Error: nan')
     return NegLnLike
 
@@ -120,7 +121,10 @@ if __name__ == '__main__':
     knownParams = np.array(knownParams)
     knownValues = np.array(pz)
 
-    p = [2., 2.]
+    p = [1.8, 1.8]
+
+    print(str(calc_likelihood(knownParams, knownValues, [0.001, 0.001], p)))
+    print(str(calc_likelihood_v2(knownParams, knownValues, [0.001, 0.001], p)))
 
     #thetas = np.linspace(0.001, 0.1, 100 + 1)
     thetas = np.logspace(-3, 1, num=20)
@@ -132,7 +136,7 @@ if __name__ == '__main__':
         for i2 in range(0, len(thetas)):
             #likelyX1.append(calc_likelihood(knownParams, knownValues, [thetas[i1], thetas[i2]], p))
             #likelyX2.append(calc_likelihood(knownParams, knownValues, [1., thet], p))
-            likely[i1][i2] = calc_likelihood(knownParams, knownValues, [thetas[i1], thetas[i2]], p)
+            likely[i2][i1] = calc_likelihood_v2(knownParams, knownValues, [thetas[i1], thetas[i2]], p)
 
     x0 = [1., 1.]
     bnds = [(0.0001, 1000.), (0.0001, 1000.)]
@@ -156,6 +160,9 @@ if __name__ == '__main__':
     pcol = ax.pcolor(thetas, thetas, likely)
     fig.colorbar(pcol)
     ax.plot(bestThetaX1, bestThetaX2, 'rx')
+    ax.set_xlabel(r'$\theta_1$', fontdict=font)
+    ax.set_ylabel(r'$\theta_2$', fontdict=font)
+
     #ax.plot([bestThetaX1], [bestThetaX2], 'rx')
 
     #plt.semilogx(thetas, likelyX1, '-b')
