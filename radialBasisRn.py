@@ -8,6 +8,8 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import rc
 import scipy
 
+from utils.TimeTrack import TimeTrack
+
 def printMat(mat):
     print('\n'.join([''.join(['{:10.3}\t'.format(item) for item in row]) for row in mat]))
 
@@ -38,8 +40,8 @@ def rbf_calc_coefficiants(rbf_const, knownCoord, knownVal, rbf):
             mat[iColumn][iRow] = mat[iRow][iColumn]
     #print('radialMat:')
     #printMat(radialMat)
-    print('mat:')
-    printMat(mat)
+    #print('mat:')
+    #printMat(mat)
     return np.linalg.solve(mat, knownVal)
 
 def rbfSolution(x, knownCoord, coefficients, rbf, rbf_const):
@@ -56,6 +58,7 @@ def rbfSolution(x, knownCoord, coefficients, rbf, rbf_const):
 
 
 if __name__ == '__main__':
+    t1 = TimeTrack('OverAllTimer')
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     #rc('text', usetex=True)
@@ -122,14 +125,15 @@ if __name__ == '__main__':
     #plt.tight_layout()
     ax.legend()
     ax.autoscale_view(tight=True)
-    plt.savefig('dataOut/radialBasisRn.svg')
-    plt.savefig('dataOut/radialBasisRn.pdf')
+    #plt.savefig('dataOut/radialBasisRn.svg')
+    #plt.savefig('dataOut/radialBasisRn.pdf')
 
     #for angle in range(0, 360):
     #    ax.view_init(30, angle)
     #    plt.draw()
     #    print(str(angle))
     #    plt.pause(.001)
+    t1.toc()
     plt.show()
 
 

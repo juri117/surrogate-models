@@ -8,6 +8,8 @@ import scipy
 from scipy.optimize import minimize
 from matplotlib.colors import LogNorm
 
+from Kriging import Kriging
+
 FONT_SIZE=14
 font = {'family':'sans-serif', 'size':FONT_SIZE}
 
@@ -87,14 +89,18 @@ if __name__ == '__main__':
     px = [1., 3., 5., 7., 9., 11.]
     py = list(map(f,px))
     #first fixed exponent here
-    p = 2.
+    p = [2.]
     #first fixed factor here
-    theta = .5
+    theta = [.5]
+
+    krig1 = Kriging(px, py)
+    krig1.update_param(theta, p)
 
     #standardDeviation = np.std(py)
     #sigma = standardDeviation
 
-    NegLnLike = calc_likelihood(px, py, theta, p)
+    #NegLnLike = calc_likelihood(px, py, theta, p)
+    NegLnLike = krig1.calc_likelihood()
     print('negLnLike = ' + str(NegLnLike))
 
     #thetas = np.linspace(0.01, 10, 1000+1)
@@ -103,25 +109,25 @@ if __name__ == '__main__':
     likely = np.zeros((len(ps), len(thetas)))
     for it in range(0, len(thetas)):
         for ip in range(0, len(ps)):
-            likely[ip][it] = calc_likelihood(px, py, thetas[it], ps[ip])
+            krig1.update_param([thetas[it]], [ps[ip]])
+            likely[ip][it] = krig1.calc_likelihood()
 
-    x0 = [1., 2.]
-    bnds = [(0.0001, 1000.), (1., 2.)]
-    res = minimize(calc_likelihood_opti, x0, args=(px, py), method='SLSQP', tol=1e-11, bounds=bnds)
+    #x0 = [1., 2.]
+    #bnds = [(0.0001, 1000.), (1., 2.)]
+    #res = minimize(calc_likelihood_opti, x0, args=(px, py), method='SLSQP', tol=1e-11, bounds=bnds)
+    krig1.optimize()
 
-    bestTheta = res.x[0]
-    bestP = res.x[1]
-    minLike = calc_likelihood(px, py, bestTheta, bestP)
+    minLike = krig1.calc_likelihood()
     print('minLike = '+str(minLike))
-    print('@theta = ' + str(bestTheta))
-    print('@p = ' + str(bestP))
+    print('@theta = ' + str(krig1._theta[0]))
+    print('@p = ' + str(krig1._p[0]))
     fig, ax = plt.subplots()
-    rc('text', usetex=True)
+    #rc('text', usetex=True)
     rc('font', **font)
     rc('xtick', labelsize=FONT_SIZE)
     rc('ytick', labelsize=FONT_SIZE)
     ax.semilogx(thetas, likely[-1])
-    ax.semilogx(bestTheta, minLike, 'rx', markersize=10, label='Minimum')
+    ax.semilogx(krig1._theta[0], minLike, 'rx', markersize=10, label='Minimum')
     ax.set_xlabel(r'$\theta$', fontdict=font)
     ax.set_ylabel(r'Likelihood', fontdict=font)
     ax.legend(loc='upper right', ncol=1)
@@ -135,7 +141,7 @@ if __name__ == '__main__':
     ax.set_xscale('log')
     pcol = ax.pcolor(thetas, ps, likely, cmap='viridis_r')
     fig.colorbar(pcol)
-    ax.plot(bestTheta, bestP, 'rx')
+    ax.plot(krig1._theta[0], krig1._p[0], 'rx')
     ax.set_xlabel('$\theta$', fontdict=font)
     ax.set_ylabel('p', fontdict=font)
     plt.show()
@@ -148,8 +154,8 @@ if __name__ == '__main__':
 
     krigY = np.zeros((len(fx),1)).flatten()
     for i in range(0, len(fx)):
-        krigY[i] = predict(fx[i], px, py, bestTheta, bestP)
-    ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(bestTheta)+'$, $p = '+'{0:.1f}'.format(bestP)+'$')
+        krigY[i] = krig1.predict([fx[i]])
+    ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
 
     ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
