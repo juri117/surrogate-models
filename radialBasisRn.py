@@ -8,6 +8,7 @@ from matplotlib.ticker import LinearLocator, FormatStrFormatter
 from matplotlib import rc
 import scipy
 
+from RBF import RBF
 from utils.TimeTrack import TimeTrack
 
 def printMat(mat):
@@ -17,13 +18,7 @@ def printMat(mat):
 def f(x, y):
     return math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4 + 0.05*y**2 - 0.001*y**4 - 0.005*y**3
 
-# gaus RBF (GS)
-def gausRBF(a, r):
-    #return r
-    #return math.e**(-((a*r)**2))
-    return math.sqrt(1 + (a*r)**2)
 
-# todo: other RBFunctions here...
 
 def rbf_calc_coefficiants(rbf_const, knownCoord, knownVal, rbf):
     paramCount, knownCount = np.array(knownCoord).shape
@@ -97,19 +92,25 @@ if __name__ == '__main__':
 
     scat1 = ax.scatter(py, px, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
-    a1 = 1.
-    coeff1 = rbf_calc_coefficiants(a1, knownParams, pz, gausRBF)
+    rbf = RBF(knownParams, pz)
+    a = 0.17
+    rbf.update_param(a, 'gaus')
 
-    a2 = 0.17
-    coeff2 = rbf_calc_coefficiants(a2, knownParams, pz, gausRBF)
+
+
+    #a = 1.
+    #coeff1 = rbf_calc_coefficiants(a1, knownParams, pz, gausRBF)
+
+    #a = 0.17
+    #coeff2 = rbf_calc_coefficiants(a2, knownParams, pz, gausRBF)
 
     rbfz1 = np.zeros((len(fx), len(fy)))
-    rbfz2 = np.zeros((len(fx), len(fy)))
+    #rbfz2 = np.zeros((len(fx), len(fy)))
     for iX in range(0,len(fx)):
         for iY in range(0,len(fy)):
             coords = [fx[iX], fy[iY]]
-            rbfz1[iX][iY] = rbfSolution(coords, knownParams, coeff1, gausRBF, a1)
-            rbfz2[iX][iY] = rbfSolution(coords, knownParams, coeff2, gausRBF, a2)
+            rbfz1[iX][iY] = rbf.predict(coords)
+            #rbfz2[iX][iY] = rbfSolution(coords, knownParams, coeff2, gausRBF, a2)
 
     surf2 = ax.plot_wireframe(plotX, plotY, rbfz1, color='b', label=r'$f_{RBF}$', rcount=20, ccount=20, linewidths=1, alpha=0.5)#, rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
 
