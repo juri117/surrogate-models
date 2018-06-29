@@ -43,10 +43,13 @@ class RBF:
         self._rbfConst = rbf_const
         if rbf_name == 'gaus':
             self._rbf = gausRBF
-        elif rbf_name == 'inverseBla':
-            self._rbf = None
+        elif rbf_name == 'multi-quadratic':
+            self._rbf = multiQuadRBF
+        elif rbf_name == 'inverse-multi-quadratic':
+            self._rbf = invMultiQuadRBF
         else:
             print('WARNING: unknown rbf_name, I will just use gaus for you.')
+            print('next time chose one of ["gaus", "multi-quadratic", "inverse-multi-quadratic"]')
             self._rbf = gausRBF
         self._calc_coefficiants()
 
@@ -63,10 +66,6 @@ class RBF:
                 radialMat[iRow][iColumn] = radius
                 mat[iRow][iColumn] = self._rbf(self._rbfConst, radius)
                 mat[iColumn][iRow] = mat[iRow][iColumn]
-        # print('radialMat:')
-        # printMat(radialMat)
-        # print('mat:')
-        # printMat(mat)
         self._coeff = np.linalg.solve(mat, self._knownVal)
         return self._coeff
 
@@ -81,8 +80,10 @@ class RBF:
         return res
 
 def gausRBF(a, r):
-    # return r
-    # return math.e**(-((a*r)**2))
+    return math.e**(-((a*r)**2))
+
+def multiQuadRBF(a, r):
     return math.sqrt(1 + (a * r) ** 2)
 
-# todo: other RBFunctions here...
+def invMultiQuadRBF(a, r):
+    return (1+r**2)**(a/2)

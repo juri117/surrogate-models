@@ -34,8 +34,8 @@ class PlotHelper:
             rc('text', usetex=True)
         rc('font', **self.font)
 
-    def finalize(self, width=8, height=5):
-        self.ax.legend()
+    def finalize(self, width=8, height=5, legendLoc=1, legendNcol=1):
+        self.ax.legend(loc=legendLoc, ncol=legendNcol)
         self.fig.set_size_inches(width, height)
         self.ax.autoscale_view(tight=True)
 
@@ -51,3 +51,27 @@ class PlotHelper:
             plt.draw()
             #print(str(angle))
             plt.pause(.001)
+
+    def plot_function_3D(self, f, fx, fy, label, color='b'):
+        fz = np.zeros((len(fx), len(fy)))
+        for iX in range(0, len(fx)):
+            for iY in range(0, len(fy)):
+                coords = [fx[iX], fy[iY]]
+                fz[iX][iY] = f(coords)
+
+        plotX, plotY = np.meshgrid(fx, fy)
+        surf = self.ax.plot_wireframe(plotX, plotY, fz, color=color, label=label, rcount=20, ccount=20,
+                                       linewidths=1,
+                                       alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
+        return surf
+
+    def plot_function_2D(self, f, fx, label, color='b'):
+        fz = np.zeros((len(fx), 1))
+        for iX in range(0, len(fx)):
+            fz[iX][0] = f(fx[iX])
+
+        plotX, plotY = np.meshgrid(fx, fy)
+        surf = self.ax.plot_wireframe(plotX, plotY, fz, color=color, label=label, rcount=20, ccount=20,
+                                       linewidths=1,
+                                       alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
+        return surf

@@ -13,52 +13,31 @@ from Kriging import Kriging
 from KrigingForrester import KrigingForrester
 from utils.PlotHelper import PlotHelper
 from utils.TimeTrack import TimeTrack
-
-FONT_SIZE=14
-font = {'family':'sans-serif', 'size':FONT_SIZE}
-
-def printMat(mat, octave=False):
-    if octave:
-        print('['+';\n'.join([''.join(['{:10.3} '.format(item) for item in row]) for row in mat])+']')
-    else:
-        print('\n'.join([''.join(['{:10.3}\t'.format(item) for item in row]) for row in mat]))
-
-# this is our sample function
-def f(x, y):
-    return math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4 + 0.05*y**2 - 0.001*y**4 - 0.005*y**3
+from utils.samples import *
 
 
 if __name__ == '__main__':
     t1 = TimeTrack('OverAllTimer')
-    # the smooth whole function
-    fx = np.linspace(-2, 12, 101)
-    fy = np.linspace(-2, 12, 101)
-    fz = np.zeros((len(fx), len(fy)))
-    for iX in range(0,len(fx)):
-        for iY in range(0,len(fy)):
-            fz[iX][iY] = f(fx[iX], fy[iY])
+    plt1 = PlotHelper(['Eingang 1', 'Eingang 2', 'Ausgang'], fancy=False)
 
     # now we pretend we only know a view points
-    knownParams = []
+    fx = np.linspace(-2, 12, 101)
+    fy = np.linspace(-2, 12, 101)
+    plt1.plot_function_3D(f_3D, fx, fy, r'$f_{original}$', color='r')
+    # the smooth whole function
+
+    # now we pretend we only know a view points
     pxEdge = [0., 2., 4., 6., 8., 10.]
     pyEdge = [0., 2., 4., 6., 8., 10.]
-    px = []
-    py = []
-    pz = []
-    for iX in range(0, len(pxEdge)):
-        for iY in range(0, len(pyEdge)):
-            px.append(pxEdge[iX])
-            py.append(pyEdge[iY])
-            pz.append(f(pxEdge[iX], pyEdge[iY]))
+    px, py, knownValues = generate_sample_data(f_3D, pxEdge, pyEdge)
+    knownParams = []
     knownParams.append(px)
     knownParams.append(py)
-    knownParams = np.array(knownParams)
-    knownValues = np.array(pz)
+
+    scat1 = plt1.ax.scatter(py, px, knownValues, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
     krig = Kriging(knownParams, knownValues)
-
     p = [1.8, 1.8]
-
     krig.update_param([0.001, 0.001], p)
     print(str(krig.calc_likelihood()))
     #print(str(krig.calc_likelihood_v2([0.001, 0.001], p)))
@@ -87,29 +66,9 @@ if __name__ == '__main__':
     pltTheta.fig.colorbar(pcol)
     pltTheta.ax.plot(krig._theta[0], krig._theta[1], 'rx')
     pltTheta.finalize()
-    pltTheta.show()
+    #pltTheta.show()
 
-    #plot original function and points
-    plotX, plotY = np.meshgrid(fx, fy)
-    plt1 = PlotHelper(['Eingang 1', 'Eingang 2', 'Ausgang'], fancy=False)
-
-    surf1 = plt1.ax.plot_wireframe(plotX, plotY, fz, color='r', label=r'$f_{original}$', rcount=20, ccount=20, linewidths=1,
-                              alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
-
-    scat1 = plt1.ax.scatter(py, px, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
-
-
-
-    krigingSol = np.zeros((len(fx), len(fy)))
-    for iX in range(0, len(fx)):
-        #print(str(iX) + ' of ' + str(len(fx)))
-        for iY in range(0, len(fy)):
-            coords = [fx[iX], fy[iY]]
-            krigingSol[iX][iY] = krig.predict(coords)
-
-    surf2 = plt1.ax.plot_wireframe(plotX, plotY, krigingSol, color='b', label=r'$f_{kriging}$', rcount=20, ccount=20, linewidths=1,
-                              alpha=0.5)#, antialiased=True)
-
+    plt1.plot_function_3D(krig.predict, fx, fy, r'$f_{RBF}$', color='b')
     plt1.ax.view_init(20, 50)
     plt1.finalize()
     #plt1.save('dataOut/krigingRn.svg')
