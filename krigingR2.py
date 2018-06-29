@@ -71,26 +71,10 @@ if __name__ == '__main__':
     plt1.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     plt1.ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
 
-    #krigY = np.zeros((len(fx),1)).flatten()
     krigY = list(map(krig1.predict, fx.reshape((len(fx), 1))))
-
-    #for i in range(0, len(fx)):
-    #    krigY[i] = krig1.predict([fx[i]])
     plt1.ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
 
     plt1.finalize(width=8, height=5, legendLoc='lower left', legendNcol=1)
     #plt1.save('dataOut/krigingR2.svg')
     #plt1.save('dataOut/krigingR2.pdf')
     plt1.show()
-
-    """
-    ax.legend(loc='lower left', ncol=1)#, mode="expand")
-    ax.set_xlabel('Eingang', fontdict=font)
-    ax.set_ylabel('Ausgang', fontdict=font)
-    ax.tick_params(labelsize=16., length=6, width=2)
-    fig.set_size_inches(8, 5)
-    plt.tight_layout()
-    plt.savefig('dataOut/krigingR2.svg')
-    plt.savefig('dataOut/krigingR2.pdf')
-    plt.show()
-    """

@@ -77,17 +77,3 @@ if __name__ == '__main__':
     t1.toc()
     plt1.show()
     print('done')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
