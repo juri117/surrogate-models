@@ -80,13 +80,19 @@ class Kriging:
             print('Error: nan')
         return negLnLike
 
-    def _calc_likelihood_opti(self, params, *args):
+    def _calc_likelihood_opti_theta_only(self, params, *args):
         self.update_param(params, args[0])
         NegLnLike = self.calc_likelihood()
         print(str(NegLnLike))
         return NegLnLike
 
-    def optimize(self):
+    def _calc_likelihood_opti(self, params, *args):
+        self.update_param(params[0:self._k], params[self._k:])
+        NegLnLike = self.calc_likelihood()
+        print(str(NegLnLike))
+        return NegLnLike
+
+    def optimize_theta_only(self):
         x0 = np.ones((self._k,1)).flatten()
         bnds = []
         for i in range(0, self._k):
@@ -94,8 +100,22 @@ class Kriging:
         opt = {}
         opt['disp'] = True
         opt['maxiter'] = 99999
-        res = minimize(self._calc_likelihood_opti, x0, args=(self._p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+        res = minimize(self._calc_likelihood_opti_theta_only, x0, args=(self._p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
         self._theta = res.x
+
+    def optimize(self):
+        x0 = np.ones((self._k*2,1)).flatten()
+        bnds = []
+        for i in range(0, self._k):
+            bnds.append((0.0001, 1000.))
+        for i in range(0, self._k):
+            bnds.append((1., 2.))
+        opt = {}
+        opt['disp'] = True
+        opt['maxiter'] = 99999
+        res = minimize(self._calc_likelihood_opti, x0, args=(self._p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+        self._theta = res.x[0:self._k]
+        self._p = res.x[self._k:]
 
     def predict(self, x_pred):
         one = np.ones((self._n, 1)).flatten()

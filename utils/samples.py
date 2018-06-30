@@ -10,7 +10,10 @@ def f_3D(coords):
     return math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4 + 0.05*y**2 - 0.001*y**4 - 0.005*y**3
 
 def f_2D(x):
-    return math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4
+    return 6 - (math.sin(x) + 0.95 + 0.075*x**2 - 0.001*x**4)
+
+def f_2D_big(x):
+    return math.sin(x)+3.+0.035*x**2+0.003*x**3-0.00045*x**4+0.0000005*x**6
 
 
 def generate_sample_data(f_3D, pxEdge, pyEdge):

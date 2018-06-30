@@ -16,14 +16,14 @@ from utils.PlotHelper import PlotHelper
 
 if __name__ == '__main__':
     # the smooth whole function
-    fx = np.linspace(1, 11, 1001)
-    fy = list(map(f_2D,fx))
+    fx = np.linspace(0, 24, 1001)
+    fy = list(map(f_2D_big,fx))
 
     # now we pretend we only know a view points
-    px = [1., 3., 5., 7., 9., 11.]
-    py = list(map(f_2D,px))
+    px = [0., 2., 4., 6., 8., 10., 12., 14., 16., 18., 20., 22., 24.]
+    py = list(map(f_2D_big,px))
     #first fixed exponent here
-    p = [2.]
+    p = [1.5]
     #first fixed factor here
     theta = [.5]
 
