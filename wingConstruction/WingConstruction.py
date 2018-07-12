@@ -12,22 +12,22 @@ __status__ = "Development"
 # ==============================================================================
 
 
-class GeometryGenerator:
+class WingConstruction:
 
     def __init__(self):
         print('done')
 
     def generate_wing(self, file_path, n_ribs, ribs_thickness, beam_thickness, skin_thickness):
-        elemType = 'qu8'
-        #elemType = 'qu4'
+        #elemType = 'qu8'
+        elemType = 'qu4'
         #force in N at wingtip
-        force = -100
+        force = -0.5*(77000. * 9.81)
         # outer geometry in m
-        overhang = 10
-        height = 60
-        halfSpan = 400
-        boxDepth = 40
-        elementSize = 5
+        overhang = 0.5
+        height = 1.
+        halfSpan = 17.
+        boxDepth = 2.
+        elementSize = 0.25
         outLines = []
         outLines.append('# draw flat T as lines')
         outLines.append('pnt pc 0 0 0')
@@ -39,7 +39,7 @@ class GeometryGenerator:
         outLines.append('')
         outLines.append('# mirro to get the TT, still flat lines')
         outLines.append('copy T1o T1u mir z a')
-        outLines.append('move T1u tra 0 0 {:f}'.format(height/2.))
+        outLines.append('move T1u tra 0 0 {:f}'.format(height))
         outLines.append('')
         outLines.append('#new set for the TT (flat lines)')
         outLines.append('seta TT T1o T1u')
@@ -60,7 +60,7 @@ class GeometryGenerator:
             outLines.append('seta prevAll all')
             outLines.append('pnt '+prName+' {:f} {:f} 0'.format(spanPos, -1*overhang))
             outLines.append('seta '+prName+' p '+prName+'')
-            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(height/2., int((height/2.)/elementSize)))
+            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(height, int((height)/elementSize)))
             outLines.append('seta '+ribName+' l all')
             outLines.append('setr '+ribName+' l prevAll')
             outLines.append('swep '+ribName+' new tra 0 {:f} 0 {:d}'.format((boxDepth/2.)+overhang, int(((boxDepth/2.)+overhang)/elementSize)))
@@ -72,7 +72,7 @@ class GeometryGenerator:
         outLines.append('')
         outLines.append('# merge TT, like welding')
         outLines.append('seta nodes n all')
-        outLines.append('enq nodes tomerg rec 180 _ _ 0.1 #(last param is the tolerance)')
+        outLines.append('enq nodes tomerg rec _ _ {:f} 0.1'.format(height/2.))
         outLines.append('merg n tomerg')
 
         for i in range(0, n_ribs):
@@ -127,10 +127,51 @@ class GeometryGenerator:
         outLines.append('plus n load1 g')
         outLines.append('hcpy png')
         outLines.append('sys mv hcpy_1.png mesh.png')
+        outLines.append('')
+        outLines.append('quit')
         f = open(file_path + '.fbl', 'w')
         f.writelines(line + '\n' for line in outLines)
         f.close()
 
+    def generate_inp(self, file_path, shell_thickness):
+        outLines = []
+        outLines.append('** load mesh- and bc-file')
+        outLines.append('*include, input=all.msh')
+        outLines.append('*include, input=x0.nam')
+        outLines.append('')
+        outLines.append('** constraints')
+        outLines.append('*boundary')
+        outLines.append('Nx0,1,3')
+        outLines.append('')
+        outLines.append('** material definition')
+        outLines.append('*MATERIAL,NAME=alu')
+        outLines.append('*ELASTIC')
+        outLines.append('60000000000.000000, 0.340000')
+        outLines.append('')
+        outLines.append('** define surfaces')
+        outLines.append('*shell section, elset=Eall, material=alu')
+        outLines.append('{:f}'.format(shell_thickness))
+        outLines.append('')
+        outLines.append('** step')
+        outLines.append('*step')
+        outLines.append('*static')
+        outLines.append('')
+        outLines.append('** load')
+        outLines.append('*cload')
+        outLines.append('*include, input=load1.frc')
+        outLines.append('')
+        outLines.append('*node file')
+        outLines.append('U')
+        outLines.append('*el file')
+        outLines.append('S')
+        outLines.append('*end step')
+        outLines.append('')
+        f = open(file_path + '.inp', 'w')
+        f.writelines(line + '\n' for line in outLines)
+        f.close()
+
+
 if __name__ == '__main__':
-    geo = GeometryGenerator()
+    geo = WingConstruction()
     geo.generate_wing('../dataOut/test01/test', 5, 0.1, 0.1, 0.1)
+    geo.generate_inp('../dataOut/test01/test', 2.)
