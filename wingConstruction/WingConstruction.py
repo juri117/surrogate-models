@@ -17,6 +17,11 @@ class WingConstruction:
     def __init__(self):
         print('done')
 
+    def calc_span_division(self, n_ribs, desired_div):
+        while(desired_div % (n_ribs-1) != 0):
+            desired_div += 1
+        return desired_div
+
     def generate_wing(self, file_path, n_ribs, ribs_thickness, beam_thickness, skin_thickness):
         #elemType = 'qu8'
         elemType = 'qu4'
@@ -45,7 +50,9 @@ class WingConstruction:
         outLines.append('seta TT T1o T1u')
         outLines.append('')
         outLines.append('# extrude the TT')
-        outLines.append('swep TT xL tra {:f} 0 0 {:d}'.format(halfSpan, int(halfSpan/elementSize)))
+        # here a more suffisticated calculation of the division is needed, since it has to fit the n_rib
+        spanDiv = self.calc_span_division(n_ribs, int(halfSpan/elementSize))
+        outLines.append('swep TT xL tra {:f} 0 0 {:d}'.format(halfSpan, spanDiv))
         outLines.append('seta toflip s A001 A004 A006')
         outLines.append('flip toflip')
         outLines.append('# new set for TT body')
