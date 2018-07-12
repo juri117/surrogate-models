@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from RBF import RBF
+from myLibs.RBF import RBF
 from utils.PlotHelper import PlotHelper
 from utils.TimeTrack import TimeTrack
 from utils.samples import *

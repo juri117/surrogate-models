@@ -1,15 +1,9 @@
 
 import numpy as np
-import math
-import matplotlib.pyplot as plt
-from matplotlib import rc
-import matplotlib
-import scipy
 from scipy.optimize import minimize
 from scipy import optimize
-from matplotlib.colors import LogNorm
 
-from Kriging import Kriging
+from myLibs.Kriging import Kriging
 from utils.samples import *
 from utils.PlotHelper import PlotHelper
 

@@ -6,8 +6,8 @@
 import sys
 import os
 
-sys.path.insert(0, './OpenMDAO')
-sys.path.insert(0, './pyDOE2-master')
+sys.path.insert(0, './lib/OpenMDAO')
+sys.path.insert(0, './lib/pyDOE2')
 
 import numpy as np
 

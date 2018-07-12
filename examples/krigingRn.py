@@ -1,16 +1,7 @@
 
 import numpy as np
-import math
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import rc
-import matplotlib
-import scipy
-from scipy.optimize import minimize
-import time
 
-from Kriging import Kriging
-from KrigingForrester import KrigingForrester
+from myLibs.Kriging import Kriging
 from utils.PlotHelper import PlotHelper
 from utils.TimeTrack import TimeTrack
 from utils.samples import *

@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from RBF import RBF
+from myLibs.RBF import RBF
 from utils.PlotHelper import PlotHelper
 from utils.samples import *
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     plt1.ax.plot(knownParams, knownValues, 'ro', label=r'St\"utzstellen', markersize=10)
 
     plt1.finalize(width=8, height=5, legendLoc='lower left', legendNcol=2)
-    plt1.ax.legend(loc='lower left', ncol=2)  # , mode="expand")
+    plt1.ax.legend(loc='upper left', ncol=2)  # , mode="expand")
     #plt1.save('dataOut/radialBasisR2.svg')
     #plt1.save('dataOut/radialBasisR2.pdf')
     plt1.show()
