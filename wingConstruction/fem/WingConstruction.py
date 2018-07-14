@@ -5,8 +5,7 @@ __status__ = "Development"
 # ==============================================================================
 # description     :interface to Calculix and solver-input-file generation
 # author          :Juri Bieler
-# date            :2017-12-13
-# version         :0.01
+# date            :2018-07-13
 # notes           :
 # python_version  :3.6
 # ==============================================================================
@@ -14,76 +13,91 @@ __status__ = "Development"
 
 class WingConstruction:
 
-    def __init__(self):
+    def __init__(self, project_path, half_span, box_depth, box_height, n_ribs, box_overhang=0.):
+        self.projectPath = project_path
+        self.halfSpan = half_span
+        self.boxDepth = box_depth
+        self.boxHeight = box_height
+        self.nRibs = n_ribs
+        self.boxOverhang = box_overhang
         print('done')
 
-    def calc_span_division(self, n_ribs, desired_div):
-        while(desired_div % (n_ribs-1) != 0):
+    def calc_span_division(self, desired_div):
+        if self.nRibs <= 1:
+            return desired_div
+        while(desired_div % (self.nRibs-1) != 0):
             desired_div += 1
         return desired_div
 
-    def generate_wing(self, file_path, n_ribs, ribs_thickness, beam_thickness, skin_thickness):
+    def generate_wing(self, force_top, force_but, element_size, element_type='qu4'):
         #elemType = 'qu8'
-        elemType = 'qu4'
+        #elemType = 'qu4'
         #force in N at wingtip
-        force = -0.5*(77000. * 9.81)
+        #force = -0.5*(77000. * 9.81)
         # outer geometry in m
-        overhang = 0.5
-        height = 1.
-        halfSpan = 17.
-        boxDepth = 2.
-        elementSize = 0.25
+        #overhang = 0.5
+        #height = 1.
+        #halfSpan = 17.
+        #boxDepth = 2.
+        #elementSize = 0.25
+        elementSize = element_size
         outLines = []
         outLines.append('# draw flat T as lines')
         outLines.append('pnt pc 0 0 0')
         outLines.append('seta pc all')
-        outLines.append('swep pc new tra 0 0 {:f} {:d}'.format(height/2., int((height/2.)/elementSize)))
-        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*overhang, int(overhang/elementSize)))
-        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(boxDepth/2., int((boxDepth/2.)/elementSize)))
+        outLines.append('swep pc new tra 0 0 {:f} {:d}'.format(self.boxHeight/2., int((self.boxHeight/2.)/elementSize)))
+        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, int(self.boxOverhang/elementSize)))
+        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(self.boxDepth/2., int((self.boxDepth/2.)/elementSize)))
         outLines.append('seta T1o all')
         outLines.append('')
         outLines.append('# mirro to get the TT, still flat lines')
         outLines.append('copy T1o T1u mir z a')
-        outLines.append('move T1u tra 0 0 {:f}'.format(height))
+        outLines.append('move T1u tra 0 0 {:f}'.format(self.boxHeight))
         outLines.append('')
         outLines.append('#new set for the TT (flat lines)')
         outLines.append('seta TT T1o T1u')
         outLines.append('')
         outLines.append('# extrude the TT')
         # here a more suffisticated calculation of the division is needed, since it has to fit the n_rib
-        spanDiv = self.calc_span_division(n_ribs, int(halfSpan/elementSize))
-        outLines.append('swep TT xL tra {:f} 0 0 {:d}'.format(halfSpan, spanDiv))
+        spanDiv = self.calc_span_division(int(self.halfSpan/elementSize))
+        outLines.append('swep TT xL tra {:f} 0 0 {:d}'.format(self.halfSpan, spanDiv))
         outLines.append('seta toflip s A001 A004 A006')
         outLines.append('flip toflip')
         outLines.append('# new set for TT body')
         outLines.append('seta T1 all')
 
-        for i in range(0, n_ribs):
-            spanPos = i * (halfSpan / (n_ribs-1))
+        for i in range(0, self.nRibs):
+            if self.nRibs <= 1:
+                spanPos = 0
+            else:
+                spanPos = i * (self.halfSpan / (self.nRibs-1))
             prName = 'rp{:d}'.format(i)
             ribName = 'rib{:d}'.format(i)
             outLines.append('')
             outLines.append('# generate a rib{:d}'.format(i))
             outLines.append('seta prevAll all')
-            outLines.append('pnt '+prName+' {:f} {:f} 0'.format(spanPos, -1*overhang))
+            outLines.append('pnt '+prName+' {:f} {:f} 0'.format(spanPos, -1*self.boxOverhang))
             outLines.append('seta '+prName+' p '+prName+'')
-            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(height, int((height)/elementSize)))
+            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(self.boxHeight, int((self.boxHeight)/elementSize)))
             outLines.append('seta '+ribName+' l all')
             outLines.append('setr '+ribName+' l prevAll')
-            outLines.append('swep '+ribName+' new tra 0 {:f} 0 {:d}'.format((boxDepth/2.)+overhang, int(((boxDepth/2.)+overhang)/elementSize)))
+            outLines.append('swep '+ribName+' new tra 0 {:f} 0 {:d}'.format((self.boxDepth/2.)+self.boxOverhang, int(((self.boxDepth/2.)+self.boxOverhang)/elementSize)))
 
         outLines.append('')
         outLines.append('# mesh it')
-        outLines.append('elty all '+elemType)
+        outLines.append('elty all '+element_type)
         outLines.append('mesh all')
         outLines.append('')
         outLines.append('# merge TT, like welding')
         outLines.append('seta nodes n all')
-        outLines.append('enq nodes tomerg rec _ _ {:f} 0.1'.format(height/2.))
+        outLines.append('enq nodes tomerg rec _ _ {:f} 0.1'.format(self.boxHeight/2.))
         outLines.append('merg n tomerg')
 
-        for i in range(0, n_ribs):
-            spanPos = i * (halfSpan / (n_ribs - 1))
+        for i in range(0, self.nRibs):
+            if self.nRibs <= 1:
+                spanPos = 0
+            else:
+                spanPos = i * (self.halfSpan / (self.nRibs-1))
             prName = 'rp{:d}'.format(i)
             ribName = 'rib{:d}'.format(i)
             outLines.append('')
@@ -98,11 +112,11 @@ class WingConstruction:
         outLines.append('')
         outLines.append('# mirror TT so we get the beam')
         outLines.append('copy all I2 mir y a')
-        outLines.append('move I2 tra 0 {:f} 0'.format(boxDepth))
+        outLines.append('move I2 tra 0 {:f} 0'.format(self.boxDepth))
         outLines.append('')
         outLines.append('# merge nodes in x and z direction')
         outLines.append('seta nodes n all')
-        outLines.append('enq nodes tomerg rec _ {:f} _ 0.1'.format(boxDepth/2.))
+        outLines.append('enq nodes tomerg rec _ {:f} _ 0.1'.format(self.boxDepth/2.))
         outLines.append('merg n tomerg')
         outLines.append('')
         outLines.append('# write msh file')
@@ -111,16 +125,23 @@ class WingConstruction:
         outLines.append('send x0 abq nam')
         outLines.append('send all abq')
         outLines.append('')
-        outLines.append('# load application')
-        outLines.append('seta nodes n all')
-        outLines.append('merg n nodes') #merge duplicate nodes
-        outLines.append('enq nodes load1 rec _ _ 0')#.format(halfSpan))
         #outLines.append('enq nodes load1 rec {:f} 0 40 0.1 a'.format(halfSpan))
-        nodeCount = ((halfSpan/elementSize)+1) * ((((2.*overhang)+boxDepth)/elementSize)+1)
-        if elemType == 'qu8':
-            nodeCount -= 0.5*(halfSpan/elementSize) * 0.5*(((2.*overhang)+boxDepth)/elementSize)
-        noadLoad = force/nodeCount
-        outLines.append('send load1 abq force 0 0 {:f}'.format(noadLoad))
+        nodeCount = ((self.halfSpan/elementSize)+1) * ((((2.*self.boxOverhang)+self.boxDepth)/elementSize)+1)
+        if element_type == 'qu8':
+            nodeCount -= 0.5*(self.halfSpan/elementSize) * 0.5*(((2.*self.boxOverhang)+self.boxDepth)/elementSize)
+        noadLoadTop = force_top/nodeCount
+        noadLoadBut = force_but / nodeCount
+        outLines.append('# load application')
+        outLines.append('# top')
+        outLines.append('seta nodes n all')
+        outLines.append('merg n nodes')  # merge duplicate nodes
+        outLines.append('enq nodes loadTop rec _ _ 0')  # .format(halfSpan))
+        outLines.append('send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
+        outLines.append('# top')
+        outLines.append('seta nodes n all')
+        outLines.append('merg n nodes')  # merge duplicate nodes
+        outLines.append('enq nodes loadBut rec _ _ {:f}'.format(self.boxHeight))
+        outLines.append('send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
         outLines.append('')
         outLines.append('# plot it')
         outLines.append('rot -y')
@@ -136,11 +157,13 @@ class WingConstruction:
         outLines.append('sys mv hcpy_1.png mesh.png')
         outLines.append('')
         outLines.append('quit')
-        f = open(file_path + '.fbl', 'w')
+        f = open(self.projectPath + '/wingGeo.fbl', 'w')
         f.writelines(line + '\n' for line in outLines)
         f.close()
 
-    def generate_inp(self, file_path, shell_thickness):
+    def generate_inp(self, shell_thickness):
+        material_young = 69000000000.
+        material_poisson = 0.32
         outLines = []
         outLines.append('** load mesh- and bc-file')
         outLines.append('*include, input=all.msh')
@@ -153,7 +176,7 @@ class WingConstruction:
         outLines.append('** material definition')
         outLines.append('*MATERIAL,NAME=alu')
         outLines.append('*ELASTIC')
-        outLines.append('60000000000.000000, 0.340000')
+        outLines.append('{:f}, {:f}'.format(material_young, material_poisson))
         outLines.append('')
         outLines.append('** define surfaces')
         outLines.append('*shell section, elset=Eall, material=alu')
@@ -165,7 +188,8 @@ class WingConstruction:
         outLines.append('')
         outLines.append('** load')
         outLines.append('*cload')
-        outLines.append('*include, input=load1.frc')
+        outLines.append('*include, input=loadTop.frc')
+        outLines.append('*include, input=loadBut.frc')
         outLines.append('')
         outLines.append('*node file')
         outLines.append('U')
@@ -173,7 +197,7 @@ class WingConstruction:
         outLines.append('S')
         outLines.append('*end step')
         outLines.append('')
-        f = open(file_path + '.inp', 'w')
+        f = open(self.projectPath + '/wingRun.inp', 'w')
         f.writelines(line + '\n' for line in outLines)
         f.close()
 

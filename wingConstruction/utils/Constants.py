@@ -1,8 +1,20 @@
+__author__ = "Juri Bieler"
+__version__ = "0.0.1"
+__status__ = "Development"
+
+# ==============================================================================
+# description     :singleton holding global parameters
+# author          :Juri Bieler
+# date            :2018-07-13
+# notes           :
+# python_version  :3.6
+# ==============================================================================
+
 import os.path
 import sys
 import configparser
 
-from utils.Singleton import Singleton
+from wingConstruction.utils.Singleton import Singleton
 
 # this is needed for python 2, 3 compatibility
 def with_metaclass(mcls):
@@ -20,11 +32,12 @@ class Constants(object):
 
     # tolerance for float comparison
     FLOAT_TOLERANCE = 0.00000001
+    INPUT_DIR = '../dataIn'
 
     def __init__(self):
         print('init Constants...')
         self.config = configparser.ConfigParser()
-        self.config.read('../dataIn/setup.ini')
+        self.config.read(self.INPUT_DIR+'/setup.ini')
 
         ### PATHS
         self.WORKING_DIR = self.config['meta']['working_dir']

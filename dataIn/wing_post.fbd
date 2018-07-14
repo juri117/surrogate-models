@@ -1,0 +1,70 @@
+read wingRun.frd
+view edge off
+
+### DEFORMATION
+text deformation
+view disp
+rot -y
+#rot r 90
+ds 1 e 3
+flpc
+
+#mark BCs
+seta nodes n all
+enq nodes x0 rec 0 _ _
+plus n x0 r
+
+frame
+hcpy png
+sys mv hcpy_1.png wing_deform.png
+
+# make a movie
+scal d 1
+view disp off
+anim model on
+anim real on
+anim elem off
+anim steps 72
+anim time 2
+view edge on
+ds 1 e 4
+movi frames 30
+ds 1 a
+view edge off
+
+### MIESES TRESS
+flpc
+text Mieses stress buttom
+view disp off
+rot y
+rot u 90
+ds 2 e 7
+min 0 f
+
+#mark BCs
+seta nodes n all
+enq nodes x0 rec 0 _ _
+plus n x0 r
+
+frame
+hcpy png
+sys mv hcpy_2.png wing_mieses_buttom.png
+text Mieses stress top
+rot u 180
+frame
+hcpy png
+sys mv hcpy_3.png wing_mieses_top.png
+
+### MESH
+view surf
+view elem
+
+#mark BCs
+seta nodes n all
+enq nodes x0 rec 0 _ _
+plus n x0 r
+
+frame
+hcpy png
+sys mv hcpy_4.png wing_mesh_top.png
+quit
