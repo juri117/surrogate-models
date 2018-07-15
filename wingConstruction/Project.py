@@ -12,6 +12,7 @@ __status__ = "Development"
 
 import os
 from shutil import copyfile
+from shutil import rmtree
 
 from wingConstruction.utils.Constants import Constants
 from wingConstruction.fem.WingConstruction import WingConstruction
@@ -20,6 +21,7 @@ from wingConstruction.fem.Calculix import Calculix
 class Project:
 
     def __init__(self, project_name):
+        self.errorFlag = False
         self.workingDir = Constants().WORKING_DIR+'/'+project_name
         if not os.path.isdir(self.workingDir):
             os.mkdir(self.workingDir)
@@ -57,9 +59,16 @@ class Project:
             self.clx = Calculix(workingDir=self.workingDir)
         self.clx.generate_mesh('wingGeo')
         self.clx.solve_model('wingRun')
+        if self.clx.errorFlag:
+            self.errorFlag = True
 
     def postprocess(self):
         copyfile(Constants().INPUT_DIR+'/wing_post.fbd', self.workingDir+'/wing_post.fbd')
         if self.clx == None:
             self.clx = Calculix(workingDir=self.workingDir)
         self.clx.run_postprocessing('wing_post.fbd')
+        if self.clx.errorFlag:
+            self.errorFlag = True
+
+    def remove(self):
+        rmtree(self.workingDir)

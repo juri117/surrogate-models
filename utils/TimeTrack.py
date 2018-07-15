@@ -13,4 +13,5 @@ class TimeTrack:
 
     def toc(self):
         self.stop = timer()
-        print(self.name + ': ' + str(self.stop - self.start))
+        print(self.name + ': ' + str(self.stop - self.start) + ' s')
+        return self.stop - self.start

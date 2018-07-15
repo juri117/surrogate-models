@@ -36,6 +36,10 @@ class Calculix():
         self._workingDir = workingDir
         if not os.path.isdir(self._workingDir):
             os.mkdir(self._workingDir)
+        self.dispD3Min = 0
+        self.dispD3Max = 0
+        self.stressMisesMin = 0
+        self.stressMisesMax = 0
 
     ##############################################
     # fem postprocessing
@@ -91,10 +95,11 @@ class Calculix():
         p = self.run_cgx(part_name + '.fbl')
 
     # calls the fem solver (all input files must be present in the working directory)
-    def solve_model(self, part_name):
+    def solve_model(self, file_name):
         # print('--- start ccx output ---------------------------------------')
         print('run fem solver ccx')
-        p = self.run_ccx(part_name, pipe_response=True)
+        p = self.run_ccx(file_name, pipe_response=False)
+        """
         out, err = p.communicate()
         print(out.decode('UTF-8'))
         # print('--- end ccx output ---------------------------------------')
@@ -106,13 +111,13 @@ class Calculix():
             self.errorFlag = True
         if 'Job finished' in out.decode('UTF-8'):
             print('ccx succeeded')
+        """
 
     def run_postprocessing(self, file_name):
         # ToDo: run it with pipeRespnose=True results in calculix gui freeze
         # print('--- start cgx output ---------------------------------------')
         print('run fem postprocessing cgx')
-        p = self.run_cgx(file_name, pipe_response=False)
-        '''
+        p = self.run_cgx(file_name, pipe_response=True)
         out, err = p.communicate()
         print(out.decode('UTF-8'))
         # print('--- stop cgx output ---------------------------------------')
@@ -124,14 +129,9 @@ class Calculix():
             self.errorFlag = True
         else:
             print('cgx succeeded')
-        self.process_cgx_output(out)
-        '''
+            self.process_cgx_output(out)
 
     def process_cgx_output(self, strOut):
-        self.dispD3Min = 0
-        self.dispD3Max = 0
-        self.stressMisesMin = 0
-        self.stressMisesMax = 0
         lines = strOut.split(b'\n')
         for i in range(0, len(lines) - 3):
             if b'DISP' in lines[i] and b'D3' in lines[i]:

@@ -20,14 +20,25 @@ class WingConstruction:
         self.boxHeight = box_height
         self.nRibs = n_ribs
         self.boxOverhang = box_overhang
+        self.elementSize = 0.1
         print('done')
 
-    def calc_span_division(self, desired_div):
+    def calc_span_division(self, length):
+        div = int(length / self.elementSize)
         if self.nRibs <= 1:
-            return desired_div
-        while(desired_div % (self.nRibs-1) != 0):
-            desired_div += 1
-        return desired_div
+            return self.calc_division(length)
+        while div % (self.nRibs-1) > 0 or div % 2 > 0:
+            div += 1
+        return div
+
+    # the division shouldn't be odd or 0
+    def calc_division(self, length):
+        div = int(length / self.elementSize)
+        if div == 0:
+            div = 2
+        if div % 2 > 0:
+            div += 1
+        return div
 
     def generate_wing(self, force_top, force_but, element_size, element_type='qu4'):
         #elemType = 'qu8'
@@ -40,14 +51,14 @@ class WingConstruction:
         #halfSpan = 17.
         #boxDepth = 2.
         #elementSize = 0.25
-        elementSize = element_size
+        self.elementSize = element_size
         outLines = []
         outLines.append('# draw flat T as lines')
         outLines.append('pnt pc 0 0 0')
         outLines.append('seta pc all')
-        outLines.append('swep pc new tra 0 0 {:f} {:d}'.format(self.boxHeight/2., int((self.boxHeight/2.)/elementSize)))
-        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, int(self.boxOverhang/elementSize)))
-        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(self.boxDepth/2., int((self.boxDepth/2.)/elementSize)))
+        outLines.append('swep pc new tra 0 0 {:f} {:d}'.format(self.boxHeight/2., self.calc_division(self.boxHeight/2.)))
+        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
+        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(self.boxDepth/2., self.calc_division((self.boxDepth/2.))))
         outLines.append('seta T1o all')
         outLines.append('')
         outLines.append('# mirro to get the TT, still flat lines')
@@ -59,7 +70,7 @@ class WingConstruction:
         outLines.append('')
         outLines.append('# extrude the TT')
         # here a more suffisticated calculation of the division is needed, since it has to fit the n_rib
-        spanDiv = self.calc_span_division(int(self.halfSpan/elementSize))
+        spanDiv = self.calc_span_division(self.halfSpan)
         outLines.append('swep TT xL tra {:f} 0 0 {:d}'.format(self.halfSpan, spanDiv))
         outLines.append('seta toflip s A001 A004 A006')
         outLines.append('flip toflip')
@@ -78,10 +89,10 @@ class WingConstruction:
             outLines.append('seta prevAll all')
             outLines.append('pnt '+prName+' {:f} {:f} 0'.format(spanPos, -1*self.boxOverhang))
             outLines.append('seta '+prName+' p '+prName+'')
-            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(self.boxHeight, int((self.boxHeight)/elementSize)))
+            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(self.boxHeight, self.calc_division((self.boxHeight))))
             outLines.append('seta '+ribName+' l all')
             outLines.append('setr '+ribName+' l prevAll')
-            outLines.append('swep '+ribName+' new tra 0 {:f} 0 {:d}'.format((self.boxDepth/2.)+self.boxOverhang, int(((self.boxDepth/2.)+self.boxOverhang)/elementSize)))
+            outLines.append('swep '+ribName+' new tra 0 {:f} 0 {:d}'.format((self.boxDepth/2.)+self.boxOverhang, self.calc_division(((self.boxDepth/2.)+self.boxOverhang))))
 
         outLines.append('')
         outLines.append('# mesh it')
@@ -90,7 +101,7 @@ class WingConstruction:
         outLines.append('')
         outLines.append('# merge TT, like welding')
         outLines.append('seta nodes n all')
-        outLines.append('enq nodes tomerg rec _ _ {:f} 0.1'.format(self.boxHeight/2.))
+        outLines.append('enq nodes tomerg rec _ _ {:f} 0.01'.format(self.boxHeight/2.))
         outLines.append('merg n tomerg')
 
         for i in range(0, self.nRibs):
@@ -103,7 +114,7 @@ class WingConstruction:
             outLines.append('')
             outLines.append('# merge '+ribName)
             outLines.append('seta nodes n all')
-            outLines.append('enq nodes tomerg rec {:f} _ _ 0.1'.format(spanPos))
+            outLines.append('enq nodes tomerg rec {:f} _ _ 0.01'.format(spanPos))
             outLines.append('merg n tomerg')
 
         outLines.append('')
@@ -116,7 +127,7 @@ class WingConstruction:
         outLines.append('')
         outLines.append('# merge nodes in x and z direction')
         outLines.append('seta nodes n all')
-        outLines.append('enq nodes tomerg rec _ {:f} _ 0.1'.format(self.boxDepth/2.))
+        outLines.append('enq nodes tomerg rec _ {:f} _ 0.01'.format(self.boxDepth/2.))
         outLines.append('merg n tomerg')
         outLines.append('')
         outLines.append('# write msh file')
@@ -126,9 +137,9 @@ class WingConstruction:
         outLines.append('send all abq')
         outLines.append('')
         #outLines.append('enq nodes load1 rec {:f} 0 40 0.1 a'.format(halfSpan))
-        nodeCount = ((self.halfSpan/elementSize)+1) * ((((2.*self.boxOverhang)+self.boxDepth)/elementSize)+1)
+        nodeCount = ((self.halfSpan/self.elementSize)+1) * ((((2.*self.boxOverhang)+self.boxDepth)/self.elementSize)+1)
         if element_type == 'qu8':
-            nodeCount -= 0.5*(self.halfSpan/elementSize) * 0.5*(((2.*self.boxOverhang)+self.boxDepth)/elementSize)
+            nodeCount -= 0.5*(self.halfSpan/self.elementSize) * 0.5*(((2.*self.boxOverhang)+self.boxDepth)/self.elementSize)
         noadLoadTop = force_top/nodeCount
         noadLoadBut = force_but / nodeCount
         outLines.append('# load application')
@@ -139,7 +150,7 @@ class WingConstruction:
         outLines.append('send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
         outLines.append('# top')
         outLines.append('seta nodes n all')
-        outLines.append('merg n nodes')  # merge duplicate nodes
+        #outLines.append('merg n nodes')  # merge duplicate nodes
         outLines.append('enq nodes loadBut rec _ _ {:f}'.format(self.boxHeight))
         outLines.append('send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
         outLines.append('')

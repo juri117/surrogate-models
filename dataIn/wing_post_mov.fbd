@@ -18,6 +18,20 @@ frame
 hcpy png
 sys mv hcpy_1.png wing_deform.png
 
+# make a movie
+scal d 1
+view disp off
+anim model on
+anim real on
+anim elem off
+anim steps 72
+anim time 2
+view edge on
+ds 1 e 4
+movi frames 30
+ds 1 a
+view edge off
+
 ### MIESES TRESS
 flpc
 text Mieses stress buttom

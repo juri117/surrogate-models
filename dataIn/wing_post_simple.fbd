@@ -1,0 +1,9 @@
+read wingRun.frd
+
+### DEFORMATION
+ds 1 e 3
+
+### MIESES TRESS
+ds 2 e 7
+
+quit
