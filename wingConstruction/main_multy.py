@@ -58,7 +58,7 @@ def collect_results(element_size):
     return ''
 
 
-if __name__ == '__main__':
+def main_run():
     sizes = np.flip(np.arange(0.025, .1, 0.001), 0)
     sizes = list(sizes)
     start = time.time()
@@ -80,3 +80,7 @@ if __name__ == '__main__':
             outputF.flush()
     outputF.close()
     print('DONE with ALL')
+
+
+if __name__ == '__main__':
+    main_run()
