@@ -75,7 +75,7 @@ class WingConstruction:
         outLines.append('seta toflip s A001 A004 A006')
         outLines.append('flip toflip')
         outLines.append('# new set for TT body')
-        outLines.append('seta T1 all')
+        outLines.append('seta I1 all')
 
         for i in range(0, self.nRibs):
             if self.nRibs <= 1:
@@ -118,12 +118,11 @@ class WingConstruction:
             outLines.append('merg n tomerg')
 
         outLines.append('')
-        outLines.append('# new set for the already connected TT with rib')
-        outLines.append('seta I1 all')
-        outLines.append('')
         outLines.append('# mirror TT so we get the beam')
         outLines.append('copy all I2 mir y a')
         outLines.append('move I2 tra 0 {:f} 0'.format(self.boxDepth))
+        outLines.append('')
+        outLines.append('seta II I1 I2')
         outLines.append('')
         outLines.append('# merge nodes in x and z direction')
         outLines.append('seta nodes n all')
@@ -144,14 +143,14 @@ class WingConstruction:
         noadLoadBut = force_but / nodeCount
         outLines.append('# load application')
         outLines.append('# top')
-        outLines.append('seta nodes n all')
-        outLines.append('merg n nodes')  # merge duplicate nodes
-        outLines.append('enq nodes loadTop rec _ _ 0')  # .format(halfSpan))
-        outLines.append('send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
-        outLines.append('# top')
-        outLines.append('seta nodes n all')
+        outLines.append('seta nodes n II')
         #outLines.append('merg n nodes')  # merge duplicate nodes
-        outLines.append('enq nodes loadBut rec _ _ {:f}'.format(self.boxHeight))
+        outLines.append('enq nodes loadTop rec _ _ 0')  # .format(halfSpan))
+        outLines.append('send loadTop abq force 0 0 {:f} 0.001'.format(noadLoadTop))
+        outLines.append('# buttom')
+        outLines.append('seta nodes n II')
+        #outLines.append('merg n nodes')  # merge duplicate nodes
+        outLines.append('enq nodes loadBut rec _ _ {:f} 0.001'.format(self.boxHeight))
         outLines.append('send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
         outLines.append('')
         outLines.append('# plot it')
@@ -163,7 +162,8 @@ class WingConstruction:
         outLines.append('view elem')
         outLines.append('plus n x0 r')
         outLines.append('plus n xL b')
-        outLines.append('plus n load1 g')
+        outLines.append('plus n loadTop g')
+        outLines.append('plus n loadBut y')
         outLines.append('hcpy png')
         outLines.append('sys mv hcpy_1.png mesh.png')
         outLines.append('')
