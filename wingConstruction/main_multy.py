@@ -47,12 +47,12 @@ def run_test(element_size):
 def collect_results(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
     pro1 = Project(projectName)
-    pro1.postprocess()
+    pro1.postprocess(template='wing_post_simple')
     if not pro1.errorFlag:
-        exportRow = str(element_size) + ','
-        +str(pro1.clx.dispD3Min) + ','
-        + str(pro1.clx.dispD3Max) + ','
-        + str(pro1.clx.stressMisesMin) + ','
+        exportRow = str(element_size) + ','\
+        +str(pro1.clx.dispD3Min) + ','\
+        + str(pro1.clx.dispD3Max) + ','\
+        + str(pro1.clx.stressMisesMin) + ','\
         + str(pro1.clx.stressMisesMax) + '\n'
         return exportRow
     return ''
@@ -79,6 +79,7 @@ def main_run():
             outputF.write(outStr)
             outputF.flush()
     outputF.close()
+    print("Time taken = {0:.5f}".format(time.time() - start))
     print('DONE with ALL')
 
 

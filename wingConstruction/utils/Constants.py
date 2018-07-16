@@ -53,10 +53,10 @@ class Constants(object):
         self.CALCULIX_CCX_EXE_PATH = self.CALCULIX_BIN_PATH + '/' + self.config['fem']['calculix_ccx_executable']
         self.CALCULIX_CGX_EXE_PATH = self.CALCULIX_BIN_PATH + '/' + self.config['fem']['calculix_cgx_executable']
 
-        self.GMSH_EXE_PATH = self.config['fem']['gmsh_executable_path']
-        if not os.path.isfile(self.GMSH_EXE_PATH):
-            print('WARNING: could not find gmsh at: ' + self.GMSH_EXE_PATH)
-            self.GMSH_EXE_PATH = os.path.dirname(__file__) + '/' + self.GMSH_EXE_PATH
-            if not os.path.isfile(self.GMSH_EXE_PATH):
-                print('ERROR: could not find gmsh at: ' + self.GMSH_EXE_PATH)
-                sys.exit(1)
+        #self.GMSH_EXE_PATH = self.config['fem']['gmsh_executable_path']
+        #if not os.path.isfile(self.GMSH_EXE_PATH):
+        #    print('WARNING: could not find gmsh at: ' + self.GMSH_EXE_PATH)
+        #    self.GMSH_EXE_PATH = os.path.dirname(__file__) + '/' + self.GMSH_EXE_PATH
+        #    if not os.path.isfile(self.GMSH_EXE_PATH):
+        #        print('ERROR: could not find gmsh at: ' + self.GMSH_EXE_PATH)
+        #        sys.exit(1)

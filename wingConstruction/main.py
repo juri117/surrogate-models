@@ -19,12 +19,12 @@ from utils.TimeTrack import TimeTrack
 
 t = TimeTrack()
 t.tic()
-projectName = '0.05er03ribs'
+projectName = '0.05er06ribs'
 pro1 = Project(projectName)
 pro1.halfSpan = 17.
 pro1.boxDepth = 2.
 pro1.boxHeight = 1.
-pro1.nRibs = 3
+pro1.nRibs = 6
 pro1.boxOverhang = 0.1
 pro1.forceTop = -0.3*(77000. * 9.81)
 pro1.forceBut = -0.2*(77000. * 9.81)
