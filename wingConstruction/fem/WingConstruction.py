@@ -132,9 +132,9 @@ class WingConstruction:
         outLines.append('send all abq')
         outLines.append('')
 
-        nodeCount = (self.calc_division(self.halfSpan)+1) * (self.calc_division(self.boxDepth)+1)
+        nodeCount = (self.calc_span_division(self.halfSpan)+1) * (self.calc_division(self.boxDepth)+1)
         if element_type == 'qu8':
-            nodeCount -= 0.5*self.calc_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
+            nodeCount -= 0.5*self.calc_span_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
         noadLoadTop = force_top/nodeCount
         noadLoadBut = force_but / nodeCount
         outLines.append('# load application')
