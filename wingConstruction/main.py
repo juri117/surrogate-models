@@ -19,17 +19,17 @@ from utils.TimeTrack import TimeTrack
 
 t = TimeTrack()
 t.tic()
-projectName = '0.05er06ribs'
+projectName = '0.25er03ribs'
 pro1 = Project(projectName)
-pro1.halfSpan = 17.
-pro1.boxDepth = 2.
-pro1.boxHeight = 1.
-pro1.nRibs = 6
-pro1.boxOverhang = 0.1
+pro1.halfSpan = 16.
+pro1.boxDepth = 2.5
+pro1.boxHeight = 1.1
+pro1.nRibs = 17
+pro1.boxOverhang = 0.5
 pro1.forceTop = -0.3*(77000. * 9.81)
 pro1.forceBut = -0.2*(77000. * 9.81)
-#pro1.elementSize = 0.25
-pro1.elementSize = 0.05
+pro1.elementSize = 0.1
+#pro1.elementSize = 0.05
 pro1.elemType = 'qu4'
 pro1.shellThickness = 0.0099
 pro1.generate_geometry()
@@ -44,4 +44,8 @@ if not pro1.errorFlag:
         print('max displacement: ' + str(pro1.clx.dispD3Max))
         print('min mieses stress: ' + str(pro1.clx.stressMisesMin))
         print('max mieses stress: ' + str(pro1.clx.stressMisesMax))
+
+        l = pro1.validate_load('loadTop.frc')
+        l += pro1.validate_load('loadBut.frc')
+        print('load error: ' + str((-0.5 * 77000. * 9.81) - l))
 

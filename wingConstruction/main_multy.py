@@ -59,7 +59,7 @@ def collect_results(element_size):
 
 
 def main_run():
-    sizes = np.flip(np.arange(0.025, .1, 0.001), 0)
+    sizes = np.flip(np.arange(0.05, .275, 0.025), 0)
     sizes = list(sizes)
     start = time.time()
     with Pool(4) as p:

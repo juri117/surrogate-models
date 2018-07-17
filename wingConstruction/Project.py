@@ -70,5 +70,20 @@ class Project:
         if self.clx.errorFlag:
             self.errorFlag = True
 
+    def validate_load(self, load_file_name):
+        loadF = open(self.workingDir+'/'+load_file_name)
+        loadSum = 0
+        for line in loadF:
+            try:
+                vals = line.strip().split(',')
+                if len(vals) == 3:
+                    l = float(vals[2].strip())
+                    loadSum += l
+            except ValueError:
+                print('invalid line in Load file')
+        print('sum of Loads in '+load_file_name+': ' + str(loadSum))
+        return loadSum
+
+
     def remove(self):
         rmtree(self.workingDir)
