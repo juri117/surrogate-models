@@ -26,7 +26,7 @@ def run_test(element_size):
     pro1.halfSpan = 17.
     pro1.boxDepth = 2.
     pro1.boxHeight = 1.
-    pro1.nRibs = 17
+    pro1.nRibs = 18
     pro1.boxOverhang = 0.1
     pro1.forceTop = -0.3*(77000. * 9.81)
     pro1.forceBut = -0.2*(77000. * 9.81)
@@ -48,21 +48,25 @@ def collect_results(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
     pro1 = Project(projectName)
     pro1.postprocess(template='wing_post_simple')
+    l = pro1.validate_load('loadTop.frc')
+    l += pro1.validate_load('loadBut.frc')
+    loadError = (-0.5 * 77000. * 9.81) - l
     if not pro1.errorFlag:
         exportRow = str(element_size) + ','\
         +str(pro1.clx.dispD3Min) + ','\
         + str(pro1.clx.dispD3Max) + ','\
         + str(pro1.clx.stressMisesMin) + ','\
-        + str(pro1.clx.stressMisesMax) + '\n'
+        + str(pro1.clx.stressMisesMax) + ','\
+        + str(loadError)+'\n'
         return exportRow
     return ''
 
 
 def main_run():
-    sizes = np.flip(np.arange(0.05, .275, 0.025), 0)
+    sizes = np.flip(np.arange(0.05, .26, 0.01), 0)
     sizes = list(sizes)
     start = time.time()
-    with Pool(4) as p:
+    with Pool(18) as p:
         res = p.map(run_test, sizes)
     print("Time taken = {0:.5f}".format(time.time() - start))
 
@@ -71,7 +75,7 @@ def main_run():
                    + datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
                    + '.csv',
                    'w')
-    outputF.write('sizes,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax\n')
+    outputF.write('sizes,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
 
     for s in sizes:
         outStr = collect_results(s)
