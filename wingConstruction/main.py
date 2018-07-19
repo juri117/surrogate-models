@@ -19,7 +19,7 @@ from utils.TimeTrack import TimeTrack
 
 t = TimeTrack()
 t.tic()
-projectName = '0.25er18ribs'
+projectName = 'test'
 pro1 = Project(projectName)
 pro1.halfSpan = 17.
 pro1.boxDepth = 2.
@@ -28,7 +28,7 @@ pro1.nRibs = 18
 pro1.boxOverhang = 0.5
 pro1.forceTop = -0.3*(77000. * 9.81)
 pro1.forceBut = -0.2*(77000. * 9.81)
-pro1.elementSize = 0.25
+pro1.elementSize = 1.
 #pro1.elementSize = 0.05
 pro1.elemType = 'qu4'
 pro1.shellThickness = 0.0099
@@ -45,7 +45,9 @@ if not pro1.errorFlag:
         print('min mieses stress: ' + str(pro1.clx.stressMisesMin))
         print('max mieses stress: ' + str(pro1.clx.stressMisesMax))
 
-        l = pro1.validate_load('loadTop.frc')
-        l += pro1.validate_load('loadBut.frc')
+        l = pro1.validate_load('load.frc')
+
+        #l = pro1.validate_load('loadTop.frc')
+        #l += pro1.validate_load('loadBut.frc')
         print('load error: ' + str((-0.5 * 77000. * 9.81) - l))
 

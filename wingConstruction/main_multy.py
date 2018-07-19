@@ -48,8 +48,9 @@ def collect_results(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
     pro1 = Project(projectName)
     pro1.postprocess(template='wing_post_simple')
-    l = pro1.validate_load('loadTop.frc')
-    l += pro1.validate_load('loadBut.frc')
+    #l = pro1.validate_load('loadTop.frc')
+    #l += pro1.validate_load('loadBut.frc')
+    l = pro1.validate_load('load.frc')
     loadError = (-0.5 * 77000. * 9.81) - l
     if not pro1.errorFlag:
         exportRow = str(element_size) + ','\
@@ -63,7 +64,7 @@ def collect_results(element_size):
 
 
 def main_run():
-    sizes = np.flip(np.arange(0.05, .26, 0.01), 0)
+    sizes = np.flip(np.arange(0.06, .26, 0.01), 0)
     sizes = list(sizes)
     start = time.time()
     with Pool(18) as p:
