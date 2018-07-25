@@ -138,17 +138,18 @@ class WingConstruction:
         noadLoadTop = force_top/nodeCount
         noadLoadBut = force_but / nodeCount
         outLines.append('# load application')
+
+        #temp test with point load
+        #outLines.append('seta nodes n all')
+        #outLines.append('enq nodes bc1 rec {:f} 0 0 0.01'.format(self.halfSpan))
+        #outLines.append('enq nodes bc2 rec {:f} {:f} 0 0.01'.format(self.halfSpan, self.boxDepth))
+        #outLines.append('seta load bc1 bc2')
+        #outLines.append('send load abq force 0 0 {:f}'.format((force_top+force_but)/2.))
+
         outLines.append('# top')
-
-        outLines.append('seta nodes n all')
-        outLines.append('enq nodes bc1 rec {:f} 0 0 0.01'.format(self.halfSpan))
-        outLines.append('enq nodes bc2 rec {:f} {:f} 0 0.01'.format(self.halfSpan, self.boxDepth))
-        outLines.append('seta load bc1 bc2')
-        outLines.append('send load abq force 0 0 {:f}'.format((force_top+force_but)/2.))
-
-        outLines.append('#send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
+        outLines.append('send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
         outLines.append('# buttom')
-        outLines.append('#send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
+        outLines.append('send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
         outLines.append('')
         outLines.append('# plot it')
         outLines.append('rot -y')
@@ -170,8 +171,8 @@ class WingConstruction:
         f.writelines(line + '\n' for line in outLines)
         f.close()
 
-    def generate_inp(self, shell_thickness):
-        material_young = 69000000000.
+    def generate_inp(self, shell_thickness, nonlinear=False):
+        material_young = 69e9
         material_poisson = 0.32
         outLines = []
         outLines.append('** load mesh- and bc-file')
@@ -185,21 +186,24 @@ class WingConstruction:
         outLines.append('** material definition')
         outLines.append('*MATERIAL,NAME=alu')
         outLines.append('*ELASTIC')
-        outLines.append('{:f}, {:f}'.format(material_young, material_poisson))
+        outLines.append('{:.3e}, {:.3f}'.format(material_young, material_poisson))
         outLines.append('')
         outLines.append('** define surfaces')
         outLines.append('*shell section, elset=Eall, material=alu')
         outLines.append('{:f}'.format(shell_thickness))
         outLines.append('')
         outLines.append('** step')
-        outLines.append('*step')
+        if nonlinear:
+            outLines.append('*step, nlgeom')
+        else:
+            outLines.append('*step')
         outLines.append('*static')
         outLines.append('')
         outLines.append('** load')
         outLines.append('*cload')
-        outLines.append('*include, input=load.frc')
-        #outLines.append('*include, input=loadTop.frc')
-        #outLines.append('*include, input=loadBut.frc')
+        #outLines.append('*include, input=load.frc')
+        outLines.append('*include, input=loadTop.frc')
+        outLines.append('*include, input=loadBut.frc')
         outLines.append('')
         outLines.append('*node file')
         outLines.append('U')

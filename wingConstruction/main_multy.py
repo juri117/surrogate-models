@@ -32,9 +32,9 @@ def run_test(element_size):
     pro1.forceBut = -0.2*(77000. * 9.81)
     #pro1.elementSize = 0.25
     pro1.elementSize = element_size
-    pro1.elemType = 'qu4'
+    pro1.elemType = 'qu8'
     pro1.shellThickness = 0.0099
-    pro1.generate_geometry()
+    pro1.generate_geometry(nonlinear=True)
     pro1.solve()
     print('############ DONE ############')
     if not pro1.errorFlag:
@@ -48,9 +48,9 @@ def collect_results(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
     pro1 = Project(projectName)
     pro1.postprocess(template='wing_post_simple')
-    #l = pro1.validate_load('loadTop.frc')
-    #l += pro1.validate_load('loadBut.frc')
-    l = pro1.validate_load('load.frc')
+    l = pro1.validate_load('loadTop.frc')
+    l += pro1.validate_load('loadBut.frc')
+    #l = pro1.validate_load('load.frc')
     loadError = (-0.5 * 77000. * 9.81) - l
     if not pro1.errorFlag:
         exportRow = str(element_size) + ','\
@@ -64,10 +64,10 @@ def collect_results(element_size):
 
 
 def main_run():
-    sizes = np.flip(np.arange(0.06, .26, 0.01), 0)
+    sizes = np.arange(0.06, .26, 0.01)
     sizes = list(sizes)
     start = time.time()
-    with Pool(18) as p:
+    with Pool(4) as p:
         res = p.map(run_test, sizes)
     print("Time taken = {0:.5f}".format(time.time() - start))
 

@@ -40,7 +40,7 @@ class Project:
         self.shellThickness = 0.01
 
 
-    def generate_geometry(self):
+    def generate_geometry(self, nonlinear=False):
         geo = WingConstruction(self.workingDir,
                                self.halfSpan,
                                self.boxDepth,
@@ -52,7 +52,7 @@ class Project:
                           self.forceBut,
                           self.elementSize,
                           element_type=self.elemType)
-        geo.generate_inp(self.shellThickness)
+        geo.generate_inp(self.shellThickness, nonlinear=nonlinear)
 
     def solve(self):
         if self.clx == None:
