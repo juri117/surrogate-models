@@ -25,7 +25,7 @@ view disp off
 rot y
 rot u 90
 ds 2 e 7
-min 0 f
+#min 0 f
 
 #mark BCs
 seta nodes n all

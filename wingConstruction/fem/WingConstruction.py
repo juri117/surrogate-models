@@ -10,6 +10,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
+from wingConstruction.utils.Constants import Constants
 
 class WingConstruction:
 
@@ -59,25 +60,29 @@ class WingConstruction:
         outLines.append('seta pc all')
         outLines.append('swep pc new tra 0 0 {:f} {:d}'.format(self.boxHeight, self.calc_division(self.boxHeight)))
         outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division((self.boxDepth))))
-        outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
+        if self.boxOverhang > 0.:
+            outLines.append('swep pc new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
         outLines.append('')
         outLines.append('# top left corner')
         outLines.append('pnt pc2 0 {:f} 0'.format(self.boxDepth))
         outLines.append('seta pc2 pc2')
         outLines.append('swep pc2 new tra 0 0 {:f} {:d}'.format(self.boxHeight, self.calc_division(self.boxHeight)))
-        outLines.append('swep pc2 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
+        if self.boxOverhang > 0.:
+            outLines.append('swep pc2 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
         outLines.append('')
         outLines.append('# lower right corner')
         outLines.append('pnt pc3 0 0 {:f}'.format(self.boxHeight))
         outLines.append('seta pc3 pc3')
-        outLines.append('swep pc3 new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
+        if self.boxOverhang > 0.:
+            outLines.append('swep pc3 new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
         outLines.append('swep pc3 new tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division((self.boxDepth))))
         outLines.append('')
-        outLines.append('# lower left corner')
-        outLines.append('pnt pc4 0 {:f} {:f}'.format(self.boxDepth, self.boxHeight))
-        outLines.append('seta pc4 pc4')
-        outLines.append('swep pc4 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
-        outLines.append('')
+        if self.boxOverhang > 0.:
+            outLines.append('# lower left corner')
+            outLines.append('pnt pc4 0 {:f} {:f}'.format(self.boxDepth, self.boxHeight))
+            outLines.append('seta pc4 pc4')
+            outLines.append('swep pc4 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
+            outLines.append('')
         outLines.append('seta II2d all')
         outLines.append('')
 
@@ -101,14 +106,14 @@ class WingConstruction:
                 spanPos = 0
             else:
                 spanPos = i * (self.halfSpan / (self.nRibs-1))
-            prName = 'rp{:d}'.format(i)
+            #prName = 'rp{:d}'.format(i)
             ribName = 'rib{:d}'.format(i)
             outLines.append('')
             outLines.append('# generate a rib{:d}'.format(i))
             outLines.append('seta prevAll all')
-            outLines.append('pnt '+prName+' {:f} 0 0'.format(spanPos))
-            outLines.append('seta '+prName+' p '+prName+'')
-            outLines.append('swep '+prName+' new tra 0 0 {:f} {:d}'.format(self.boxHeight, self.calc_division((self.boxHeight))))
+            outLines.append('pnt '+ribName+' {:f} 0 0'.format(spanPos))
+            outLines.append('seta '+ribName+' p '+ribName+'')
+            outLines.append('swep '+ribName+' '+ribName+' tra 0 0 {:f} {:d} a'.format(self.boxHeight, self.calc_division((self.boxHeight))))
             outLines.append('seta '+ribName+' l all')
             outLines.append('setr '+ribName+' l prevAll')
             outLines.append('swep '+ribName+' '+ribName+' tra 0 {:f} 0 {:d} a'.format(self.boxDepth, self.calc_division(self.boxDepth)))
@@ -125,10 +130,12 @@ class WingConstruction:
         outLines.append('merg n nodes')
         outLines.append('')
 
-        outLines.append('# write msh file')
-        outLines.append('seta nodes n all')
-        outLines.append('enq nodes bc rec 0 _ _')
+        outLines.append('# write bc')
+        #outLines.append('seta nodes n all')
+        #outLines.append('enq nodes bc rec 0 _ _')
+        outLines.append('seta bc n rib0')
         outLines.append('send bc abq nam')
+        outLines.append('# write msh file')
         outLines.append('send all abq')
         outLines.append('')
 
@@ -172,8 +179,8 @@ class WingConstruction:
         f.close()
 
     def generate_inp(self, shell_thickness, nonlinear=False):
-        material_young = 69e9
-        material_poisson = 0.32
+        material_young = Constants().config.getfloat('defaults', 'material_young')
+        material_poisson = Constants().config.getfloat('defaults', 'material_poisson')
         outLines = []
         outLines.append('** load mesh- and bc-file')
         outLines.append('*include, input=all.msh')
@@ -181,7 +188,7 @@ class WingConstruction:
         outLines.append('')
         outLines.append('** constraints')
         outLines.append('*boundary')
-        outLines.append('Nbc,1,3')
+        outLines.append('Nbc,1,6')
         outLines.append('')
         outLines.append('** material definition')
         outLines.append('*MATERIAL,NAME=alu')

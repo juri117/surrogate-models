@@ -24,14 +24,14 @@ pro1 = Project(projectName)
 pro1.halfSpan = 17.
 pro1.boxDepth = 2.
 pro1.boxHeight = 1.
-pro1.nRibs = 18
-pro1.boxOverhang = 0.5
+pro1.nRibs = 30
+pro1.boxOverhang = 0.
 pro1.forceTop = -0.3*(77000. * 9.81)
 pro1.forceBut = -0.2*(77000. * 9.81)
 pro1.elementSize = .2
 #pro1.elementSize = 0.05
 pro1.elemType = 'qu8'
-pro1.shellThickness = 0.0099
+pro1.shellThickness = 0.002
 pro1.generate_geometry()
 #todo: detect failed mesh generation
 pro1.solve()
