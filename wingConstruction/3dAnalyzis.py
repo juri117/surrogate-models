@@ -19,6 +19,7 @@ from utils.TimeTrack import TimeTrack
 from multiprocessing import Pool
 import time
 
+USED_CORES = 4
 
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
@@ -68,7 +69,7 @@ def collect_results(pro):
     #pro = Project(projectName)
     pro.postprocess(template='wing_post_simple')
     l = pro.validate_load('loadTop.frc')
-    l += pro.validate_load('loadBut.frc')
+    l += pro.validate_load('loadBot.frc')
     #l = pro1.validate_load('load.frc')
     loadError = (-0.5*wing_load) - l
     if not pro.errorFlag:
@@ -95,7 +96,7 @@ def main_run():
             projects.append(new_project(r, t))
 
     start = time.time()
-    with Pool(4) as p:
+    with Pool(USED_CORES) as p:
         res = p.map(run_project, projects)
     print("Time taken = {0:.5f}".format(time.time() - start))
 

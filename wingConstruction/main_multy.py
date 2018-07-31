@@ -19,6 +19,7 @@ from utils.TimeTrack import TimeTrack
 from multiprocessing import Pool
 import time
 
+USED_CORES = 4
 
 def run_test(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
@@ -49,7 +50,7 @@ def collect_results(element_size):
     pro1 = Project(projectName)
     pro1.postprocess(template='wing_post_simple')
     l = pro1.validate_load('loadTop.frc')
-    l += pro1.validate_load('loadBut.frc')
+    l += pro1.validate_load('loadBot.frc')
     #l = pro1.validate_load('load.frc')
     loadError = (-0.5 * 77000. * 9.81) - l
     if not pro1.errorFlag:
@@ -67,7 +68,7 @@ def main_run():
     sizes = np.arange(0.06, .26, 0.01)
     sizes = list(sizes)
     start = time.time()
-    with Pool(4) as p:
+    with Pool(USED_CORES) as p:
         res = p.map(run_test, sizes)
     print("Time taken = {0:.5f}".format(time.time() - start))
 
