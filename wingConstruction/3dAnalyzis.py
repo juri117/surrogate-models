@@ -58,16 +58,16 @@ def run_project(pro):
     pro.solve()
     print('############ DONE ############')
     if not pro.errorFlag:
-        #pro1.postprocess()
-        #if not pro1.errorFlag:
-        return True
+        pro.postprocess(template='wing_post_simple')
+        if not pro.errorFlag:
+            return True
     return False
 
 
 def collect_results(pro):
     #projectName = 'meshSize_r{:d}_t{:5f}'.format(rib_count, shell_thick)
     #pro = Project(projectName)
-    pro.postprocess(template='wing_post_simple')
+
     l = pro.validate_load('loadTop.frc')
     l += pro.validate_load('loadBot.frc')
     #l = pro1.validate_load('load.frc')
