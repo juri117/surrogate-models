@@ -41,7 +41,7 @@ class WingConstruction:
             div += 1
         return div
 
-    def generate_wing(self, force_top, force_but, element_size, element_type='qu4'):
+    def generate_wing(self, force_top, force_bot, element_size, element_type='qu4'):
         #elemType = 'qu8'
         #elemType = 'qu4'
         #force in N at wingtip
@@ -95,29 +95,34 @@ class WingConstruction:
         outLines.append('# new set for II beam')
         outLines.append('seta II all')
         outLines.append('')
-        outLines.append('# define top and buttom shell for load')
+        outLines.append('# define top and bottom shell for load')
         outLines.append('seta loadTop s A002')
         outLines.append('comp loadTop d')
-        outLines.append('seta loadBut s A007')
-        outLines.append('comp loadBut d')
+        if self.boxOverhang > 0.:
+            outLines.append('seta loadBot s A007')
+        else:
+            outLines.append('seta loadBot s A004')
+        outLines.append('comp loadBot d')
 
         for i in range(0, self.nRibs):
             if self.nRibs <= 1:
                 spanPos = 0
             else:
                 spanPos = i * (self.halfSpan / (self.nRibs-1))
-            #prName = 'rp{:d}'.format(i)
+            ptName = 'rp{:d}'.format(i)
             ribName = 'rib{:d}'.format(i)
             outLines.append('')
             outLines.append('# generate a rib{:d}'.format(i))
-            outLines.append('seta prevAll all')
-            outLines.append('pnt '+ribName+' {:f} 0 0'.format(spanPos))
-            outLines.append('seta '+ribName+' p '+ribName+'')
+            outLines.append('seto ' + ribName)
+            #outLines.append('seta prevAll all')
+            outLines.append('pnt '+ptName+' {:f} 0 0'.format(spanPos))
+            #outLines.append('seta '+ribName+' p '+ribName+'')
             outLines.append('swep '+ribName+' '+ribName+' tra 0 0 {:f} {:d} a'.format(self.boxHeight, self.calc_division((self.boxHeight))))
-            outLines.append('seta '+ribName+' l all')
-            outLines.append('setr '+ribName+' l prevAll')
+            #outLines.append('seta '+ribName+' l all')
+            #outLines.append('setr '+ribName+' l prevAll')
             outLines.append('swep '+ribName+' '+ribName+' tra 0 {:f} 0 {:d} a'.format(self.boxDepth, self.calc_division(self.boxDepth)))
-            outLines.append('comp '+ribName+' u')
+            #outLines.append('comp '+ribName+' u')
+            outLines.append('setc ' + ribName)
 
         outLines.append('')
         outLines.append('# mesh it')
@@ -143,7 +148,7 @@ class WingConstruction:
         if element_type == 'qu8':
             nodeCount -= 0.5*self.calc_span_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
         noadLoadTop = force_top/nodeCount
-        noadLoadBut = force_but / nodeCount
+        noadLoadBot = force_bot / nodeCount
         outLines.append('# load application')
 
         #temp test with point load
@@ -151,12 +156,12 @@ class WingConstruction:
         #outLines.append('enq nodes bc1 rec {:f} 0 0 0.01'.format(self.halfSpan))
         #outLines.append('enq nodes bc2 rec {:f} {:f} 0 0.01'.format(self.halfSpan, self.boxDepth))
         #outLines.append('seta load bc1 bc2')
-        #outLines.append('send load abq force 0 0 {:f}'.format((force_top+force_but)/2.))
+        #outLines.append('send load abq force 0 0 {:f}'.format((force_top+force_bot)/2.))
 
         outLines.append('# top')
         outLines.append('send loadTop abq force 0 0 {:f}'.format(noadLoadTop))
-        outLines.append('# buttom')
-        outLines.append('send loadBut abq force 0 0 {:f}'.format(noadLoadBut))
+        outLines.append('# bottom')
+        outLines.append('send loadBot abq force 0 0 {:f}'.format(noadLoadBot))
         outLines.append('')
         outLines.append('# plot it')
         outLines.append('rot -y')
@@ -167,7 +172,7 @@ class WingConstruction:
         outLines.append('zoom 2')
         outLines.append('view elem')
         outLines.append('plus n loadTop g')
-        outLines.append('plus n loadBut y')
+        outLines.append('plus n loadBot y')
         outLines.append('plus n bc r')
         outLines.append('plus n II2dOppo b')
         outLines.append('hcpy png')
@@ -210,7 +215,7 @@ class WingConstruction:
         outLines.append('*cload')
         #outLines.append('*include, input=load.frc')
         outLines.append('*include, input=loadTop.frc')
-        outLines.append('*include, input=loadBut.frc')
+        outLines.append('*include, input=loadBot.frc')
         outLines.append('')
         outLines.append('*node file')
         outLines.append('U')

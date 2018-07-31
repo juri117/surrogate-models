@@ -34,7 +34,7 @@ class Project:
         self.nRibs = 8
         self.boxOverhang = 0.5
         self.forceTop = 0.
-        self.forceBut = 0.
+        self.forceBot = 0.
         self.elementSize = 0.25
         self.elemType = 'qu4'
         self.shellThickness = 0.01
@@ -49,7 +49,7 @@ class Project:
                                box_overhang=self.boxOverhang)
 
         geo.generate_wing(self.forceTop,
-                          self.forceBut,
+                          self.forceBot,
                           self.elementSize,
                           element_type=self.elemType)
         geo.generate_inp(self.shellThickness, nonlinear=nonlinear)

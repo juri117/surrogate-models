@@ -7,6 +7,8 @@ view disp
 rot -y
 #rot r 90
 ds 1 e 3
+#hack for non-lin
+ds -1 e 3
 flpc
 
 #mark BCs
@@ -25,6 +27,8 @@ view disp off
 rot y
 rot u 90
 ds 2 e 7
+#hack for non-lin
+ds -2 e 7
 #min 0 f
 
 #mark BCs

@@ -29,7 +29,7 @@ def run_test(element_size):
     pro1.nRibs = 18
     pro1.boxOverhang = 0.1
     pro1.forceTop = -0.3*(77000. * 9.81)
-    pro1.forceBut = -0.2*(77000. * 9.81)
+    pro1.forceBot = -0.2 * (77000. * 9.81)
     #pro1.elementSize = 0.25
     pro1.elementSize = element_size
     pro1.elemType = 'qu8'
