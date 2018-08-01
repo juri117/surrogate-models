@@ -33,6 +33,9 @@ chord_length = 3.
 chord_height = 0.55
 
 shear_strength = 3.31e8
+max_g = 2.5
+safety_fac = 1.5
+max_shear_strength = shear_strength * max_g * safety_fac
 
 element_size = 0.2
 
@@ -52,7 +55,6 @@ def new_project(rib_count, shell_thick):
     # pro1.elementSize = 0.05
     pro.elemType = 'qu8'
     pro.shellThickness = shell_thick
-
     return pro
 
 def run_project(pro):
@@ -61,15 +63,12 @@ def run_project(pro):
     print('############ DONE ############')
     if not pro.errorFlag:
         pro.postprocess(template='wing_post_simple')
-        if not pro.errorFlag:
-            return True
-    return False
+        #if not pro.errorFlag:
+        #    return True
+    return pro
 
 
 def collect_results(pro):
-    #projectName = 'meshSize_r{:d}_t{:5f}'.format(rib_count, shell_thick)
-    #pro = Project(projectName)
-
     l = pro.validate_load('loadTop.frc')
     l += pro.validate_load('loadBot.frc')
     #l = pro1.validate_load('load.frc')
@@ -99,7 +98,7 @@ def main_run():
 
     start = time.time()
     with Pool(USED_CORES) as p:
-        res = p.map(run_project, projects)
+        projects = p.map(run_project, projects)
     print("Time taken = {0:.5f}".format(time.time() - start))
 
     output_file_name = 'convAna_'+datetime.now().strftime('%Y-%m-%d_%H_%M_%S')+'.csv'
@@ -130,8 +129,8 @@ def plot_results(output_file_name):
     nRib = len(set(ribsRaw))
     nThick = len(set(shellThickRaw))
 
-    ribs = list(set(ribsRaw))
-    shellThick = list(set(shellThickRaw))
+    ribs = sorted(list(set(ribsRaw)))
+    shellThick = sorted(list(set(shellThickRaw)))
     maxStress = np.zeros((nThick, nRib))
     maxDisp = np.zeros((nThick, nRib))
     for i in range(0, len(ribsRaw)):
@@ -140,17 +139,19 @@ def plot_results(output_file_name):
 
     for i in range(0, nThick):
         plt.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
+    plt.plot(ribs, np.full((len(ribs), 1),max_shear_strength), 'r--', label='limit')
     plt.legend()
     plt.show()
 
-
-    #fig = plt.figure()
-    #ax = fig.add_subplot(111, projection='3d')
-    #plotX, plotY = np.meshgrid(ribs, shellThick)
-    #ax.plot_wireframe(plotX, plotY, maxStress)#, rstride=1, cstride=1)
-    #plt.show()
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    plotX, plotY = np.meshgrid(ribs, shellThick)
+    ax.plot_wireframe(plotX, plotY, maxStress, color='b')#, rstride=1, cstride=1)
+    limit = np.full((nThick, nRib),max_shear_strength)
+    ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.5)
+    plt.show()
 
 if __name__ == '__main__':
-    output_file_name = 'convAna_2018-07-31_10_54_45.csv'
+    output_file_name = 'convAna_2018-08-01_10_35_30.csv'
     #output_file_name = main_run()
     plot_results(output_file_name)
