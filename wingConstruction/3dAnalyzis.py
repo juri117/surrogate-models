@@ -16,6 +16,8 @@ from wingConstruction.utils.Constants import Constants
 from wingConstruction.Project import Project
 from utils.TimeTrack import TimeTrack
 
+from mpl_toolkits.mplot3d import axes3d
+import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import time
 
@@ -88,7 +90,7 @@ def collect_results(pro):
 def main_run():
     ribs = np.arange(1, 51, 1)
     ribs = list(ribs)
-    thick = np.arange(0.001, 0.021, 0.001)
+    thick = np.arange(0.001, 0.0052, 0.0002)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -100,10 +102,9 @@ def main_run():
         res = p.map(run_project, projects)
     print("Time taken = {0:.5f}".format(time.time() - start))
 
+    output_file_name = 'convAna_'+datetime.now().strftime('%Y-%m-%d_%H_%M_%S')+'.csv'
     outputF = open(Constants().WORKING_DIR + '/'
-                   + 'convAna_'
-                   + datetime.now().strftime('%Y-%m-%d_%H_%M_%S')
-                   + '.csv',
+                   + output_file_name,
                    'w')
     outputF.write('sizes,nRibs,shellThickness,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
 
@@ -115,7 +116,41 @@ def main_run():
     outputF.close()
     print("Time taken = {0:.5f}".format(time.time() - start))
     print('DONE with ALL')
+    return output_file_name
 
+
+def plot_results(output_file_name):
+    file_path = Constants().WORKING_DIR + '/' + output_file_name
+    data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
+    ribsRaw = data[:, 1]
+    shellThickRaw = data[:, 2]
+    maxStressRaw = data[:, 6]
+    maxDispRaw = data[:, 3]
+
+    nRib = len(set(ribsRaw))
+    nThick = len(set(shellThickRaw))
+
+    ribs = list(set(ribsRaw))
+    shellThick = list(set(shellThickRaw))
+    maxStress = np.zeros((nThick, nRib))
+    maxDisp = np.zeros((nThick, nRib))
+    for i in range(0, len(ribsRaw)):
+        maxStress[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = maxStressRaw[i]
+        maxDisp[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = maxDispRaw[i]
+
+    for i in range(0, nThick):
+        plt.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
+    plt.legend()
+    plt.show()
+
+
+    #fig = plt.figure()
+    #ax = fig.add_subplot(111, projection='3d')
+    #plotX, plotY = np.meshgrid(ribs, shellThick)
+    #ax.plot_wireframe(plotX, plotY, maxStress)#, rstride=1, cstride=1)
+    #plt.show()
 
 if __name__ == '__main__':
-    main_run()
+    output_file_name = 'convAna_2018-07-31_10_54_45.csv'
+    #output_file_name = main_run()
+    plot_results(output_file_name)
