@@ -14,21 +14,28 @@ from wingConstruction.utils.Constants import Constants
 
 class WingConstruction:
 
-    def __init__(self, project_path, half_span, box_depth, box_height, n_ribs, box_overhang=0.):
+    def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, box_overhang=0.):
         self.projectPath = project_path
         self.halfSpan = half_span
         self.boxDepth = box_depth
         self.boxHeight = box_height
-        self.nRibs = n_ribs
+        self.ribs = ribs
+        self.shellThickness = shell_thickness
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
         print('done')
 
+    def calc_weight(self, density):
+        v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
+        v_ribs = self.ribs * self.boxHeight * self.boxDepth * self.shellThickness
+        w = (v_box + v_ribs) * density
+        return w
+
     def calc_span_division(self, length):
         div = int(length / self.elementSize)
-        if self.nRibs <= 1:
+        if self.ribs <= 1:
             return self.calc_division(length)
-        while div % (self.nRibs-1) > 0 or div % 2 > 0:
+        while div % (self.ribs - 1) > 0 or div % 2 > 0:
             div += 1
         return div
 
@@ -104,11 +111,11 @@ class WingConstruction:
             outLines.append('seta loadBot s A004')
         outLines.append('comp loadBot d')
 
-        for i in range(0, self.nRibs):
-            if self.nRibs <= 1:
+        for i in range(0, self.ribs):
+            if self.ribs <= 1:
                 spanPos = 0
             else:
-                spanPos = i * (self.halfSpan / (self.nRibs-1))
+                spanPos = i * (self.halfSpan / (self.ribs - 1))
             ptName = 'rp{:d}'.format(i)
             ribName = 'rib{:d}'.format(i)
             outLines.append('')
@@ -183,7 +190,7 @@ class WingConstruction:
         f.writelines(line + '\n' for line in outLines)
         f.close()
 
-    def generate_inp(self, shell_thickness, nonlinear=False):
+    def generate_inp(self, nonlinear=False):
         material_young = Constants().config.getfloat('defaults', 'material_young')
         material_poisson = Constants().config.getfloat('defaults', 'material_poisson')
         outLines = []
@@ -202,7 +209,7 @@ class WingConstruction:
         outLines.append('')
         outLines.append('** define surfaces')
         outLines.append('*shell section, elset=Eall, material=alu')
-        outLines.append('{:f}'.format(shell_thickness))
+        outLines.append('{:f}'.format(self.shellThickness))
         outLines.append('')
         outLines.append('** step')
         if nonlinear:

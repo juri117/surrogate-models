@@ -33,6 +33,7 @@ wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
 
+density = 2810 #kg/m^3
 shear_strength = 3.31e8
 max_g = 2.5
 safety_fac = 1.5
@@ -75,6 +76,7 @@ def collect_results(pro):
         exportRow = str(pro.elementSize) + ',' \
         + str(pro.ribs) + ',' \
         + str(pro.shellThickness) + ',' \
+        + str(pro.geo.calc_weight(density)) + ',' \
         + str(pro.clx.dispD3Min) + ','\
         + str(pro.clx.dispD3Max) + ','\
         + str(pro.clx.stressMisesMin) + ','\
@@ -111,7 +113,7 @@ def main_run():
     outputF = open(Constants().WORKING_DIR + '/'
                    + output_file_name,
                    'w')
-    outputF.write('elementSizes,nRibs,shellThickness,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -174,7 +176,7 @@ def convergence_analyzis_run():
     output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     outputF = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
     outputF.write(
-        'elementSizes,nRibs,shellThickness,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -190,6 +192,6 @@ def convergence_analyzis_run():
 if __name__ == '__main__':
     #convergence_analyzis_run()
 
-    #output_file_name = 'convAna_2018-08-01_10_35_30.csv'
-    output_file_name = main_run()
+    output_file_name = '2drun_2018-08-02_09_54_43.csv'
+    #output_file_name = main_run()
     plot_results(output_file_name)
