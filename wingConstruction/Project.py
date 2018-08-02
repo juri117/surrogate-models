@@ -31,7 +31,7 @@ class Project:
         self.halfSpan = 17.
         self.boxDepth = 2.
         self.boxHeight = 1.
-        self.nRibs = 8
+        self.ribs = 8
         self.boxOverhang = 0.5
         self.forceTop = 0.
         self.forceBot = 0.
@@ -40,19 +40,21 @@ class Project:
         self.shellThickness = 0.01
 
 
-    def generate_geometry(self, nonlinear=False):
-        geo = WingConstruction(self.workingDir,
-                               self.halfSpan,
-                               self.boxDepth,
-                               self.boxHeight,
-                               self.nRibs,
-                               box_overhang=self.boxOverhang)
 
-        geo.generate_wing(self.forceTop,
+
+    def generate_geometry(self, nonlinear=False):
+        self.geo = WingConstruction(self.workingDir,
+                                    self.halfSpan,
+                                    self.boxDepth,
+                                    self.boxHeight,
+                                    self.ribs,
+                                    box_overhang=self.boxOverhang)
+
+        self.geo.generate_wing(self.forceTop,
                           self.forceBot,
                           self.elementSize,
                           element_type=self.elemType)
-        geo.generate_inp(self.shellThickness, nonlinear=nonlinear)
+        self.geo.generate_inp(self.shellThickness, nonlinear=nonlinear)
 
     def solve(self):
         if self.clx == None:

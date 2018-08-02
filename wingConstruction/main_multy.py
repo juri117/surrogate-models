@@ -21,24 +21,88 @@ import time
 
 USED_CORES = 4
 
+mtow = 29257
+fuel_mass_in_wings = 2*2659.
+wing_load = (mtow - fuel_mass_in_wings) * 9.81
+engine_mass = 1125 * 9.81
+engine_pos_y = 3
+wing_length = 12.87
+chord_length = 3.
+chord_height = 0.55
+
+shear_strength = 3.31e8
+max_g = 2.5
+safety_fac = 1.5
+max_shear_strength = shear_strength * max_g * safety_fac
+
+element_size = 0.2
+
+def new_project(project_name):
+    #project_name = 'meshSize_r{:02d}_t{:5f}'.format(rib_count, shell_thick)
+    pro = Project(project_name)
+    pro.halfSpan = wing_length
+    pro.boxDepth = chord_length * 0.4
+    pro.boxHeight = chord_height
+    pro.ribs = int(wing_length) + 1
+    pro.boxOverhang = 0.
+    pro.forceTop = -0.3 * wing_load
+    pro.forceBot = -0.2 * wing_load
+    pro.elementSize = element_size
+    # pro1.elementSize = 0.05
+    pro.elemType = 'qu8'
+    pro.shellThickness = 0.009
+    return pro
+
+def run_project(pro):
+    pro.generate_geometry(nonlinear=False)
+    pro.solve()
+    print('############ DONE ############')
+    if not pro.errorFlag:
+        pro.postprocess(template='wing_post_simple')
+    return pro
+
+def collect_results(pro):
+    l = pro.validate_load('loadTop.frc')
+    l += pro.validate_load('loadBot.frc')
+    loadError = (-0.5*wing_load) - l
+    if not pro.errorFlag:
+        exportRow = str(element_size) + ',' \
+        + str(pro.nRibs) + ',' \
+        + str(pro.shellThickness) + ',' \
+        + str(pro.clx.dispD3Min) + ','\
+        + str(pro.clx.dispD3Max) + ','\
+        + str(pro.clx.stressMisesMin) + ','\
+        + str(pro.clx.stressMisesMax) + ',' \
+        + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
+        + str(loadError)+'\n'
+        return exportRow
+    return ''
+
+
+
+
+
+
+
+
 def run_test(element_size):
     projectName = 'meshSize_{0:.5f}'.format(element_size)
-    pro1 = Project(projectName)
-    pro1.halfSpan = 17.
-    pro1.boxDepth = 2.
-    pro1.boxHeight = 1.
-    pro1.nRibs = 18
-    pro1.boxOverhang = 0.1
-    pro1.forceTop = -0.3*(77000. * 9.81)
-    pro1.forceBot = -0.2 * (77000. * 9.81)
-    #pro1.elementSize = 0.25
-    pro1.elementSize = element_size
-    pro1.elemType = 'qu8'
-    pro1.shellThickness = 0.0099
-    pro1.generate_geometry(nonlinear=True)
-    pro1.solve()
+    pro = Project(projectName)
+    pro.halfSpan = 17.
+    pro.boxDepth = 2.
+    pro.boxHeight = 1.
+    pro.ribs = 18
+    pro.boxOverhang = 0.1
+    pro.forceTop = -0.3*(77000. * 9.81)
+    pro.forceBot = -0.2 * (77000. * 9.81)
+    #pro.elementSize = 0.25
+    pro.elementSize = element_size
+    pro.elemType = 'qu8'
+    pro.shellThickness = 0.0099
+    pro.generate_geometry(nonlinear=True)
+    pro.solve()
     print('############ DONE ############')
-    if not pro1.errorFlag:
+    if not pro.errorFlag:
         #pro1.postprocess()
         #if not pro1.errorFlag:
         return True
@@ -58,7 +122,8 @@ def collect_results(element_size):
         +str(pro1.clx.dispD3Min) + ','\
         + str(pro1.clx.dispD3Max) + ','\
         + str(pro1.clx.stressMisesMin) + ','\
-        + str(pro1.clx.stressMisesMax) + ','\
+        + str(pro1.clx.stressMisesMax) + ',' \
+        + str(pro1.geo.calc_span_division(pro1.halfSpan)) + ',' \
         + str(loadError)+'\n'
         return exportRow
     return ''
