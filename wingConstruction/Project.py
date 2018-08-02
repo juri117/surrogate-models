@@ -45,13 +45,14 @@ class Project:
                                     self.boxDepth,
                                     self.boxHeight,
                                     self.ribs,
+                                    self.shellThickness,
                                     box_overhang=self.boxOverhang)
 
         self.geo.generate_wing(self.forceTop,
                           self.forceBot,
                           self.elementSize,
                           element_type=self.elemType)
-        self.geo.generate_inp(self.shellThickness, nonlinear=nonlinear)
+        self.geo.generate_inp(nonlinear=nonlinear)
 
     def solve(self):
         if self.clx == None:
