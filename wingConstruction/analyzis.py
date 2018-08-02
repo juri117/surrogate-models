@@ -93,7 +93,7 @@ def pool_run(projects):
     print("Time taken = {0:.5f}".format(time.time() - start))
     return projects
 
-def main_run():
+def main_run(cleanup=False):
     ribs = np.arange(1, 51, 1)
     ribs = list(ribs)
     thick = np.arange(0.001, 0.0052, 0.0002)
@@ -123,6 +123,9 @@ def main_run():
         else:
             print('ERROR, empty data return')
     outputF.close()
+    if cleanup:
+        for p in projects:
+            p.remove()
     print('DONE with ALL')
     return output_file_name
 
@@ -161,7 +164,7 @@ def plot_results(output_file_name):
     ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.5)
     plt.show()
 
-def convergence_analyzis_run():
+def convergence_analyzis_run(cleanup=False):
     sizes = np.arange(0.05, .26, 0.01)
     sizes = list(sizes)
     projects = []
@@ -186,12 +189,15 @@ def convergence_analyzis_run():
         else:
             print('ERROR, empty data return')
     outputF.close()
+    if cleanup:
+        for p in projects:
+            p.remove()
     print('DONE with ALL')
     return output_file_name
 
 if __name__ == '__main__':
-    #convergence_analyzis_run()
+    #convergence_analyzis_run(cleanup=True)
 
     output_file_name = '2drun_2018-08-02_09_54_43.csv'
-    #output_file_name = main_run()
+    output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)

@@ -39,9 +39,6 @@ class Project:
         self.elemType = 'qu4'
         self.shellThickness = 0.01
 
-
-
-
     def generate_geometry(self, nonlinear=False):
         self.geo = WingConstruction(self.workingDir,
                                     self.halfSpan,
@@ -85,7 +82,6 @@ class Project:
                 print('invalid line in Load file')
         print('sum of Loads in '+load_file_name+': ' + str(loadSum))
         return loadSum
-
 
     def remove(self):
         rmtree(self.workingDir)
