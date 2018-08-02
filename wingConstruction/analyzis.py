@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import time
 
-USED_CORES = 4
+USED_CORES = Constants().config.getint('meta', 'used_cores')
 
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
