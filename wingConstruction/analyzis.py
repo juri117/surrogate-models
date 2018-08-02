@@ -97,7 +97,7 @@ def pool_run(projects):
 def main_run(cleanup=False):
     ribs = np.arange(1, 51, 1)
     ribs = list(ribs)
-    thick = np.arange(0.0002, 0.0052, 0.0002)
+    thick = np.arange(0.0008, 0.0017, 0.0001)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -168,6 +168,7 @@ def plot_results(output_file_name):
     fig.colorbar(cset, shrink=0.5)
     limit = np.full((nThick, nRib),max_shear_strength)
     ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.5)
+    ax.set_zlim3d(0, max_shear_strength * 1.5);
     plt.show()
 
 def convergence_analyzis_run(cleanup=False):
@@ -204,6 +205,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-02_10_26_58.csv'
+    output_file_name = '2drun_2018-08-02_11_25_43.csv'
     #output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)
