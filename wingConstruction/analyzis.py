@@ -97,7 +97,7 @@ def pool_run(projects):
 def main_run(cleanup=False):
     ribs = np.arange(1, 51, 1)
     ribs = list(ribs)
-    thick = np.arange(0.0008, 0.0017, 0.0001)
+    thick = np.arange(0.0008, 0.0017, 0.00002)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -163,12 +163,16 @@ def plot_results(output_file_name):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     plotX, plotY = np.meshgrid(ribs, shellThick)
-    ax.plot_wireframe(plotX, plotY, maxStress, color='b')#, rstride=1, cstride=1)
-    cset = ax.contour(plotX, plotY, weight, 1000, zdir='z', offset=0, cmap=cm.coolwarm)
-    fig.colorbar(cset, shrink=0.5)
+    maxStress[maxStress > max_shear_strength] = np.nan
+    #ax.plot_wireframe(plotX, plotY, maxStress, color='b', rstride=2, cstride=10)
+    ax.plot_surface(plotX, plotY, maxStress, facecolors=plt.cm.jet(weight/np.max(weight)),
+                    cstride=1,
+                    rstride=1)
+    #cset = ax.contour(plotX, plotY, weight, 1000, zdir='z', offset=0, cmap=cm.coolwarm)
+    #fig.colorbar(cset, shrink=0.5)
     limit = np.full((nThick, nRib),max_shear_strength)
-    ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.5)
-    ax.set_zlim3d(0, max_shear_strength * 1.5);
+    ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.1)
+    ax.set_zlim3d(0, max_shear_strength);
     plt.show()
 
 def convergence_analyzis_run(cleanup=False):
@@ -205,6 +209,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-02_11_25_43.csv'
+    output_file_name = '2drun_2018-08-02_11_40_09.csv'
     #output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)
