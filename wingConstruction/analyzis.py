@@ -19,6 +19,7 @@ from utils.PlotHelper import PlotHelper
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from multiprocessing import Pool
 import time
 
@@ -96,7 +97,7 @@ def pool_run(projects):
 def main_run(cleanup=False):
     ribs = np.arange(1, 51, 1)
     ribs = list(ribs)
-    thick = np.arange(0.001, 0.0052, 0.0002)
+    thick = np.arange(0.0002, 0.0052, 0.0002)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -135,17 +136,20 @@ def plot_results(output_file_name):
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     ribsRaw = data[:, 1]
     shellThickRaw = data[:, 2]
-    maxStressRaw = data[:, 6]
-    maxDispRaw = data[:, 3]
+    weightRaw = data[:, 3]
+    maxStressRaw = data[:, 7]
+    maxDispRaw = data[:, 4]
 
     nRib = len(set(ribsRaw))
     nThick = len(set(shellThickRaw))
 
     ribs = sorted(list(set(ribsRaw)))
     shellThick = sorted(list(set(shellThickRaw)))
+    weight = np.zeros((nThick, nRib))
     maxStress = np.zeros((nThick, nRib))
     maxDisp = np.zeros((nThick, nRib))
     for i in range(0, len(ribsRaw)):
+        weight[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = weightRaw[i]
         maxStress[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = maxStressRaw[i]
         maxDisp[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = maxDispRaw[i]
 
@@ -160,6 +164,8 @@ def plot_results(output_file_name):
     ax = fig.add_subplot(111, projection='3d')
     plotX, plotY = np.meshgrid(ribs, shellThick)
     ax.plot_wireframe(plotX, plotY, maxStress, color='b')#, rstride=1, cstride=1)
+    cset = ax.contour(plotX, plotY, weight, 1000, zdir='z', offset=0, cmap=cm.coolwarm)
+    fig.colorbar(cset, shrink=0.5)
     limit = np.full((nThick, nRib),max_shear_strength)
     ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.5)
     plt.show()
@@ -198,6 +204,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-02_09_54_43.csv'
-    output_file_name = main_run(cleanup=True)
+    output_file_name = '2drun_2018-08-02_10_26_58.csv'
+    #output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)
