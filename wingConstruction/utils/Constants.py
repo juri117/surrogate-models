@@ -35,7 +35,7 @@ class Constants(object):
     INPUT_DIR = '../dataIn'
 
     def __init__(self):
-        print('init Constants...')
+        #print('init Constants...')
         self.config = configparser.ConfigParser()
         self.config.read(self.INPUT_DIR+'/setup.ini')
 

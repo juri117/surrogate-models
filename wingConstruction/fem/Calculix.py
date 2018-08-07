@@ -92,13 +92,16 @@ class Calculix():
 
     # generates the mesh from a given .fbl-file
     def generate_mesh(self, part_name):
-        p = self.run_cgx(part_name + '.fbl')
+        print('run fem pre-processor cgx('+self._workingDir+')')
+        p = self.run_cgx(part_name + '.fbl', pipe_response=True)
+        out, err = p.communicate()
 
     # calls the fem solver (all input files must be present in the working directory)
     def solve_model(self, file_name):
         # print('--- start ccx output ---------------------------------------')
-        print('run fem solver ccx')
-        p = self.run_ccx(file_name, pipe_response=False)
+        print('run fem solver ccx('+self._workingDir+')')
+        p = self.run_ccx(file_name, pipe_response=True)
+        out, err = p.communicate()
         """
         out, err = p.communicate()
         print(out.decode('UTF-8'))
@@ -116,19 +119,19 @@ class Calculix():
     def run_postprocessing(self, file_name):
         # ToDo: run it with pipeRespnose=True results in calculix gui freeze
         # print('--- start cgx output ---------------------------------------')
-        print('run fem postprocessing cgx')
+        print('run fem post-processing cgx('+self._workingDir+')')
         p = self.run_cgx(file_name, pipe_response=True)
         out, err = p.communicate()
-        print(out.decode('UTF-8'))
+        #print(out.decode('UTF-8'))
         # print('--- stop cgx output ---------------------------------------')
         if err is not None and err != b'':
-            print('ccx process failed')
+            print('ccx process failed('+self._workingDir+')')
             self.errorFlag = True
         elif 'ERROR' in out.decode('UTF-8'):
-            print('ccx returned an error')
+            print('ccx returned an error('+self._workingDir+')')
             self.errorFlag = True
         else:
-            print('cgx succeeded')
+            print('cgx succeeded('+self._workingDir+')')
             self.process_cgx_output(out)
 
     def process_cgx_output(self, strOut):

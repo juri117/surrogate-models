@@ -22,8 +22,10 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from multiprocessing import Pool
 import time
+from scipy.interpolate import interp1d
 
 USED_CORES = Constants().config.getint('meta', 'used_cores')
+NON_LINEAR = False
 
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
@@ -43,7 +45,6 @@ max_shear_strength = shear_strength * max_g * safety_fac
 element_size = 0.2
 
 
-
 def new_project(project_name):
     #project_name = 'meshSize_r{:02d}_t{:5f}'.format(rib_count, shell_thick)
     pro = Project(project_name)
@@ -60,12 +61,18 @@ def new_project(project_name):
     pro.shellThickness = 0.009
     return pro
 
+
 def run_project(pro):
-    pro.generate_geometry(nonlinear=False)
+    pro.generate_geometry(nonlinear=NON_LINEAR)
     pro.solve()
     print('############ DONE ############')
     if not pro.errorFlag:
-        pro.postprocess(template='wing_post_simple')
+        if NON_LINEAR:
+            pro.postprocess(template='wing_post_nl_simple')
+        else:
+            pro.postprocess(template='wing_post_simple')
+    print('#########################################')
+    print('finished: ' + pro.workingDir)
     return pro
 
 
@@ -154,7 +161,17 @@ def plot_results(output_file_name):
         maxDisp[shellThick.index(shellThickRaw[i])][ribs.index(ribsRaw[i])] = maxDispRaw[i]
 
     plot1 = PlotHelper(['ribs', 'max stress'])
-    for i in range(0, nThick):
+    optiRibs = []
+    optiShell = []
+    for i in range(0, len(shellThick)):
+        stress = maxStress[i]
+        if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
+            #optRibs = np.interp(max_shear_strength, stress, ribs)
+            f = interp1d(stress, ribs, kind='linear')
+            plot1.ax.plot([f(max_shear_strength)], [max_shear_strength], 'go')
+            optiRibs.append(f(max_shear_strength))
+            optiShell.append(shellThick[i])
+
         plot1.ax.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
     plot1.ax.plot(ribs, np.full((len(ribs), 1),max_shear_strength), 'r--', label='Limit-Load')
     plot1.finalize()
@@ -163,20 +180,24 @@ def plot_results(output_file_name):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     plotX, plotY = np.meshgrid(ribs, shellThick)
-    maxStress[maxStress > max_shear_strength] = np.nan
+    maxStress[maxStress > 1.2*max_shear_strength] = np.nan
     #ax.plot_wireframe(plotX, plotY, maxStress, color='b', rstride=2, cstride=10)
-    ax.plot_surface(plotX, plotY, maxStress, facecolors=plt.cm.jet(weight/np.max(weight)),
+    color_map = plt.cm.jet(weight/np.max(weight))
+    surf = ax.plot_surface(plotX, plotY, maxStress, facecolors=color_map,
                     cstride=1,
                     rstride=1)
+    optiLine = ax.plot(optiRibs, optiShell, max_shear_strength, 'k-')
     #cset = ax.contour(plotX, plotY, weight, 1000, zdir='z', offset=0, cmap=cm.coolwarm)
-    #fig.colorbar(cset, shrink=0.5)
+    m = cm.ScalarMappable(cmap=cm.jet)
+    m.set_array(weight)
+    plt.colorbar(m)
     limit = np.full((nThick, nRib),max_shear_strength)
     ax.plot_wireframe(plotX, plotY, limit, color='r', alpha=0.1)
     ax.set_zlim3d(0, max_shear_strength);
     plt.show()
 
 def convergence_analyzis_run(cleanup=False):
-    sizes = np.arange(0.05, .26, 0.01)
+    sizes = np.arange(0.01, .26, 0.01)
     sizes = list(sizes)
     projects = []
     for s in sizes:
@@ -209,6 +230,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-02_11_40_09.csv'
-    #output_file_name = main_run(cleanup=True)
+    #output_file_name = '2drun_2018-08-02_13_24_52.csv'
+    output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)

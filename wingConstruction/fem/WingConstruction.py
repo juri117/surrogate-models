@@ -23,7 +23,6 @@ class WingConstruction:
         self.shellThickness = shell_thickness
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
-        print('done')
 
     def calc_weight(self, density):
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
@@ -78,11 +77,11 @@ class WingConstruction:
             outLines.append('swep pc2 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
         outLines.append('')
         outLines.append('# lower right corner')
-        outLines.append('pnt pc3 0 0 {:f}'.format(self.boxHeight))
-        outLines.append('seta pc3 pc3')
+        outLines.append('pnt lowRightCorn 0 0 {:f}'.format(self.boxHeight))
+        outLines.append('seta lowRightCorn lowRightCorn')
         if self.boxOverhang > 0.:
-            outLines.append('swep pc3 new tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
-        outLines.append('swep pc3 new tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division((self.boxDepth))))
+            outLines.append('swep lowRightCorn lowLeftCorn tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
+        outLines.append('swep lowRightCorn lowLeftCorn tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division((self.boxDepth))))
         outLines.append('')
         if self.boxOverhang > 0.:
             outLines.append('# lower left corner')
@@ -145,8 +144,12 @@ class WingConstruction:
         outLines.append('# write bc')
         #outLines.append('seta nodes n all')
         #outLines.append('enq nodes bc rec 0 _ _')
-        outLines.append('seta bc n rib0')
+        outLines.append('seta bc n II2d')
         outLines.append('send bc abq nam')
+        outLines.append('seta lowCorns n lowRightCorn lowLeftCorn')
+        outLines.append('send lowCorns abq nam')
+        outLines.append('send lowRightCorn abq nam')
+
         outLines.append('# write msh file')
         outLines.append('send all abq')
         outLines.append('')
@@ -197,10 +200,14 @@ class WingConstruction:
         outLines.append('** load mesh- and bc-file')
         outLines.append('*include, input=all.msh')
         outLines.append('*include, input=bc.nam')
+        outLines.append('*include, input=lowCorns.nam')
+        outLines.append('*include, input=lowRightCorn.nam')
         outLines.append('')
         outLines.append('** constraints')
         outLines.append('*boundary')
-        outLines.append('Nbc,1,6')
+        outLines.append('Nbc,1')
+        outLines.append('NlowCorns,3')
+        outLines.append('NlowRightCorn,2')
         outLines.append('')
         outLines.append('** material definition')
         outLines.append('*MATERIAL,NAME=alu')
