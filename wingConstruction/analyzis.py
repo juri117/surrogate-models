@@ -102,9 +102,9 @@ def pool_run(projects):
     return projects
 
 def main_run(cleanup=False):
-    ribs = np.arange(1, 51, 1)
+    ribs = np.arange(1, 51, 2)
     ribs = list(ribs)
-    thick = np.arange(0.0008, 0.0017, 0.00002)
+    thick = np.arange(0.0008, 0.0017, 0.00005)
     thick = list(thick)
     projects = []
     for r in ribs:
