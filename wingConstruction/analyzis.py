@@ -175,7 +175,14 @@ def plot_results(output_file_name):
         plot1.ax.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
     plot1.ax.plot(ribs, np.full((len(ribs), 1),max_shear_strength), 'r--', label='Limit-Load')
     plot1.finalize()
-    plot1.show()
+    #plot1.show()
+
+    plot2 = PlotHelper(['ribs', 'max disp'])
+    for i in range(0, len(shellThick)):
+        plot2.ax.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
+    #plot1.ax.plot(ribs, np.full((len(ribs), 1), max_shear_strength), 'r--', label='Limit-Load')
+    plot2.finalize()
+    plot2.show()
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -230,6 +237,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    #output_file_name = '2drun_2018-08-02_13_24_52.csv'
-    output_file_name = main_run(cleanup=True)
+    output_file_name = '2drun_2018-08-07_11_07_23.csv'
+    #output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)
