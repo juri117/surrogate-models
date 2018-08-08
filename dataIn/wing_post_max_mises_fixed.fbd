@@ -1,0 +1,39 @@
+read wingRun.frd
+
+view disp
+
+### MIESES TRESS
+### MIESES TRESS
+
+text Mieses stress buttom
+view disp off
+rot y
+rot u 90
+ds 2 e 7
+#min 0 f
+frame
+
+
+
+#mark BCs
+seta whole n all
+enq whole bc rec 0 _ _ 0.5
+
+seta relev n all
+setr relev n bc
+
+seto relev
+
+#stack on
+#prnt se relev
+#valu nod1 pop
+#valu val1 pop
+#sys echo Node nod1 Value val1 > file.txt
+
+#enq relev out set pos1 1. h
+#find maximum
+enq relev out set relev 0. h
+
+plus n out r
+
+quit

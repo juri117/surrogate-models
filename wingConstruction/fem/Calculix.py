@@ -40,6 +40,7 @@ class Calculix():
         self.dispD3Max = 0
         self.stressMisesMin = 0
         self.stressMisesMax = 0
+        self.stressMisesMaxFixed = 0
 
     ##############################################
     # fem postprocessing
@@ -155,6 +156,13 @@ class Calculix():
                     str = lines[i + 3].replace(b' min:', b'')
                     str = str.split(b' ')[0]
                     self.stressMisesMin = float(str)
+            if b'mode:h' in lines[i]:
+                if b'node' in lines[i+1] and b'value' in lines[i+1]:
+                    str = lines[i + 1].replace(b' node:', b'')
+                    str = str.replace(b'value:', b'')
+                    str = str.replace(b'dist:', b'')
+                    vals = str.split(b' ')
+                    self.stressMisesMaxFixed = float(vals[1])
 
     ##############################################
     # helper functions

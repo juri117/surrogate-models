@@ -42,7 +42,7 @@ max_g = 2.5
 safety_fac = 1.5
 max_shear_strength = shear_strength * max_g * safety_fac
 
-element_size = 0.2
+element_size = 0.1
 
 
 def new_project(project_name):
@@ -71,6 +71,8 @@ def run_project(pro):
             pro.postprocess(template='wing_post_nl_simple')
         else:
             pro.postprocess(template='wing_post_simple')
+            pro.postprocess(template='wing_post_max_mises_fixed')
+
     print('#########################################')
     print('finished: ' + pro.workingDir)
     return pro
@@ -89,6 +91,7 @@ def collect_results(pro):
         + str(pro.clx.dispD3Max) + ','\
         + str(pro.clx.stressMisesMin) + ','\
         + str(pro.clx.stressMisesMax) + ',' \
+        + str(pro.clx.stressMisesMaxFixed) + ','\
         + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
         + str(loadError)+'\n'
         return exportRow
@@ -121,7 +124,7 @@ def main_run(cleanup=False):
     outputF = open(Constants().WORKING_DIR + '/'
                    + output_file_name,
                    'w')
-    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -204,7 +207,7 @@ def plot_results(output_file_name):
     plt.show()
 
 def convergence_analyzis_run(cleanup=False):
-    sizes = np.arange(0.01, .26, 0.01)
+    sizes = np.arange(0.04, .26, 0.01)
     sizes = list(sizes)
     projects = []
     for s in sizes:
@@ -218,7 +221,7 @@ def convergence_analyzis_run(cleanup=False):
     output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     outputF = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
     outputF.write(
-        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -235,8 +238,8 @@ def convergence_analyzis_run(cleanup=False):
     return output_file_name
 
 if __name__ == '__main__':
-    #convergence_analyzis_run(cleanup=True)
+    convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-07_11_07_23.csv'
+    #output_file_name = 'convAna_2018-08-07_13_04_31.csv'
     #output_file_name = main_run(cleanup=True)
-    plot_results(output_file_name)
+    #plot_results(output_file_name)
