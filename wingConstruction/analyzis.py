@@ -71,7 +71,7 @@ def run_project(pro):
             pro.postprocess(template='wing_post_nl_simple')
         else:
             pro.postprocess(template='wing_post_simple')
-            pro.postprocess(template='wing_post_max_mises_fixed')
+            #pro.postprocess(template='wing_post_max_mises_fixed')
 
     print('#########################################')
     print('finished: ' + pro.workingDir)
@@ -124,7 +124,7 @@ def main_run(cleanup=False):
     outputF = open(Constants().WORKING_DIR + '/'
                    + output_file_name,
                    'w')
-    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,spanElementCount,loadError\n')
+    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -214,6 +214,7 @@ def convergence_analyzis_run(cleanup=False):
         project_name = 'meshSize_s{:5f}'.format(s)
         pro = new_project(project_name)
         pro.elementSize = s
+        pro.ribs = 14
         projects.append(pro)
 
     projects = pool_run(projects)
@@ -221,7 +222,7 @@ def convergence_analyzis_run(cleanup=False):
     output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     outputF = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
     outputF.write(
-        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,spanElementCount,loadError\n')
+        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)

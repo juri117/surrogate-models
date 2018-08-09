@@ -30,7 +30,7 @@ shear_strength = 3.31e8
 
 t = TimeTrack()
 t.tic()
-projectName = 'testBC_05'
+projectName = 'testBC_2_qu4V3'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
@@ -39,9 +39,9 @@ pro1.ribs = 14
 pro1.boxOverhang = 0.
 pro1.forceTop = -0.3*wing_load
 pro1.forceBot = -0.2*wing_load
-pro1.elementSize = .05
+pro1.elementSize = .2
 #pro1.elementSize = 0.05
-pro1.elemType = 'qu8'
+pro1.elemType = 'qu4'
 pro1.shellThickness = 0.009
 pro1.generate_geometry(nonlinear=False)
 #todo: detect failed mesh generation
