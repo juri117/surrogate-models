@@ -105,9 +105,9 @@ def pool_run(projects):
     return projects
 
 def main_run(cleanup=False):
-    ribs = np.arange(1, 51, 2)
+    ribs = np.arange(5, 21, 1)
     ribs = list(ribs)
-    thick = np.arange(0.0008, 0.0017, 0.00005)
+    thick = np.arange(0.0008, 0.0015, 0.00005)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -173,23 +173,21 @@ def plot_results(output_file_name):
     # interpol weight
     f_weight = interpolate.interp2d(plotX, plotY, weight, kind='cubic')
 
-    '''
+
     plot1 = PlotHelper(['ribs', 'max stress'])
     
     for i in range(0, len(shellThick)):
         stress = maxStress[i]
-        if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
-            #optRibs = np.interp(max_shear_strength, stress, ribs)
-            f = interp1d(stress, ribs, kind='linear')
-            plot1.ax.plot([f(max_shear_strength)], [max_shear_strength], 'go')
-            optiRibs.append(f(max_shear_strength))
-            optiShell.append(shellThick[i])
-
+        #if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
+        #   optRibs = np.interp(max_shear_strength, stress, ribs)
+        #   f = interp1d(stress, ribs, kind='linear')
+        #   plot1.ax.plot([f(max_shear_strength)], [max_shear_strength], 'go')
+        #   optiRibs.append(f(max_shear_strength))
+        #   optiShell.append(shellThick[i])
         plot1.ax.plot(ribs, maxStress[i], label='shell= {:03f}'.format(shellThick[i]))
     plot1.ax.plot(ribs, np.full((len(ribs), 1),max_shear_strength), 'r--', label='Limit-Load')
-    plot1.finalize()
+    plot1.finalize(legendNcol=2)
     #plot1.show()
-    '''
 
     plot2 = PlotHelper(['shellthickness in mm', 'max stress'])
     for i in range(0, len(ribs)):
