@@ -12,6 +12,7 @@ __status__ = "Development"
 
 from wingConstruction.utils.Constants import Constants
 
+
 class WingConstruction:
 
     def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, box_overhang=0.):

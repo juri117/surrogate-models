@@ -57,7 +57,7 @@ def new_project(project_name):
     pro.forceBot = -0.2 * wing_load
     pro.elementSize = element_size
     # pro1.elementSize = 0.05
-    pro.elemType = 'tr3'
+    pro.elemType = 'qu4'
     pro.shellThickness = 0.009
     return pro
 
@@ -84,6 +84,7 @@ def collect_results(pro):
     loadError = (-0.5*wing_load) - l
     if not pro.errorFlag:
         exportRow = str(pro.elementSize) + ',' \
+        + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
         + str(pro.ribs) + ',' \
         + str(pro.shellThickness) + ',' \
         + str(pro.geo.calc_weight(density)) + ',' \
@@ -91,8 +92,6 @@ def collect_results(pro):
         + str(pro.clx.dispD3Max) + ','\
         + str(pro.clx.stressMisesMin) + ','\
         + str(pro.clx.stressMisesMax) + ',' \
-        + str(pro.clx.stressMisesMaxFixed) + ','\
-        + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
         + str(loadError)+'\n'
         return exportRow
     return ''
@@ -124,7 +123,7 @@ def main_run(cleanup=False):
     outputF = open(Constants().WORKING_DIR + '/'
                    + output_file_name,
                    'w')
-    outputF.write('elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+    outputF.write('elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
@@ -222,7 +221,7 @@ def convergence_analyzis_run(cleanup=False):
     output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     outputF = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
     outputF.write(
-        'elementSizes,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,spanElementCount,loadError\n')
+        'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
 
     for p in projects:
         outStr = collect_results(p)
