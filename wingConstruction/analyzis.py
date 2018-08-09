@@ -57,7 +57,7 @@ def new_project(project_name):
     pro.forceBot = -0.2 * wing_load
     pro.elementSize = element_size
     # pro1.elementSize = 0.05
-    pro.elemType = 'qu8'
+    pro.elemType = 'tr3'
     pro.shellThickness = 0.009
     return pro
 
@@ -70,7 +70,7 @@ def run_project(pro):
         if NON_LINEAR:
             pro.postprocess(template='wing_post_nl_simple')
         else:
-            pro.postprocess(template='wing_post_simple')
+            pro.postprocess(template='wing_post')
             #pro.postprocess(template='wing_post_max_mises_fixed')
 
     print('#########################################')
@@ -242,5 +242,5 @@ if __name__ == '__main__':
     convergence_analyzis_run(cleanup=True)
 
     #output_file_name = 'convAna_2018-08-07_13_04_31.csv'
-    #output_file_name = main_run(cleanup=True)
+    #output_file_name = main_run(cleanup=False)
     #plot_results(output_file_name)

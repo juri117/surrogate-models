@@ -145,7 +145,11 @@ class WingConstruction:
         outLines.append('# write surface files for TIEs')
         outLines.append('send II abq sur')
         for i in range(1, self.ribs):
-            outLines.append('send rib{:d} abq sur'.format(i))
+            outLines.append('seta ribL{:d} l rib{:d}'.format(i, i))
+
+            outLines.append('comp ribL{:d} do'.format(i))
+            outLines.append('comp ribL{:d} do'.format(i))
+            outLines.append('send ribL{:d} abq sur'.format(i))
         outLines.append('')
 
         outLines.append('# write bc')
@@ -215,7 +219,7 @@ class WingConstruction:
         outLines.append('*include, input=bc2.nam')
         outLines.append('*include, input=II.sur')
         for i in range(1, self.ribs):
-            outLines.append('*include, input=rib{:d}.sur'.format(i))
+            outLines.append('*include, input=ribL{:d}.sur'.format(i))
         #outLines.append('*include, input=lowCorns.nam')
         #outLines.append('*include, input=lowRightCorn.nam')
         outLines.append('')
@@ -237,7 +241,7 @@ class WingConstruction:
         outLines.append('')
         for i in range(1, self.ribs):
             outLines.append('*tie,name=t{:d},position tolerance=0.1'.format(i))
-            outLines.append('SII,Srib{:d}'.format(i))
+            outLines.append('SribL{:d},SII'.format(i))
             outLines.append('')
         #outLines.append('')
         outLines.append('** step')
