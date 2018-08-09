@@ -30,7 +30,7 @@ shear_strength = 3.31e8
 
 t = TimeTrack()
 t.tic()
-projectName = 'testBC_1_qu4V3'
+projectName = 'testBC_1_qu4V3_1'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
