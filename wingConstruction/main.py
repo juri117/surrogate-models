@@ -30,7 +30,7 @@ shear_strength = 3.31e8
 
 t = TimeTrack()
 t.tic()
-projectName = 'testBC_1_qu4V3_1'
+projectName = 'testBC_1_qu4'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
@@ -47,7 +47,7 @@ pro1.generate_geometry(nonlinear=False)
 #todo: detect failed mesh generation
 pro1.solve()
 if not pro1.errorFlag:
-    pro1.postprocess()
+    pro1.post_process()
     if not pro1.errorFlag:
         runTime = t.toc()
 

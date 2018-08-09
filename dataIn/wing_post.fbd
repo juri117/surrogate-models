@@ -28,7 +28,7 @@ ds 2 e 7
 
 #mark BCs
 seta nodes n all
-enq nodes x0 rec 0 _ _
+enq nodes x0 rec 0 _ _ 0.1
 plus n x0 r
 
 frame
@@ -46,10 +46,37 @@ view elem
 
 #mark BCs
 seta nodes n all
-enq nodes x0 rec 0 _ _
+enq nodes x0 rec 0 _ _ 0.01
 plus n x0 r
 
 frame
 hcpy png
 sys mv hcpy_4.png wing_mesh_top.png
+
+
+seta orig all
+copy orig cp1 tra 0 0 -3
+
+ds 2 e 7
+view elem off
+view edge on
+plot ld all
+plus ev orig
+
+
+#mark BCs
+seta n3 n cp1
+enq n3 bc rec 0 _ _ 0.1
+plus n bc r
+
+rot d 90
+rot l 40
+rot u 30
+frame
+zoom 1.3
+
+
+hcpy png
+sys mv hcpy_5.png wing_mieses_plus_struct.png
+
 quit
