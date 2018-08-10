@@ -17,28 +17,28 @@ from wingConstruction.Project import Project
 from utils.TimeTrack import TimeTrack
 
 
-max_g = 2.5
+max_g = 1. #2.5
 safety_fac = 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2*2659.
 first_wing_struct_mass = 2*1000.
-wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * safety_fac * 0.5
+wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * 0.5
 engine_weight = (873.1 + 251.9 + 112.7 + 62.8) * 9.81 #engine, prop, wheel, brake
 engine_pos_y = 3.
 wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
 
-shear_strength = 3.31e8
+shear_strength = 3.31e8 / safety_fac
 
 t = TimeTrack()
 t.tic()
-projectName = 'test_14_eng'
+projectName = 'test_2_eng'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
 pro1.boxHeight = chord_height
-pro1.ribs = 14
+pro1.ribs = 2
 pro1.enginePos = engine_pos_y
 pro1.engineWeight = engine_weight
 pro1.boxOverhang = 0.
