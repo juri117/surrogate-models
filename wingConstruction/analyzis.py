@@ -109,7 +109,7 @@ def pool_run(projects):
 def main_run(cleanup=False):
     ribs = np.arange(6, 40, 2)
     ribs = list(ribs)
-    thick = np.arange(0.0008, 0.002, 0.0001)
+    thick = np.arange(0.006, 0.03, 0.002)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -270,6 +270,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-10_09_22_32.csv'
-    #output_file_name = main_run(cleanup=False)
+    output_file_name = '2drun_2018-08-10_09_59_27.csv'
+    output_file_name = main_run(cleanup=True)
     plot_results(output_file_name)
