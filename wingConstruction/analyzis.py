@@ -28,12 +28,12 @@ from scipy import interpolate
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 NON_LINEAR = False
 
-max_g = 2.5
+max_g = 1. #2.5
 safety_fac = 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2*2659.
 first_wing_struct_mass = 2*1000.
-wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * safety_fac * 0.5
+wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * 0.5
 engine_weight = (873.1 + 251.9 + 112.7 + 62.8) * 9.81 #engine, prop, wheel, brake
 engine_pos_y = 3.
 wing_length = 12.87
@@ -41,7 +41,7 @@ chord_length = 3.
 chord_height = 0.55
 
 density = 2810 #kg/m^3
-shear_strength = 5.72e8 #3.31e8 #Pa
+shear_strength = 5.72e8 / safety_fac #3.31e8 #Pa
 max_shear_strength = shear_strength
 
 element_size = 0.1
@@ -273,6 +273,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-10_11_26_17.csv'
+    output_file_name = '2drun_2018-08-09_17_47_11.csv'
     #output_file_name = main_run(cleanup=False)
     plot_results(output_file_name)
