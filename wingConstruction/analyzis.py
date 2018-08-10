@@ -28,10 +28,12 @@ from scipy import interpolate
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 NON_LINEAR = False
 
+max_g = 2.5
+safety_fac = 1.5
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
-wing_load = (mtow - fuel_mass_in_wings) * 9.81
-engine_mass = 1125 * 9.81
+wing_load = ((mtow - fuel_mass_in_wings) * 9.81) * max_g * safety_fac
+engine_weight = 1125 * 9.81
 engine_pos_y = 3
 wing_length = 12.87
 chord_length = 3.
@@ -39,9 +41,7 @@ chord_height = 0.55
 
 density = 2810 #kg/m^3
 shear_strength = 3.31e8
-max_g = 2.5
-safety_fac = 1.5
-max_shear_strength = shear_strength * max_g * safety_fac
+max_shear_strength = shear_strength
 
 element_size = 0.1
 
@@ -107,9 +107,9 @@ def pool_run(projects):
 
 
 def main_run(cleanup=False):
-    ribs = np.arange(5, 21, 1)
+    ribs = np.arange(6, 40, 2)
     ribs = list(ribs)
-    thick = np.arange(0.0008, 0.0015, 0.00005)
+    thick = np.arange(0.0008, 0.002, 0.0001)
     thick = list(thick)
     projects = []
     for r in ribs:
@@ -267,6 +267,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-09_14_16_28.csv'
-    #output_file_name = main_run(cleanup=False)
+    output_file_name = '2drun_2018-08-09_17_47_11.csv'
+    output_file_name = main_run(cleanup=False)
     plot_results(output_file_name)

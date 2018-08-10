@@ -17,9 +17,11 @@ from wingConstruction.Project import Project
 from utils.TimeTrack import TimeTrack
 
 
+max_g = 2.5
+safety_fac = 1.5
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
-wing_load = (mtow - fuel_mass_in_wings) * 9.81
+wing_load = ((mtow - fuel_mass_in_wings) * 9.81) * max_g * safety_fac
 engine_mass = 1125 * 9.81
 engine_pos_y = 3
 wing_length = 12.87
