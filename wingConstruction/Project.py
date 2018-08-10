@@ -15,7 +15,7 @@ from shutil import copyfile
 from shutil import rmtree
 
 from wingConstruction.utils.Constants import Constants
-from wingConstruction.fem.WingConstructionV3 import WingConstruction
+from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.fem.Calculix import Calculix
 
 

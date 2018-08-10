@@ -40,7 +40,7 @@ chord_length = 3.
 chord_height = 0.55
 
 density = 2810 #kg/m^3
-shear_strength = 3.31e8
+shear_strength = 5.72e8 #3.31e8 #Pa
 max_shear_strength = shear_strength
 
 element_size = 0.1
@@ -177,7 +177,7 @@ def plot_results(output_file_name):
     opti_weight = []
     rib_mat, shell_mat = np.meshgrid(ribs, shell_thick)
     # interpol weight
-    f_weight = interpolate.interp2d(rib_mat, shell_mat, weight, kind='cubic')
+    f_weight = interpolate.interp2d(rib_mat, shell_mat, weight, kind='linear')
 
     plot1 = PlotHelper(['ribs', 'max stress'])
     for i in range(0, len(shell_thick)):
@@ -203,7 +203,7 @@ def plot_results(output_file_name):
             plot2.ax.plot([f(max_shear_strength)], [max_shear_strength], 'go')
             opti_ribs.append(ribs[i])
             opti_shell.append(f(max_shear_strength))
-            opti_weight.append(f_weight(ribs[i], f(max_shear_strength)))
+            opti_weight.append(f_weight(ribs[i], f(max_shear_strength))[0])
     plot2.ax.plot(shell_thick, np.full((len(shell_thick), 1), max_shear_strength), 'r--', label='Limit-Load')
     #plot2.ax.set_xlim((min([x * 1000 for x in shellThick]), max([x * 1000 for x in shellThick])))
 
@@ -211,6 +211,9 @@ def plot_results(output_file_name):
     plot2.show()
 
     opti_min_index = opti_weight.index(min(opti_weight))
+    print('opt wight {:03f}'.format(opti_weight[opti_min_index]))
+    print('@ {:00f} ribs'.format(opti_ribs[opti_min_index]))
+    print('@ {:05f} shell-thickness'.format(opti_shell[opti_min_index]))
 
     plot3d = PlotHelper(['ribs', 'shell thickness in m', 'mises stress'])
     max_stress[max_stress > 1.2*max_shear_strength] = np.nan
@@ -267,6 +270,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-09_17_47_11.csv'
-    output_file_name = main_run(cleanup=False)
+    output_file_name = '2drun_2018-08-10_09_22_32.csv'
+    #output_file_name = main_run(cleanup=False)
     plot_results(output_file_name)
