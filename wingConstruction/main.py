@@ -19,10 +19,11 @@ from utils.TimeTrack import TimeTrack
 
 max_g = 2.5
 safety_fac = 1.5
-mtow = 29257
+mtow = 27987.
 fuel_mass_in_wings = 2*2659.
-wing_load = ((mtow - fuel_mass_in_wings - 1000) * 9.81) * max_g * safety_fac
-engine_weight = 1125. * 9.81
+first_wing_struct_mass = 2*1000.
+wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * safety_fac * 0.5
+engine_weight = (873.1 + 251.9) * 9.81
 engine_pos_y = 3.
 wing_length = 12.87
 chord_length = 3.
