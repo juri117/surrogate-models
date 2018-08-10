@@ -57,8 +57,8 @@ def new_project(project_name):
     pro.enginePos = engine_pos_y
     pro.engineWeight = engine_weight
     pro.boxOverhang = 0.
-    pro.forceTop = (2./3.) * wing_load
-    pro.forceBot = (1./3.) * wing_load
+    pro.forceTop = -(2./3.) * wing_load
+    pro.forceBot = -(1./3.) * wing_load
     pro.elementSize = element_size
     # pro1.elementSize = 0.05
     pro.elemType = 'qu4'
@@ -273,6 +273,6 @@ def convergence_analyzis_run(cleanup=False):
 if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
-    output_file_name = '2drun_2018-08-10_09_59_27.csv'
-    output_file_name = main_run(cleanup=False)
+    output_file_name = '2drun_2018-08-10_11_26_17.csv'
+    #output_file_name = main_run(cleanup=False)
     plot_results(output_file_name)
