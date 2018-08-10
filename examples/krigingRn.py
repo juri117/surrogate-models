@@ -1,3 +1,14 @@
+__author__ = "Juri Bieler"
+__version__ = "0.0.1"
+__status__ = "Development"
+
+# ==============================================================================
+# description     :kriging in Rn
+# author          :Juri Bieler
+# date            :2018-07-13
+# notes           :
+# python_version  :3.6
+# ==============================================================================
 
 import numpy as np
 
