@@ -33,8 +33,8 @@ safety_fac = 1.5
 mtow = 29257
 fuel_mass_in_wings = 2*2659.
 wing_load = ((mtow - fuel_mass_in_wings) * 9.81) * max_g * safety_fac
-engine_weight = 1125 * 9.81
-engine_pos_y = 3
+engine_weight = 1125. * 9.81
+engine_pos_y = 3.
 wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
@@ -53,6 +53,8 @@ def new_project(project_name):
     pro.boxDepth = chord_length * 0.4
     pro.boxHeight = chord_height
     pro.ribs = int(wing_length) + 1
+    pro.enginePos = engine_pos_y
+    pro.engineWeight = engine_weight
     pro.boxOverhang = 0.
     pro.forceTop = -0.3 * wing_load
     pro.forceBot = -0.2 * wing_load
@@ -271,5 +273,5 @@ if __name__ == '__main__':
     #convergence_analyzis_run(cleanup=True)
 
     output_file_name = '2drun_2018-08-10_09_59_27.csv'
-    output_file_name = main_run(cleanup=True)
+    output_file_name = main_run(cleanup=False)
     plot_results(output_file_name)

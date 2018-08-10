@@ -34,6 +34,8 @@ class Project:
         self.boxDepth = 2.
         self.boxHeight = 1.
         self.ribs = 8
+        self.enginePos = 3.
+        self.engineWeight = 1000. * 9.81
         self.boxOverhang = 0.5
         self.forceTop = 0.
         self.forceBot = 0.
@@ -49,9 +51,11 @@ class Project:
                                         self.boxHeight,
                                         self.ribs,
                                         self.shellThickness,
+                                        self.enginePos,
                                         box_overhang=self.boxOverhang)
         self.geo.generate_wing(self.forceTop,
                                self.forceBot,
+                               self.engineWeight,
                                self.elementSize,
                                element_type=self.elemType)
         self.geo.generate_inp(nonlinear=nonlinear)

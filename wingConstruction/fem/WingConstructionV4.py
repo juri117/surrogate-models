@@ -15,13 +15,15 @@ from wingConstruction.utils.Constants import Constants
 
 class WingConstruction:
 
-    def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, box_overhang=0.):
+    def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, engine_pos, box_overhang=0.):
         self.projectPath = project_path
         self.halfSpan = half_span
         self.boxDepth = box_depth
         self.boxHeight = box_height
         self.ribs = ribs
         self.shellThickness = shell_thickness
+        self.enginePos = engine_pos
+        self.pylonHeight = 0.3
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
 
@@ -49,7 +51,7 @@ class WingConstruction:
             div += 1
         return div
 
-    def generate_wing(self, force_top, force_bot, element_size, element_type='qu4'):
+    def generate_wing(self, force_top, force_bot, engine_weight, element_size, element_type='qu4'):
         self.elementSize = element_size
         out_lines = []
         out_lines.append('# draw flat T as lines')
@@ -73,7 +75,7 @@ class WingConstruction:
         out_lines.append('seta lowRightCorn lowRightCorn')
         if self.boxOverhang > 0.:
             out_lines.append('swep lowRightCorn lowLeftCorn tra 0 {:f} 0 {:d}'.format(-1*self.boxOverhang, self.calc_division(self.boxOverhang)))
-        out_lines.append('swep lowRightCorn lowLeftCorn tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division((self.boxDepth))))
+        out_lines.append('swep lowRightCorn lowLeftCorn tra 0 {:f} 0 {:d}'.format(self.boxDepth, self.calc_division(self.boxDepth)))
         out_lines.append('')
         if self.boxOverhang > 0.:
             out_lines.append('# lower left corner')
@@ -82,23 +84,26 @@ class WingConstruction:
             out_lines.append('swep pc4 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
             out_lines.append('')
 
+        '''
         out_lines.append('# stringer')
         out_lines.append('pnt str0 0 0.3 0')
         out_lines.append('seta str0 str0')
-        out_lines.append('swep str0 str0 tra 0 0 0.1 2')
+        out_lines.append('swep str0 str0 tra 0 0 0.005 2')
         out_lines.append('')
         out_lines.append('pnt str1 0 0.9 0')
         out_lines.append('seta str1 str1')
-        out_lines.append('swep str1 str1 tra 0 0 0.1 2')
+        out_lines.append('swep str1 str1 tra 0 0 0.005 2')
         out_lines.append('')
+        
         out_lines.append('pnt str2 0 0.3 0.55')
         out_lines.append('seta str2 str2')
-        out_lines.append('swep str2 str2 tra 0 0 -0.1 2')
+        out_lines.append('swep str2 str2 tra 0 0 -0.005 2')
         out_lines.append('')
         out_lines.append('pnt str3 0 0.9 0.55')
         out_lines.append('seta str3 str3')
-        out_lines.append('swep str3 str3 tra 0 0 -0.1 2')
+        out_lines.append('swep str3 str3 tra 0 0 -0.005 2')
         out_lines.append('')
+        '''
 
         out_lines.append('seta II2d all')
         out_lines.append('')
@@ -120,6 +125,14 @@ class WingConstruction:
         else:
             out_lines.append('seta loadBot s A004')
         out_lines.append('comp loadBot d')
+
+        out_lines.append('#generate engine pylon')
+        out_lines.append('seto pyl')
+        out_lines.append('pnt pylP {:f} 0 {:f}'.format(self.enginePos, self.boxHeight))
+        out_lines.append('swep pyl pyl tra 0 0 {:f} 6 a'.format(self.pylonHeight))
+        out_lines.append('swep pyl pyl tra 0 {:f} 0 {:d} a'.format(self.boxDepth, self.calc_division(self.boxDepth)))
+        out_lines.append('setc pyl')
+        out_lines.append('')
 
         for i in range(0, self.ribs):
             if self.ribs <= 1:
@@ -149,6 +162,13 @@ class WingConstruction:
 
         out_lines.append('# write surface files for TIEs')
         out_lines.append('send II abq sur')
+        out_lines.append('')
+        out_lines.append('seta pylL l pyl')
+        out_lines.append('comp pylL do')
+        out_lines.append('comp pylL do')
+        out_lines.append('send pylL abq sur')
+        out_lines.append('')
+
         for i in range(1, self.ribs):
             out_lines.append('seta ribL{:d} l rib{:d}'.format(i, i))
 
@@ -169,17 +189,25 @@ class WingConstruction:
         out_lines.append('')
 
         node_count = (self.calc_span_division(self.halfSpan)+1) * (self.calc_division(self.boxDepth)+1)
+        node_count_engine = self.calc_division(self.boxDepth)+1
         if element_type == 'qu8':
             node_count -= 0.5*self.calc_span_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
         noad_load_top = force_top/node_count
         noad_load_bot = force_bot / node_count
+        node_load_engine = engine_weight / node_count_engine
         out_lines.append('# load application')
 
         out_lines.append('# top')
         out_lines.append('send loadTop abq force 0 0 {:f}'.format(noad_load_top))
         out_lines.append('# bottom')
         out_lines.append('send loadBot abq force 0 0 {:f}'.format(noad_load_bot))
+        out_lines.append('#engine weight')
+        out_lines.append('seta engNodes n pyl')
+        out_lines.append('enq engNodes engLoad rec {:f} _ {:f} 0.01'.format(self.enginePos, self.boxHeight+self.pylonHeight))
+        out_lines.append('send engLoad abq force 0 0 {:f}'.format(node_load_engine))
         out_lines.append('')
+        out_lines.append('')
+
         out_lines.append('# plot it')
         out_lines.append('rot -y')
         out_lines.append('rot r 110')
@@ -209,6 +237,7 @@ class WingConstruction:
         out_lines.append('*include, input=bc.nam')
         out_lines.append('*include, input=bc2.nam')
         out_lines.append('*include, input=II.sur')
+        out_lines.append('*include, input=pylL.sur')
         for i in range(1, self.ribs):
             out_lines.append('*include, input=ribL{:d}.sur'.format(i))
         out_lines.append('')
@@ -226,6 +255,9 @@ class WingConstruction:
         out_lines.append('*shell section, elset=Eall, material=ALU')
         out_lines.append('{:f}'.format(self.shellThickness))
         out_lines.append('')
+        out_lines.append('*tie,name=t1,position tolerance=0.1')
+        out_lines.append('SpylL,SII')
+        out_lines.append('')
         for i in range(1, self.ribs):
             out_lines.append('*tie,name=t{:d},position tolerance=0.1'.format(i))
             out_lines.append('SribL{:d},SII'.format(i))
@@ -241,6 +273,7 @@ class WingConstruction:
         out_lines.append('*cload')
         out_lines.append('*include, input=loadTop.frc')
         out_lines.append('*include, input=loadBot.frc')
+        out_lines.append('*include, input=engLoad.frc')
         out_lines.append('')
         out_lines.append('*node file')
         out_lines.append('U')
