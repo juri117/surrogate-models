@@ -36,7 +36,7 @@ if __name__ == '__main__':
     knownParams.append(px)
     knownParams.append(py)
 
-    scat1 = plt1.ax.scatter(py, px, knownValues, c='r', marker='o', s=10, label=r'St\"utzstellen')
+    scat1 = plt1.ax.scatter(px, py, knownValues, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
     krig = Kriging(knownParams, knownValues)
     p = [1.8, 1.8]
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     pltTheta.finalize()
     #pltTheta.show()
 
-    plt1.plot_function_3D(krig.predict, fx, fy, r'$f_{RBF}$', color='b')
+    plt1.plot_function_3D(krig.predict, fx, fy, r'$f_{krig}$', color='b')
     plt1.ax.view_init(20, 50)
     plt1.finalize()
     #plt1.save('dataOut/krigingRn.svg')

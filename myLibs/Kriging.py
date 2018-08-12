@@ -20,6 +20,8 @@ from matplotlib import rc
 import matplotlib
 import scipy
 from scipy.optimize import minimize
+from scipy.optimize import basinhopping
+from scipy import optimize
 
 
 class Kriging:
@@ -89,7 +91,7 @@ class Kriging:
     def _calc_likelihood_opti(self, params, *args):
         self.update_param(params[0:self._k], params[self._k:])
         NegLnLike = self.calc_likelihood()
-        print(str(NegLnLike))
+        #print(str(NegLnLike))
         return NegLnLike
 
     def optimize_theta_only(self):
@@ -100,20 +102,31 @@ class Kriging:
         opt = {}
         opt['disp'] = True
         opt['maxiter'] = 99999
-        res = minimize(self._calc_likelihood_opti_theta_only, x0, args=(self._p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+        res = minimize(self._calc_likelihood_opti_theta_only, x0, args=self._p, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
         self._theta = res.x
 
     def optimize(self):
         x0 = np.ones((self._k*2,1)).flatten()
         bnds = []
         for i in range(0, self._k):
-            bnds.append((0.0001, 1000.))
+            bnds.append((1e-5, 1e+10))
         for i in range(0, self._k):
             bnds.append((1., 2.))
-        opt = {}
-        opt['disp'] = True
-        opt['maxiter'] = 99999
-        res = minimize(self._calc_likelihood_opti, x0, args=(self._p), method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+        opt = {'disp': True, 'maxiter': 99999}
+        #opt['disp'] = True
+        #opt['maxiter'] = 99999
+        #x0[0] = 0.02
+        #x0[1] = 1000.
+
+        # SLSQP: proplem; find local min not glob. depending on init-vals
+        #res = minimize(self._calc_likelihood_opti, x0, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+
+        # random: not good enough... space is too big, cand find anything
+        #res = optimize.differential_evolution(self._calc_likelihood_opti, bnds, maxiter=int(1e8))
+
+        # basinhopping:
+        minimizer_kwargs = dict(method="L-BFGS-B", bounds=bnds)
+        res = basinhopping(self._calc_likelihood_opti, x0, minimizer_kwargs=minimizer_kwargs)
         self._theta = res.x[0:self._k]
         self._p = res.x[self._k:]
 

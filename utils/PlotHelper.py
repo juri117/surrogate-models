@@ -53,11 +53,11 @@ class PlotHelper:
             plt.pause(.001)
 
     def plot_function_3D(self, f, fx, fy, label, color='b'):
-        fz = np.zeros((len(fx), len(fy)))
+        fz = np.zeros((len(fy), len(fx)))
         for iX in range(0, len(fx)):
             for iY in range(0, len(fy)):
                 coords = [fx[iX], fy[iY]]
-                fz[iX][iY] = f(coords)
+                fz[iY][iX] = f(coords)
 
         plotX, plotY = np.meshgrid(fx, fy)
         surf = self.ax.plot_wireframe(plotX, plotY, fz, color=color, label=label, rcount=20, ccount=20,
