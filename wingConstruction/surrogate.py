@@ -19,6 +19,7 @@ from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
 from myLibs.Sampling import Sampling
+from myLibs.Validation import Validation
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
@@ -80,11 +81,15 @@ krig = Kriging(known_params, known_stress)
 # fit surrogate model
 
 krig.optimize()
-opt_p = krig._p
-opt_theta = krig._theta
+#opt_p = krig._p
+#opt_theta = krig._theta
 #p = [krig._p[0], krig._p[1]]
 #krig.update_param([0.001, 0.001], opt_p)
 
+krig.plot_theta_likelihood_R2()
+krig.plot_p_likelihood_R2()
+
+'''
 thetas = np.logspace(-5, 9, num=50)
 likely_thet = np.zeros((len(thetas), len(thetas)))
 for i1 in range(0, len(thetas)):
@@ -99,9 +104,10 @@ for i1 in range(0, len(thetas)):
     for i2 in range(0, len(thetas)):
         krig.update_param(opt_theta, [ps[i1], ps[i2]])
         likely_p[i2][i1] = krig.calc_likelihood()
+'''
 
 #reset model to optimum
-krig.update_param(opt_theta, opt_p)
+#krig.update_param(opt_theta, opt_p)
 #krig.update_param([0.01, 900], [1.8, 1.8])
 minLike = krig.calc_likelihood()
 print('minLike = ' + str(minLike))
@@ -110,6 +116,7 @@ print('@theta2 = ' + str(krig._theta[1]))
 print('@p1 = ' + str(krig._p[0]))
 print('@p2 = ' + str(krig._p[1]))
 
+'''
 plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{1}$'], fancy=False)
 plt_theta.ax.set_xscale('log')
 plt_theta.ax.set_yscale('log')
@@ -125,22 +132,14 @@ cbar = plt_P.fig.colorbar(pcol)
 cbar.set_label('neg. log. likelihood')
 plt_P.ax.plot(krig._p[0], krig._p[1], 'rx', label='minimum')
 plt_P.finalize()
+'''
 
 ##################################################
 # validate
 
-count = 0
-sum_deviation = 0
-#sample_indices = np.array([known_x_i, known_y_i]).T.tolist()
-for i_r in range(0, len(ribs)):
-    for i_s in range(0, len(shell)):
-        if not [i_r, i_s] in sample_indices:
-            devi = stress[i_s][i_r] - krig.predict([ribs[i_r], shell[i_s]])
-            sum_deviation += abs(devi)
-            count += 1
-avg_deviation = sum_deviation / count
-avg_deviation_per = avg_deviation / np.array(stress).mean()
-print('avg deviation: {:.3e} (-> {:.3f}%)'.format(avg_deviation, avg_deviation_per*100.))
+vali = Validation()
+vali.calc_deviation(ribs, shell, stress, krig.predict)
+
 
 ##################################################
 # optimize

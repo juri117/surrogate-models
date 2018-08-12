@@ -11,6 +11,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
+from utils.PlotHelper import PlotHelper
 
 import numpy as np
 import math
@@ -140,3 +141,53 @@ class Kriging:
             psi[i] = math.exp(-sum)
         fx = self._mu + np.transpose(psi) @ self._coreMatInv @ (self._knownVal - one * self._mu)
         return fx
+
+
+    def plot_theta_likelihood_R2(self):
+        if self._k != 2:
+            print('ERROR: plot_theta_likelihood_R2 only works with exactly 2 inputs')
+            return
+
+        opt_theta = self._theta
+        thetas = np.logspace(-5, 9, num=50)
+        likely_thet = np.zeros((len(thetas), len(thetas)))
+        for i1 in range(0, len(thetas)):
+            for i2 in range(0, len(thetas)):
+                self.update_param([thetas[i1], thetas[i2]], self._p)
+                likely_thet[i2][i1] = self.calc_likelihood()
+        # restore original thetas
+        self._theta = opt_theta
+        self.update_param(self._theta, self._p)
+        # plot it
+        plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{1}$'], fancy=False)
+        plt_theta.ax.set_xscale('log')
+        plt_theta.ax.set_yscale('log')
+        pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
+        cbar = plt_theta.fig.colorbar(pcol)
+        cbar.set_label('neg. log. likelihood')
+        plt_theta.ax.plot(self._theta[0], self._theta[1], 'rx', label='minimum')
+        plt_theta.finalize()
+        #plt_theta.show()
+
+    def plot_p_likelihood_R2(self):
+        if self._k != 2:
+            print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
+            return
+        opt_p = self._p
+        ps = np.linspace(1., 2., num=50)
+        likely_p = np.zeros((len(ps), len(ps)))
+        for i1 in range(0, len(ps)):
+            for i2 in range(0, len(ps)):
+                self.update_param(self._theta, [ps[i1], ps[i2]])
+                likely_p[i2][i1] = self.calc_likelihood()
+        # restore original ps
+        self._p = opt_p
+        self.update_param(self._theta, self._p)
+        # plot it
+        plt_P = PlotHelper([r'$p_{1}$', r'$p_{1}$'], fancy=False)
+        pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
+        cbar = plt_P.fig.colorbar(pcol)
+        cbar.set_label('neg. log. likelihood')
+        plt_P.ax.plot(self._p[0], self._p[1], 'rx', label='minimum')
+        plt_P.finalize()
+        # plt_theta.show()
