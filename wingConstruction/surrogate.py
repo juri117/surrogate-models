@@ -80,35 +80,14 @@ krig = Kriging(known_params, known_stress)
 ##################################################
 # fit surrogate model
 
+#prev stored results:
+krig.update_param([0.024898436078495855, 2482513.627234583], [1.8254148090594156, 2.0])
+
 krig.optimize()
-#opt_p = krig._p
-#opt_theta = krig._theta
-#p = [krig._p[0], krig._p[1]]
-#krig.update_param([0.001, 0.001], opt_p)
 
 krig.plot_theta_likelihood_R2()
 krig.plot_p_likelihood_R2()
 
-'''
-thetas = np.logspace(-5, 9, num=50)
-likely_thet = np.zeros((len(thetas), len(thetas)))
-for i1 in range(0, len(thetas)):
-    for i2 in range(0, len(thetas)):
-        krig.update_param([thetas[i1], thetas[i2]], opt_p)
-        likely_thet[i2][i1] = krig.calc_likelihood()
-
-#krig.update_param(opt_theta, opt_p)
-ps = np.linspace(1., 2., num=50)
-likely_p = np.zeros((len(thetas), len(thetas)))
-for i1 in range(0, len(thetas)):
-    for i2 in range(0, len(thetas)):
-        krig.update_param(opt_theta, [ps[i1], ps[i2]])
-        likely_p[i2][i1] = krig.calc_likelihood()
-'''
-
-#reset model to optimum
-#krig.update_param(opt_theta, opt_p)
-#krig.update_param([0.01, 900], [1.8, 1.8])
 minLike = krig.calc_likelihood()
 print('minLike = ' + str(minLike))
 print('@theta1 = ' + str(krig._theta[0]))
@@ -116,23 +95,6 @@ print('@theta2 = ' + str(krig._theta[1]))
 print('@p1 = ' + str(krig._p[0]))
 print('@p2 = ' + str(krig._p[1]))
 
-'''
-plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{1}$'], fancy=False)
-plt_theta.ax.set_xscale('log')
-plt_theta.ax.set_yscale('log')
-pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
-cbar = plt_theta.fig.colorbar(pcol)
-cbar.set_label('neg. log. likelihood')
-plt_theta.ax.plot(krig._theta[0], krig._theta[1], 'rx', label='minimum')
-plt_theta.finalize()
-
-plt_P = PlotHelper([r'$p_{1}$', r'$p_{1}$'], fancy=False)
-pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
-cbar = plt_P.fig.colorbar(pcol)
-cbar.set_label('neg. log. likelihood')
-plt_P.ax.plot(krig._p[0], krig._p[1], 'rx', label='minimum')
-plt_P.finalize()
-'''
 
 ##################################################
 # validate

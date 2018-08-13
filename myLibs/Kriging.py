@@ -12,6 +12,7 @@ __status__ = "Development"
 # ==============================================================================
 
 from utils.PlotHelper import PlotHelper
+from utils.TimeTrack import TimeTrack
 
 import numpy as np
 import math
@@ -62,8 +63,12 @@ class Kriging:
                     sum += self._theta[ik] * (abs(self._knownIn[ik][row] - self._knownIn[ik][column]) ** self._p[ik])
                 corMat[row][column] = math.exp(-sum)
                 corMat[column][row] = corMat[row][column]
-        self._corMat = corMat
-        self._coreMatInv = np.linalg.inv(self._corMat)
+
+        try:
+            self._coreMatInv = np.linalg.inv(corMat)
+            self._corMat = corMat
+        except:
+            print('ERROR: could not calc np.linalg.inv')
         return corMat
 
     def _calc_mu(self):
@@ -75,9 +80,14 @@ class Kriging:
     #calcs the likelyhood
     def calc_likelihood(self):
         #lnDetCorMat = np.log(np.linalg.det(corMat))
+        #ToDo: sometimes this throws an warning (C:\python\Python365_x64\lib\site-packages\numpy\linalg\linalg.py:1817: RuntimeWarning: invalid value encountered in slogdet sign, logdet = _umath_linalg.slogdet(a, signature=signature))
         lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
         one = np.ones((self._n, 1)).flatten()
+        #ToDo: sometimes this throws a warning (RuntimeWarning: invalid value encountered in log negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat))
         sigmaSqr = (np.transpose(self._knownVal - one * self._mu) @ self._coreMatInv @ (self._knownVal - one * self._mu)) / self._n
+        if sigmaSqr < 0.:
+            print('Error: neg sigmaSqr')
+            return float('inf')
         negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat)
         if negLnLike == float('nan'):
             print('Error: nan')
@@ -106,30 +116,38 @@ class Kriging:
         res = minimize(self._calc_likelihood_opti_theta_only, x0, args=self._p, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
         self._theta = res.x
 
-    def optimize(self):
-        x0 = np.ones((self._k*2,1)).flatten()
+    def optimize(self, init_guess=None):
+        if init_guess is None:
+            init_guess = [self._theta[0], self._theta[1], self._p[0], self._p[1]]
         bnds = []
         for i in range(0, self._k):
             bnds.append((1e-5, 1e+10))
         for i in range(0, self._k):
             bnds.append((1., 2.))
-        opt = {'disp': True, 'maxiter': 99999}
-        #opt['disp'] = True
-        #opt['maxiter'] = 99999
-        #x0[0] = 0.02
-        #x0[1] = 1000.
 
+        tim1 = TimeTrack('LikelihoodOpti')
+        tim1.tic()
         # SLSQP: proplem; find local min not glob. depending on init-vals
-        #res = minimize(self._calc_likelihood_opti, x0, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
+        #res = minimize(self._calc_likelihood_opti, init_guess, method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
 
         # random: not good enough... space is too big, cand find anything
         #res = optimize.differential_evolution(self._calc_likelihood_opti, bnds, maxiter=int(1e8))
 
         # basinhopping:
-        minimizer_kwargs = dict(method="L-BFGS-B", bounds=bnds)
-        res = basinhopping(self._calc_likelihood_opti, x0, minimizer_kwargs=minimizer_kwargs)
+        bounds = BasinHoppingBounds()
+        step = BasinHoppingStep()
+        #L-BFGS-B
+        minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 1e6}, tol=1e-4)
+        res = basinhopping(self._calc_likelihood_opti,
+                           init_guess,
+                           minimizer_kwargs=minimizer_kwargs,
+                           accept_test=bounds,
+                           take_step=step,
+                           niter=1000,
+                           niter_success=100)
         self._theta = res.x[0:self._k]
         self._p = res.x[self._k:]
+        tim1.toc()
 
     def predict(self, x_pred):
         one = np.ones((self._n, 1)).flatten()
@@ -191,3 +209,31 @@ class Kriging:
         plt_P.ax.plot(self._p[0], self._p[1], 'rx', label='minimum')
         plt_P.finalize()
         # plt_theta.show()
+
+
+class BasinHoppingBounds(object):
+
+    def __init__(self, xmax=[1e+10, 1e+10, 2., 2.], xmin=[1e-5, 1e-5, 1., 1.] ):
+        self.xmax = np.array(xmax)
+        self.xmin = np.array(xmin)
+
+    def __call__(self, **kwargs):
+        x = kwargs["x_new"]
+        tmax = bool(np.all(x <= self.xmax))
+        tmin = bool(np.all(x >= self.xmin))
+        return tmax and tmin
+
+
+class BasinHoppingStep(object):
+
+    def __init__(self, stepsize=1.):
+        self.stepsize = stepsize
+
+    def __call__(self, x):
+        s = self.stepsize
+        x[0] = 10**np.random.uniform(-5, 10)
+        x[1] = 10**np.random.uniform(-5, 10)
+        x[2] = np.random.uniform(1., 2)
+        x[3] = np.random.uniform(1., 2)
+        print('STEP: {:f}, {:f}, {:f}, {:f}'.format(x[0], x[1], x[2], x[3]))
+        return x

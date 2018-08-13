@@ -4,14 +4,14 @@ from timeit import default_timer as timer
 class TimeTrack:
 
     def __init__(self, name='defaultTimer'):
-        self.name = name
-        self.stop = None
-        self.start = timer()
+        self._name = name
+        self._stop = None
+        self._start = timer()
 
     def tic(self):
-        self.start = timer()
+        self._start = timer()
 
     def toc(self):
-        self.stop = timer()
-        print(self.name + ': ' + str(self.stop - self.start) + ' s')
-        return self.stop - self.start
+        self._stop = timer()
+        print(self._name + ': ' + str(self._stop - self._start) + ' s')
+        return self._stop - self._start
