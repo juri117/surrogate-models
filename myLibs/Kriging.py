@@ -183,8 +183,11 @@ class Kriging:
         pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
         cbar = plt_theta.fig.colorbar(pcol)
         cbar.set_label('neg. log. likelihood')
-        plt_theta.ax.plot(self._theta[0], self._theta[1], 'rx', label='minimum')
-        plt_theta.finalize()
+        plt_theta.ax.plot(self._theta[0], self._theta[1], 'wo', label='minimum')
+        legend = plt_theta.finalize(legendLoc=4)
+        legend.get_frame().set_facecolor('#000000')
+        for text in legend.get_texts():
+            text.set_color('#FFFFFF')
         #plt_theta.show()
 
     def plot_p_likelihood_R2(self):
@@ -206,8 +209,11 @@ class Kriging:
         pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
         cbar = plt_P.fig.colorbar(pcol)
         cbar.set_label('neg. log. likelihood')
-        plt_P.ax.plot(self._p[0], self._p[1], 'rx', label='minimum')
-        plt_P.finalize()
+        plt_P.ax.plot(self._p[0], self._p[1], 'wo', label='minimum')
+        legend = plt_P.finalize(legendLoc=4)
+        legend.get_frame().set_facecolor('#000000')
+        for text in legend.get_texts():
+            text.set_color('#FFFFFF')
         # plt_theta.show()
 
 
@@ -235,5 +241,5 @@ class BasinHoppingStep(object):
         x[1] = 10**np.random.uniform(-5, 10)
         x[2] = np.random.uniform(1., 2)
         x[3] = np.random.uniform(1., 2)
-        print('STEP: {:f}, {:f}, {:f}, {:f}'.format(x[0], x[1], x[2], x[3]))
+        #print('STEP: {:f}, {:f}, {:f}, {:f}'.format(x[0], x[1], x[2], x[3]))
         return x

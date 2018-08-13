@@ -113,20 +113,17 @@ vali.calc_deviation(ribs, shell, stress, krig.predict)
 # plot it
 
 plot3d = PlotHelper(['ribs', 'shell thickness in m', 'mises stress'])
-#max_stress[max_stress > 1.2*max_shear_strength] = np.nan
-#color_map = plt.cm.jet(weight/np.max(weight))
-#surf = plot3d.ax.plot_surface(rib_mat, shell_mat, max_stress, facecolors=color_map,
-#                cstride=1,
-#                rstride=1)
-realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
+
+#realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
+
+for i in range(0,len(ribs)):
+    if i == 0:
+        plot3d.ax.plot(np.ones((len(shell)))*ribs[i], np.array(shell), stress[:,i], 'g-', lw=3., label='fem data')
+    else:
+        plot3d.ax.plot(np.ones((len(shell))) * ribs[i], np.array(shell), stress[:, i], 'g-', lw=3.)
+
 #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
 
-#optiLine = plot3d.ax.plot(opti_ribs, opti_shell, max_shear_strength, 'k--', label='Limit-Load')
-#optiPoint = plot3d.ax.plot([opti_ribs[opti_min_index]], [opti_shell[opti_min_index]], max_shear_strength, 'ro', label='glob. optimum')
-#m = cm.ScalarMappable(cmap=cm.jet)
-#m.set_array(weight)
-#cbar = plt.colorbar(m)
-#cbar.set_label('structure weight in kg', rotation=270)
 limit = np.full((n_thick, n_rib),max_shear_strength)
 plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 

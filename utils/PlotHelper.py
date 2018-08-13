@@ -35,9 +35,10 @@ class PlotHelper:
         rc('font', **self.font)
 
     def finalize(self, width=8, height=5, legendLoc=1, legendNcol=1):
-        self.ax.legend(loc=legendLoc, ncol=legendNcol)
+        legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
         self.fig.set_size_inches(width, height)
         self.ax.autoscale_view(tight=True)
+        return legend
 
     def save(self, file_path):
         plt.savefig(file_path)
