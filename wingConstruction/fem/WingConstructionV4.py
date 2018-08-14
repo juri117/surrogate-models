@@ -170,7 +170,8 @@ class WingConstruction:
         out_lines.append('# write surface files for TIEs')
         out_lines.append('send II abq sur')
         out_lines.append('')
-        out_lines.append('seta pylL l pyl')
+        #out_lines.append('seta pylL l pyl')
+        out_lines.append('seta pylL l L00I')
         out_lines.append('comp pylL do')
         out_lines.append('comp pylL do')
         out_lines.append('send pylL abq sur')
@@ -262,7 +263,7 @@ class WingConstruction:
         out_lines.append('*shell section, elset=Eall, material=ALU')
         out_lines.append('{:f}'.format(self.shellThickness))
         out_lines.append('')
-        out_lines.append('*tie,name=t1,position tolerance=0.1')
+        out_lines.append('*tie,name=t1,position tolerance=0.01')
         out_lines.append('SpylL,SII')
         out_lines.append('')
         for i in range(1, self.ribs):

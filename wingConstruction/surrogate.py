@@ -38,7 +38,7 @@ wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
 density = 2810 #kg/m^3
-max_shear_strength = 5.72e8 * 2.5
+max_shear_strength = 5.72e8 * 2.2
 multi = MultiRun()
 
 
@@ -153,11 +153,21 @@ for i in range(0, len(ribs)):
     plt.show()
     """
 
+# exclude model edges from opti vals
+opti_ribs = ribs[:-1]
+opti_ribs = opti_ribs[1:]
+opti_shell = opti_shell[:-1]
+opti_shell = opti_shell[1:]
+opti_stress = opti_stress[:-1]
+opti_stress = opti_stress[1:]
+opti_weights = opti_weights[:-1]
+opti_weights = opti_weights[1:]
+
 best_i = opti_weights.index(min(opti_weights))
 
 optWeightPlot = PlotHelper(['ribs', 'weight'])
-optWeightPlot.ax.plot(ribs, opti_weights, 'b-')
-optWeightPlot.ax.plot([ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
+optWeightPlot.ax.plot(opti_ribs, opti_weights, 'b-')
+optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
 optWeightPlot.finalize()
 
 ##################################################
@@ -187,9 +197,9 @@ kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f
 samplePoints = plot3d.ax.plot(known_rib, known_shell, known_stress, 'bo', label='sampling points')
 
 # plot limit load line
-plot3d.ax.plot(ribs, opti_shell, opti_stress, 'k--')
+plot3d.ax.plot(opti_ribs, opti_shell, opti_stress, 'k--', lw=3., label='optimum line')
 # plot optimal point
-plot3d.ax.plot([ribs[best_i]], [opti_shell[best_i]], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5)
+plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
 
 plot3d.ax.set_zlim3d(0, max_shear_strength)
 plot3d.finalize()

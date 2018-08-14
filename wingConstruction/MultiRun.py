@@ -122,7 +122,7 @@ class MultiRun:
     def main_run(self, cleanup=False):
         ribs = np.arange(5, 21, 1)
         ribs = list(ribs)
-        thick = np.arange(0.0065, 0.0145, 0.0005)
+        thick = np.arange(0.00065, 0.00145, 0.00005)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -282,5 +282,6 @@ if __name__ == '__main__':
     #output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     #output_file_name = '2drun_2018-08-09_17_47_11.csv'
+    output_file_name = '2drun_2018-08-10_13_33_03.csv'
     #output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)
