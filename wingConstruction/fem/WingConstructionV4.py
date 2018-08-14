@@ -33,6 +33,13 @@ class WingConstruction:
         w = (v_box + v_ribs) * density
         return w
 
+    @staticmethod
+    def calc_weight_stat(half_span, box_depth, box_height, ribs, shell_thickness, density):
+        v_box = half_span * 2. * (box_height + box_depth) * shell_thickness
+        v_ribs = ribs * box_height * box_depth * shell_thickness
+        w = (v_box + v_ribs) * density
+        return w
+
     def calc_span_division(self, length):
         return self.calc_division(length)
         #div = int(length / self.elementSize)

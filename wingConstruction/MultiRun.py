@@ -120,9 +120,9 @@ class MultiRun:
         return projects
 
     def main_run(self, cleanup=False):
-        ribs = np.arange(6, 40, 2)
+        ribs = np.arange(5, 21, 1)
         ribs = list(ribs)
-        thick = np.arange(0.006, 0.03, 0.002)
+        thick = np.arange(0.0065, 0.0145, 0.0005)
         thick = list(thick)
         projects = []
         for r in ribs:

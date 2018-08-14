@@ -20,6 +20,7 @@ from utils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
 from myLibs.Sampling import Sampling
 from myLibs.Validation import Validation
+from wingConstruction.fem.WingConstructionV4 import WingConstruction
 
 from mpl_toolkits.mplot3d import axes3d
 import matplotlib.pyplot as plt
@@ -28,9 +29,15 @@ from multiprocessing import Pool
 import time
 from scipy.interpolate import interp1d
 from scipy import interpolate
+from scipy.optimize import minimize
+from scipy import optimize
 
 RESULTS_FILE = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
 
+wing_length = 12.87
+chord_length = 3.
+chord_height = 0.55
+density = 2810 #kg/m^3
 max_shear_strength = 5.72e8 * 2.5
 multi = MultiRun()
 
@@ -83,10 +90,10 @@ krig = Kriging(known_params, known_stress)
 #prev stored results:
 krig.update_param([0.024898436078495855, 2482513.627234583], [1.8254148090594156, 2.0])
 
-krig.optimize()
+#krig.optimize()
 
-krig.plot_theta_likelihood_R2()
-krig.plot_p_likelihood_R2()
+#krig.plot_theta_likelihood_R2()
+#krig.plot_p_likelihood_R2()
 
 minLike = krig.calc_likelihood()
 print('minLike = ' + str(minLike))
@@ -106,8 +113,52 @@ vali.calc_deviation(ribs, shell, stress, krig.predict)
 ##################################################
 # optimize
 
+def shell_predict(shell_thick, krig_inst, rib_num):
+    #krig_inst = args[0]
+    #rib_num = args[1]
+    stress_val = krig_inst.predict([rib_num, shell_thick])
+    #return stress_val
+    return stress_val - max_shear_strength
 
+opti_shell = []
+opti_stress = []
+opti_weights = []
+for i in range(0, len(ribs)):
+    #stress = stress[:,i]
+    # SLSQP: proplem; find local min not glob. depending on init-vals
+    init_guess = shell[int(len(shell)/2.)]
+    bnds = [(min(shell), max(shell))]
+    #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
+    #opti_shell.append(res.x[0])
+    root = optimize.newton(shell_predict, init_guess, args=[krig, ribs[i]])
+    opti_shell.append(root)
+    opti_stress.append(krig.predict([ribs[i], root]))
+    weight = WingConstruction.calc_weight_stat(wing_length,
+                                               chord_length,
+                                               chord_height,
+                                               ribs[i],
+                                               root,
+                                               density)
+    opti_weights.append(weight)
+    """
+    plt.clf()
+    sll = np.linspace(min(shell), max(shell), 500)
+    strs = []
+    for s in sll:
+        strs.append(shell_predict(s, krig, ribs[i]))
+    plt.plot(sll, strs, 'b-')
+    opt_strs = shell_predict(root, krig, ribs[i])
+    plt.plot([root], [opt_strs], 'ro')
+    plt.grid(True)
+    plt.show()
+    """
 
+best_i = opti_weights.index(min(opti_weights))
+
+optWeightPlot = PlotHelper(['ribs', 'weight'])
+optWeightPlot.ax.plot(ribs, opti_weights, 'b-')
+optWeightPlot.ax.plot([ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
+optWeightPlot.finalize()
 
 ##################################################
 # plot it
@@ -116,6 +167,7 @@ plot3d = PlotHelper(['ribs', 'shell thickness in m', 'mises stress'])
 
 #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
+# plot FEM data as lines
 for i in range(0,len(ribs)):
     if i == 0:
         plot3d.ax.plot(np.ones((len(shell)))*ribs[i], np.array(shell), stress[:,i], 'g-', lw=3., label='fem data')
@@ -124,13 +176,20 @@ for i in range(0,len(ribs)):
 
 #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
 
+# plot limit load as wireframe
 limit = np.full((n_thick, n_rib),max_shear_strength)
 plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
+# plot surrogate model as wiregrame
 ribs_sample = np.linspace(min(ribs), max(ribs), 200)
 shell_sample = np.linspace(min(shell), max(shell), 200)
 kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b')
 samplePoints = plot3d.ax.plot(known_rib, known_shell, known_stress, 'bo', label='sampling points')
+
+# plot limit load line
+plot3d.ax.plot(ribs, opti_shell, opti_stress, 'k--')
+# plot optimal point
+plot3d.ax.plot([ribs[best_i]], [opti_shell[best_i]], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5)
 
 plot3d.ax.set_zlim3d(0, max_shear_strength)
 plot3d.finalize()
