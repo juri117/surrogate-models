@@ -4,6 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import rc
 import matplotlib
 import numpy as np
+from matplotlib import rcParams
 
 
 class PlotHelper:
@@ -20,9 +21,9 @@ class PlotHelper:
         elif len(axis_labels) == 3:
             self.fig = plt.figure()
             self.ax = self.fig.gca(projection='3d')
-            self.ax.set_xlabel(axis_labels[0], fontdict=self.font)
-            self.ax.set_ylabel(axis_labels[1], fontdict=self.font)
-            self.ax.set_zlabel(axis_labels[2], fontdict=self.font)
+            self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=17)
+            self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=17)
+            self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=17)
             rc('xtick', labelsize=self.FONT_SIZE)
             rc('ytick', labelsize=self.FONT_SIZE)
             #rc('ztick', labelsize=self.FONT_SIZE)
@@ -34,10 +35,15 @@ class PlotHelper:
             rc('text', usetex=True)
         rc('font', **self.font)
 
-    def finalize(self, width=8, height=5, legendLoc=1, legendNcol=1):
-        legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
+    def finalize(self, width=8, height=5, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True):
+        if bbox_to_anchor is not None:
+            legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=(0.5, -0.25))
+        else:
+            legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
         self.fig.set_size_inches(width, height)
         self.ax.autoscale_view(tight=True)
+        if tighten_layout:
+            plt.tight_layout()
         return legend
 
     def save(self, file_path):
@@ -53,7 +59,7 @@ class PlotHelper:
             #print(str(angle))
             plt.pause(.001)
 
-    def plot_function_3D(self, f, fx, fy, label, color='b'):
+    def plot_function_3D(self, f, fx, fy, label, color='b', scale=[1.,1.,1.]):
         fz = np.zeros((len(fy), len(fx)))
         for iX in range(0, len(fx)):
             for iY in range(0, len(fy)):
@@ -61,11 +67,12 @@ class PlotHelper:
                 fz[iY][iX] = f(coords)
 
         plotX, plotY = np.meshgrid(fx, fy)
-        surf = self.ax.plot_wireframe(plotX, plotY, fz, color=color, label=label, rcount=20, ccount=20,
+        surf = self.ax.plot_wireframe(plotX*scale[0], plotY*scale[1], fz*scale[2], color=color, label=label, rcount=20, ccount=20,
                                        linewidths=1,
                                        alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
         return surf
 
+    '''
     def plot_function_2D(self, f, fx, label, color='b'):
         fz = np.zeros((len(fx), 1))
         for iX in range(0, len(fx)):
@@ -76,3 +83,4 @@ class PlotHelper:
                                        linewidths=1,
                                        alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
         return surf
+    '''

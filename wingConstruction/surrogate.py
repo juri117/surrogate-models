@@ -173,36 +173,45 @@ optWeightPlot.finalize()
 ##################################################
 # plot it
 
-plot3d = PlotHelper(['ribs', 'shell thickness in m', 'mises stress'])
+# convert all to np arrays
+shell = np.array(shell)
+opti_shell = np.array(opti_shell)
+known_shell = np.array(known_shell)
+
+
+plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False)
 
 #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
 # plot FEM data as lines
 for i in range(0,len(ribs)):
     if i == 0:
-        plot3d.ax.plot(np.ones((len(shell)))*ribs[i], np.array(shell), stress[:,i], 'g-', lw=3., label='fem data')
+        plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='fem data')
     else:
-        plot3d.ax.plot(np.ones((len(shell))) * ribs[i], np.array(shell), stress[:, i], 'g-', lw=3.)
+        plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
 
 #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
 
 # plot limit load as wireframe
-limit = np.full((n_thick, n_rib),max_shear_strength)
-plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
+#limit = np.full((n_thick, n_rib),max_shear_strength)
+#plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
 # plot surrogate model as wiregrame
 ribs_sample = np.linspace(min(ribs), max(ribs), 200)
 shell_sample = np.linspace(min(shell), max(shell), 200)
-kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b')
-samplePoints = plot3d.ax.plot(known_rib, known_shell, known_stress, 'bo', label='sampling points')
+kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b', scale=[1.,1000.,1.])
+samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
 # plot limit load line
-plot3d.ax.plot(opti_ribs, opti_shell, opti_stress, 'k--', lw=3., label='optimum line')
+plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. stress line')
 # plot optimal point
-plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
+plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
+plot3d.ax.locator_params(nbins=5, axis='y')
 
-plot3d.ax.set_zlim3d(0, max_shear_strength)
-plot3d.finalize()
+plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
+plot3d.finalize(height=7, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
+plot3d.ax.view_init(18, 60)
+plot3d.save('../dataOut/surroPlot.pdf')
 plot3d.show()
 
 print('done')

@@ -26,6 +26,7 @@ class WingConstruction:
         self.pylonHeight = 0.3
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
+        self.stringerHeight = 0.
 
     def calc_weight(self, density):
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
@@ -91,26 +92,26 @@ class WingConstruction:
             out_lines.append('swep pc4 new tra 0 {:f} 0 {:d}'.format(self.boxOverhang, self.calc_division(self.boxOverhang)))
             out_lines.append('')
 
-        '''
-        out_lines.append('# stringer')
-        out_lines.append('pnt str0 0 0.3 0')
-        out_lines.append('seta str0 str0')
-        out_lines.append('swep str0 str0 tra 0 0 0.005 2')
-        out_lines.append('')
-        out_lines.append('pnt str1 0 0.9 0')
-        out_lines.append('seta str1 str1')
-        out_lines.append('swep str1 str1 tra 0 0 0.005 2')
-        out_lines.append('')
-        
-        out_lines.append('pnt str2 0 0.3 0.55')
-        out_lines.append('seta str2 str2')
-        out_lines.append('swep str2 str2 tra 0 0 -0.005 2')
-        out_lines.append('')
-        out_lines.append('pnt str3 0 0.9 0.55')
-        out_lines.append('seta str3 str3')
-        out_lines.append('swep str3 str3 tra 0 0 -0.005 2')
-        out_lines.append('')
-        '''
+        if self.stringerHeight > 0.:
+            out_lines.append('# stringer')
+            out_lines.append('pnt str0 0 0.3 0')
+            out_lines.append('seta str0 str0')
+            out_lines.append('swep str0 str0 tra 0 0 {:f} 2'.format(self.stringerHeight))
+            out_lines.append('')
+            out_lines.append('pnt str1 0 0.9 0')
+            out_lines.append('seta str1 str1')
+            out_lines.append('swep str1 str1 tra 0 0 {:f} 2'.format(self.stringerHeight))
+            out_lines.append('')
+
+            out_lines.append('pnt str2 0 0.3 0.55')
+            out_lines.append('seta str2 str2')
+            out_lines.append('swep str2 str2 tra 0 0 {:f} 2'.format(-1.*self.stringerHeight))
+            out_lines.append('')
+            out_lines.append('pnt str3 0 0.9 0.55')
+            out_lines.append('seta str3 str3')
+            out_lines.append('swep str3 str3 tra 0 0 {:f} 2'.format(-1*self.stringerHeight))
+            out_lines.append('')
+
 
         out_lines.append('seta II2d all')
         out_lines.append('')
@@ -171,7 +172,10 @@ class WingConstruction:
         out_lines.append('send II abq sur')
         out_lines.append('')
         #out_lines.append('seta pylL l pyl')
-        out_lines.append('seta pylL l L00I')
+        if self.stringerHeight > 0.:
+            out_lines.append('seta pylL l L00Y')
+        else:
+            out_lines.append('seta pylL l L00I')
         out_lines.append('comp pylL do')
         out_lines.append('comp pylL do')
         out_lines.append('send pylL abq sur')
@@ -263,11 +267,11 @@ class WingConstruction:
         out_lines.append('*shell section, elset=Eall, material=ALU')
         out_lines.append('{:f}'.format(self.shellThickness))
         out_lines.append('')
-        out_lines.append('*tie,name=t1,position tolerance=0.01')
+        out_lines.append('*tie,name=tpyl,position tolerance=0.01')
         out_lines.append('SpylL,SII')
         out_lines.append('')
         for i in range(1, self.ribs):
-            out_lines.append('*tie,name=t{:d},position tolerance=0.1'.format(i))
+            out_lines.append('*tie,name=trib{:d},position tolerance=0.1'.format(i))
             out_lines.append('SribL{:d},SII'.format(i))
             out_lines.append('')
         out_lines.append('** step')

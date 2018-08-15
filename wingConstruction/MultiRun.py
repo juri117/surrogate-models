@@ -41,7 +41,7 @@ chord_length = 3.
 chord_height = 0.55
 
 density = 2810 #kg/m^3
-shear_strength = 5.72e8 / safety_fac #3.31e8 #Pa
+shear_strength = 5.72e8 * 2.#3.31e8 #Pa
 
 max_shear_strength = shear_strength
 
@@ -282,6 +282,6 @@ if __name__ == '__main__':
     #output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     #output_file_name = '2drun_2018-08-09_17_47_11.csv'
-    output_file_name = '2drun_2018-08-10_13_33_03.csv'
+    output_file_name = '2drun_2018-08-14_14_07_48.csv'
     #output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)
