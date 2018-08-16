@@ -134,6 +134,17 @@ class Calculix():
         else:
             print('cgx succeeded('+self._workingDir+')')
             self.process_cgx_output(out)
+        # process fixed result output if available
+        """
+        if os.path.isfile(self._workingDir + '/max_stress_fixed.out'):
+            file = open(self._workingDir + '/max_stress_fixed.out', 'r')
+            line = file.read()
+            parts = line.split(' ')
+            for i in range(0, len(parts)-1):
+                if 'val:' in parts[i]:
+        """
+
+
 
     def process_cgx_output(self, strOut):
         lines = strOut.split(b'\n')

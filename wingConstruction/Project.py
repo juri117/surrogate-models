@@ -69,10 +69,10 @@ class Project:
             self.errorFlag = True
 
     def post_process(self, template='wing_post'):
-        copyfile(Constants().INPUT_DIR + '/' + template + '.fbd', self.workingDir + '/wing_post.fbd')
+        copyfile(Constants().INPUT_DIR + '/' + template + '.fbd', self.workingDir + '/'+template+'.fbd')
         if self.clx is None:
             self.clx = Calculix(workingDir=self.workingDir)
-        self.clx.run_postprocessing('wing_post.fbd')
+        self.clx.run_postprocessing(template+'.fbd')
         if self.clx.errorFlag:
             self.errorFlag = True
 

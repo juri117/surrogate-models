@@ -40,6 +40,17 @@ frame
 hcpy png
 sys mv hcpy_3.png wing_mieses_top.png
 
+### FIXED MISES MAX STRESS
+
+#mark BCs plus some space (threshold) to skip singularity at BC
+seta whole n all
+enq whole thresh rec 0 _ _ 0.3
+seta relev n all
+setr relev n thresh
+seto relev
+enq relev out set relev 0. h
+sys mv enq_lc2_e7_1.out max_stress_fixed.out
+
 ### MESH
 view surf
 view elem

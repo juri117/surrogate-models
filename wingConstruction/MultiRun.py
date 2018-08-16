@@ -85,7 +85,6 @@ class MultiRun:
                 pro.post_process(template='wing_post_nl_simple')
             else:
                 pro.post_process(template='wing_post')
-                #pro.postprocess(template='wing_post_max_mises_fixed')
 
         print('#########################################')
         print('finished: ' + pro.workingDir)
@@ -95,7 +94,7 @@ class MultiRun:
     def collect_results(self, pro):
         l = pro.validate_load('loadTop.frc')
         l += pro.validate_load('loadBot.frc')
-        load_error = (-0.5*wing_load) - l
+        load_error = (-1.*wing_load) - l
         if not pro.errorFlag:
             export_row = str(pro.elementSize) + ',' \
             + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
@@ -106,6 +105,7 @@ class MultiRun:
             + str(pro.clx.dispD3Max) + ','\
             + str(pro.clx.stressMisesMin) + ','\
             + str(pro.clx.stressMisesMax) + ',' \
+            + str(pro.clx.stressMisesMaxFixed) + ',' \
             + str(load_error)+'\n'
             return export_row
         return ''
@@ -139,7 +139,7 @@ class MultiRun:
         output_f = open(Constants().WORKING_DIR + '/'
                        + output_file_name,
                        'w')
-        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
+        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,loadError\n')
 
         for p in projects:
             outStr = self.collect_results(p)
@@ -259,7 +259,7 @@ class MultiRun:
         output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
         output_f.write(
-            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
+            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,loadError\n')
         for p in projects:
             out_str = self.collect_results(p)
             if out_str != '':

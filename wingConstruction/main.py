@@ -33,12 +33,12 @@ shear_strength = 3.31e8 / safety_fac
 
 t = TimeTrack()
 t.tic()
-projectName = 'test_r11_s0008'
+projectName = 'test_r14_s0008'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
 pro1.boxHeight = chord_height
-pro1.ribs = 11
+pro1.ribs = 14
 pro1.enginePos = engine_pos_y
 pro1.engineWeight = engine_weight
 pro1.boxOverhang = 0.
@@ -53,6 +53,7 @@ pro1.generate_geometry(nonlinear=False)
 pro1.solve()
 if not pro1.errorFlag:
     pro1.post_process()
+    #pro1.post_process(template='wing_post_max_mises_fixed')
     if not pro1.errorFlag:
         runTime = t.toc()
 
@@ -60,10 +61,12 @@ if not pro1.errorFlag:
         print('max displacement: ' + str(pro1.clx.dispD3Max))
         print('min mieses stress: ' + str(pro1.clx.stressMisesMin))
         print('max mieses stress: ' + str(pro1.clx.stressMisesMax))
+        print('fix mieses stress: ' + str(pro1.clx.stressMisesMaxFixed))
+
 
         #l = pro1.validate_load('load.frc')
 
         l = pro1.validate_load('loadTop.frc')
         l += pro1.validate_load('loadBot.frc')
-        print('load error: ' + str((-0.5*wing_load) - l))
+        print('load error: ' + str((-1.*wing_load) - l))
 

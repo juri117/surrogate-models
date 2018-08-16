@@ -2,8 +2,7 @@ read wingRun.frd
 
 view disp
 
-### MIESES TRESS
-### MIESES TRESS
+### MIESES STRESS
 
 text Mieses stress buttom
 view disp off
@@ -17,7 +16,7 @@ frame
 
 #mark BCs
 seta whole n all
-enq whole bc rec 0 _ _ 0.5
+enq whole bc rec 0 _ _ 0.3
 
 seta relev n all
 setr relev n bc
@@ -33,6 +32,7 @@ seto relev
 #enq relev out set pos1 1. h
 #find maximum
 enq relev out set relev 0. h
+sys mv enq_lc2_e7_1.out max_stress_fixed.out
 
 plus n out r
 
