@@ -212,6 +212,11 @@ class Abaqus():
     def solve_model(self):
         # print('--- start ccx output ---------------------------------------')
         print('run fem solver abaqus('+self._workingDir+')')
+        # this is a fix to make abaqus run on win server
+        try:
+            os.environ.pop('PYTHONIOENCODING')
+        except KeyError:
+            pass
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(1), 'int', 'ask=off'], cwd=self._workingDir,
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
