@@ -25,9 +25,6 @@ import time
 from scipy.interpolate import interp1d
 from scipy import interpolate
 
-
-
-
 USE_ABAQUS = True
 NON_LINEAR = False
 USED_CORES = 1
