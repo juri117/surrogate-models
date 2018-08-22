@@ -211,7 +211,7 @@ class Abaqus():
     def solve_model(self):
         # print('--- start ccx output ---------------------------------------')
         print('run fem solver ccx('+self._workingDir+')')
-        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus=2', 'int', 'ask=off'], cwd=self._workingDir,
+        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(Constants().config.getint('meta', 'used_cores')), 'int', 'ask=off'], cwd=self._workingDir,
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         out = out.decode('UTF-8')

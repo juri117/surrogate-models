@@ -25,8 +25,14 @@ import time
 from scipy.interpolate import interp1d
 from scipy import interpolate
 
-USED_CORES = Constants().config.getint('meta', 'used_cores')
+
+
+
+USE_ABAQUS = True
 NON_LINEAR = False
+USED_CORES = 1
+if not USE_ABAQUS:
+    USED_CORES = Constants().config.getint('meta', 'used_cores')
 
 max_g = 1. #2.5
 safety_fac = 1.5
@@ -78,13 +84,18 @@ class MultiRun:
 
     def run_project(self, pro):
         pro.generate_geometry(nonlinear=NON_LINEAR)
-        pro.solve()
-        print('############ DONE ############')
-        if not pro.errorFlag:
-            if NON_LINEAR:
-                pro.post_process(template='wing_post_nl_simple')
-            else:
-                pro.post_process(template='wing_post')
+        if not USE_ABAQUS:
+            pro.solve()
+            print('############ DONE ############')
+            if not pro.errorFlag:
+                if NON_LINEAR:
+                    pro.post_process(template='wing_post_nl_simple')
+                else:
+                    pro.post_process(template='wing_post')
+        else:
+            pro.generate_geometry_abaqus()
+            pro.solve_abaqus()
+            pro.post_process_abaqus()
 
         print('#########################################')
         print('finished: ' + pro.workingDir)
