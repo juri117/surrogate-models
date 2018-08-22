@@ -92,7 +92,8 @@ class MultiRun:
         else:
             pro.generate_geometry_abaqus()
             pro.solve_abaqus()
-            pro.post_process_abaqus()
+            if not pro.errorFlag:
+                pro.post_process_abaqus()
 
         print('#########################################')
         print('finished: ' + pro.workingDir)
