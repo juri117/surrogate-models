@@ -45,7 +45,7 @@ multi = MultiRun()
 ##################################################
 # collect data
 
-ribs, shell, stress, disp, weight = multi.read_data_file(RESULTS_FILE)
+ribs, shell, stress, disp, weight, max_stress_fixed = multi.read_data_file(RESULTS_FILE)
 n_rib = len(ribs)
 n_thick = len(shell)
 rib_mat, shell_mat = np.meshgrid(ribs, shell)

@@ -171,19 +171,20 @@ class WingConstruction:
         out_lines.append('# write surface files for TIEs')
         out_lines.append('send II abq sur')
         out_lines.append('')
-        #out_lines.append('seta pylL l pyl')
-        if self.stringerHeight > 0.:
-            out_lines.append('seta pylL l L00Y')
-        else:
-            out_lines.append('seta pylL l L00I')
+        out_lines.append('seta pylL s pyl')
+        #if self.stringerHeight > 0.:
+        #    out_lines.append('seta pylL l L00Y')
+        #else:
+        #    out_lines.append('seta pylL l L00I')
         out_lines.append('comp pylL do')
         out_lines.append('comp pylL do')
         out_lines.append('send pylL abq sur')
         out_lines.append('')
 
         for i in range(1, self.ribs):
-            out_lines.append('seta ribL{:d} l rib{:d}'.format(i, i))
-
+            # here we use 's' to make it abaqus compatible, l is working for calculix
+            # s however causes warinings in caluclix
+            out_lines.append('seta ribL{:d} s rib{:d}'.format(i, i))
             out_lines.append('comp ribL{:d} do'.format(i))
             out_lines.append('comp ribL{:d} do'.format(i))
             out_lines.append('send ribL{:d} abq sur'.format(i))
@@ -259,10 +260,11 @@ class WingConstruction:
         out_lines.append('Nbc2,1,6')
         out_lines.append('')
         out_lines.append('** material definition')
-        out_lines.append('*MATERIAL,NAME=ALU')
-        out_lines.append('*ELASTIC')
-        out_lines.append('{:.3e}, {:.3f}'.format(material_young, material_poisson))
-        out_lines.append('')
+        out_lines.append('*Material, name=ALU')
+        out_lines.append('*Elastic')
+        out_lines.append(' {:.3e}, {:.3f}'.format(material_young, material_poisson))
+        out_lines.append('** workaround (if after material prop is a empty row it dows not work)')
+        #out_lines.append('')
         out_lines.append('** define surfaces')
         out_lines.append('*shell section, elset=Eall, material=ALU')
         out_lines.append('{:f}'.format(self.shellThickness))
@@ -271,7 +273,7 @@ class WingConstruction:
         out_lines.append('SpylL,SII')
         out_lines.append('')
         for i in range(1, self.ribs):
-            out_lines.append('*tie,name=trib{:d},position tolerance=0.1'.format(i))
+            out_lines.append('*tie,name=trib{:d},position tolerance=0.01'.format(i))
             out_lines.append('SribL{:d},SII'.format(i))
             out_lines.append('')
         out_lines.append('** step')

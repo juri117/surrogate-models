@@ -41,7 +41,7 @@ chord_length = 3.
 chord_height = 0.55
 
 density = 2810 #kg/m^3
-shear_strength = 5.72e8 * 2.#3.31e8 #Pa
+shear_strength = 5.72e8 #3.31e8 #Pa
 
 max_shear_strength = shear_strength
 
@@ -163,6 +163,7 @@ class MultiRun:
         weight_raw = data[:, 4]
         max_stress_raw = data[:, 8]
         max_disp_raw = data[:, 5]
+        max_stress_fixed_raw = data[:, 9]
 
         n_rib = len(set(ribs_raw))
         n_thick = len(set(shell_thick_raw))
@@ -172,16 +173,19 @@ class MultiRun:
         # shellThick = [x * 1000 for x in shellThick]
         weight = np.zeros((n_thick, n_rib))
         max_stress = np.zeros((n_thick, n_rib))
+        max_stress_fixed = np.zeros((n_thick, n_rib))
         max_disp = np.zeros((n_thick, n_rib))
         for i in range(0, len(ribs_raw)):
             weight[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = weight_raw[i]
             max_stress[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_stress_raw[i]
+            max_stress_fixed[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_stress_fixed_raw[i]
             max_disp[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_disp_raw[i]
 
-        return ribs, shell_thick, max_stress, max_disp, weight
+        return ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed
 
     def plot_results(self, file_name):
-        ribs, shell_thick, max_stress, max_disp, weight = self.read_data_file(file_name)
+        ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed = self.read_data_file(file_name)
+        max_stress = max_stress_fixed
         n_rib = len(ribs)
         n_thick = len(shell_thick)
         opti_ribs = []
@@ -277,11 +281,11 @@ class MultiRun:
 
 if __name__ == '__main__':
     multi = MultiRun()
-    #multi.convergence_analyzis_run(cleanup=True)
+    #multi.convergence_analysis_run(cleanup=True)
 
     #output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     #output_file_name = '2drun_2018-08-09_17_47_11.csv'
-    output_file_name = '2drun_2018-08-14_14_07_48.csv'
+    output_file_name = '2drun_2018-08-16_12_17_24.csv'
     #output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)

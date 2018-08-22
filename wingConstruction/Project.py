@@ -17,6 +17,7 @@ from shutil import rmtree
 from wingConstruction.utils.Constants import Constants
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.fem.Calculix import Calculix
+from wingConstruction.fem.Abaqus import Abaqus
 
 
 class Project:
@@ -29,6 +30,7 @@ class Project:
 
         self.clx = None
         self.geo = None
+        self.aba = None
 
         self.halfSpan = 17.
         self.boxDepth = 2.
@@ -59,11 +61,30 @@ class Project:
                                self.elementSize,
                                element_type=self.elemType)
         self.geo.generate_inp(nonlinear=nonlinear)
+        if self.clx is None:
+            self.clx = Calculix(workingDir=self.workingDir)
+        self.clx.generate_mesh('wingGeo')
+
+    def generate_geometry_abaqus(self):
+        if self.aba is None:
+            self.aba = Abaqus(self.workingDir)
+        self.aba.calculix_to_abaqus(self.shellThickness)
+
+    def solve_abaqus(self):
+        if self.aba is None:
+            self.aba = Abaqus(self.workingDir)
+        self.aba.solve_model()
+        if self.aba.errorFlag:
+            self.errorFlag = True
+
+    def post_process_abaqus(self):
+        if self.aba is None:
+            self.aba = Abaqus(self.workingDir)
+        self.aba.post_processing()
 
     def solve(self):
         if self.clx is None:
             self.clx = Calculix(workingDir=self.workingDir)
-        self.clx.generate_mesh('wingGeo')
         self.clx.solve_model('wingRun')
         if self.clx.errorFlag:
             self.errorFlag = True

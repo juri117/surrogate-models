@@ -50,6 +50,8 @@ class Constants(object):
             print('open the file: ' + self.SETUP_INI_FILE_NAME + ' and adapt the entry for calculix_path to the real location')
             sys.exit(1)
 
+        self.ABAQUS_EXE_PATH = self.config['fem']['abaqus_exe_path']
+
         self.CALCULIX_CCX_EXE_PATH = self.CALCULIX_BIN_PATH + '/' + self.config['fem']['calculix_ccx_executable']
         self.CALCULIX_CGX_EXE_PATH = self.CALCULIX_BIN_PATH + '/' + self.config['fem']['calculix_cgx_executable']
 
