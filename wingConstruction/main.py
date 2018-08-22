@@ -35,7 +35,7 @@ shear_strength = 3.31e8 / safety_fac
 
 t = TimeTrack()
 t.tic()
-projectName = 'test000_'#_r07_s002'
+projectName = 'test000_s003'#_r07_s002'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
@@ -49,7 +49,7 @@ pro1.forceBot = -(1./3.) * wing_load
 pro1.elementSize = .1
 #pro1.elementSize = 0.05
 pro1.elemType = 'qu4'
-pro1.shellThickness = 0.0015
+pro1.shellThickness = 0.003
 pro1.generate_geometry(nonlinear=False)
 
 pro1.generate_geometry_abaqus()

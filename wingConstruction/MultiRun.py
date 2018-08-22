@@ -27,24 +27,24 @@ from scipy import interpolate
 
 USE_ABAQUS = True
 NON_LINEAR = False
-USED_CORES = 1
-if not USE_ABAQUS:
-    USED_CORES = Constants().config.getint('meta', 'used_cores')
+#USED_CORES = 1
+#if not USE_ABAQUS:
+USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 1. #2.5
+max_g = 1.  # 2.5
 safety_fac = 1.5
 mtow = 27987.
-fuel_mass_in_wings = 2*2659.
-first_wing_struct_mass = 2*1000.
+fuel_mass_in_wings = 2 * 2659.
+first_wing_struct_mass = 2 * 1000.
 wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * 0.5
-engine_weight = (873.1 + 251.9 + 112.7 + 62.8) * 9.81 #engine, prop, wheel, brake
+engine_weight = (873.1 + 251.9 + 112.7 + 62.8) * 9.81  # engine, prop, wheel, brake
 engine_pos_y = 3.
 wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
 
-density = 2810 #kg/m^3
-shear_strength = 5.72e8 #3.31e8 #Pa
+density = 2810  # kg/m^3
+shear_strength = 5.72e8  # 3.31e8 #Pa
 
 max_shear_strength = shear_strength
 
@@ -62,7 +62,7 @@ class MultiRun:
         print('done with {:d} of {:d}'.format(self.task_done, self.task_totals))
 
     def new_project(self, project_name):
-        #project_name = 'meshSize_r{:02d}_t{:5f}'.format(rib_count, shell_thick)
+        # project_name = 'meshSize_r{:02d}_t{:5f}'.format(rib_count, shell_thick)
         pro = Project(project_name)
         pro.halfSpan = wing_length
         pro.boxDepth = chord_length * 0.4
@@ -71,12 +71,12 @@ class MultiRun:
         pro.enginePos = engine_pos_y
         pro.engineWeight = engine_weight
         pro.boxOverhang = 0.
-        pro.forceTop = -(2./3.) * wing_load
-        pro.forceBot = -(1./3.) * wing_load
+        pro.forceTop = -(2. / 3.) * wing_load
+        pro.forceBot = -(1. / 3.) * wing_load
         pro.elementSize = element_size
         # pro1.elementSize = 0.05
         pro.elemType = 'qu4'
-        pro.shellThickness = 0.009
+        pro.shellThickness = 0.002
         return pro
 
     def run_project(self, pro):
@@ -102,19 +102,18 @@ class MultiRun:
     def collect_results(self, pro):
         l = pro.validate_load('loadTop.frc')
         l += pro.validate_load('loadBot.frc')
-        load_error = (-1.*wing_load) - l
+        load_error = (-1. * wing_load) - l
         if not pro.errorFlag:
             export_row = str(pro.elementSize) + ',' \
-            + str(pro.geo.calc_span_division(pro.halfSpan)) + ',' \
-            + str(pro.ribs) + ',' \
-            + str(pro.shellThickness) + ',' \
-            + str(pro.geo.calc_weight(density)) + ',' \
-            + str(pro.clx.dispD3Min) + ','\
-            + str(pro.clx.dispD3Max) + ','\
-            + str(pro.clx.stressMisesMin) + ','\
-            + str(pro.clx.stressMisesMax) + ',' \
-            + str(pro.clx.stressMisesMaxFixed) + ',' \
-            + str(load_error)+'\n'
+                         + str(pro.calc_span_division()) + ',' \
+                         + str(pro.ribs) + ',' \
+                         + str(pro.shellThickness) + ',' \
+                         + str(pro.geo.calc_weight(density)) + ',' \
+                         + str(pro.dispD3Min) + ',' \
+                         + str(pro.dispD3Max) + ',' \
+                         + str(pro.stressMisesMin) + ',' \
+                         + str(pro.stressMisesMax) + ',' \
+                         + str(load_error) + '\n'
             return export_row
         return ''
 
@@ -128,9 +127,9 @@ class MultiRun:
         return projects
 
     def main_run(self, cleanup=False):
-        ribs = np.arange(5, 21, 1)
+        ribs = np.arange(5, 26, 1)
         ribs = list(ribs)
-        thick = np.arange(0.00065, 0.00145, 0.00005)
+        thick = np.arange(0.001, 0.003, 0.0001)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -140,15 +139,13 @@ class MultiRun:
                 pro.ribs = r
                 pro.shellThickness = t
                 projects.append(pro)
-
         projects = self.pool_run(projects)
-
-        output_file_name = '2drun_'+datetime.now().strftime('%Y-%m-%d_%H_%M_%S')+'.csv'
+        output_file_name = '2drun_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/'
-                       + output_file_name,
-                       'w')
-        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,loadError\n')
-
+                        + output_file_name,
+                        'w')
+        output_f.write(
+            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
         for p in projects:
             outStr = self.collect_results(p)
             if outStr != '':
@@ -206,20 +203,20 @@ class MultiRun:
         plot1 = PlotHelper(['ribs', 'max stress'])
         for i in range(0, len(shell_thick)):
             stress = max_stress[i]
-            #if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
+            # if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
             #   optRibs = np.interp(max_shear_strength, stress, ribs)
             #   f = interp1d(stress, ribs, kind='linear')
             #   plot1.ax.plot([f(max_shear_strength)], [max_shear_strength], 'go')
             #   opti_ribs.append(f(max_shear_strength))
             #   opti_shell.append(shellThick[i])
             plot1.ax.plot(ribs, max_stress[i], label='shell= {:03f}'.format(shell_thick[i]))
-        plot1.ax.plot(ribs, np.full((len(ribs), 1),max_shear_strength), 'r--', label='Limit-Load')
+        plot1.ax.plot(ribs, np.full((len(ribs), 1), max_shear_strength), 'r--', label='Limit-Load')
         plot1.finalize(legendNcol=2)
-        #plot1.show()
+        # plot1.show()
 
         plot2 = PlotHelper(['shellthickness in mm', 'max stress'])
         for i in range(0, len(ribs)):
-            stress = max_stress[:,i]
+            stress = max_stress[:, i]
             plot2.ax.plot(shell_thick, stress, label='ribs= {:f}'.format(ribs[i]))
             if np.min(stress) < max_shear_strength and np.max(stress) > max_shear_strength:
                 # optRibs = np.interp(max_shear_strength, stress, ribs)
@@ -229,7 +226,7 @@ class MultiRun:
                 opti_shell.append(f(max_shear_strength))
                 opti_weight.append(f_weight(ribs[i], f(max_shear_strength))[0])
         plot2.ax.plot(shell_thick, np.full((len(shell_thick), 1), max_shear_strength), 'r--', label='Limit-Load')
-        #plot2.ax.set_xlim((min([x * 1000 for x in shellThick]), max([x * 1000 for x in shellThick])))
+        # plot2.ax.set_xlim((min([x * 1000 for x in shellThick]), max([x * 1000 for x in shellThick])))
 
         plot2.finalize(legendNcol=2)
         plot2.show()
@@ -240,25 +237,26 @@ class MultiRun:
         print('@ {:05f} shell-thickness'.format(opti_shell[opti_min_index]))
 
         plot3d = PlotHelper(['ribs', 'shell thickness in m', 'mises stress'])
-        max_stress[max_stress > 1.2*max_shear_strength] = np.nan
-        color_map = plt.cm.jet(weight/np.max(weight))
+        max_stress[max_stress > 1.2 * max_shear_strength] = np.nan
+        color_map = plt.cm.jet(weight / np.max(weight))
         surf = plot3d.ax.plot_surface(rib_mat, shell_mat, max_stress, facecolors=color_map,
-                        cstride=1,
-                        rstride=1)
+                                      cstride=1,
+                                      rstride=1)
         optiLine = plot3d.ax.plot(opti_ribs, opti_shell, max_shear_strength, 'k--', label='Limit-Load')
-        optiPoint = plot3d.ax.plot([opti_ribs[opti_min_index]], [opti_shell[opti_min_index]], max_shear_strength, 'ro', label='glob. optimum')
+        optiPoint = plot3d.ax.plot([opti_ribs[opti_min_index]], [opti_shell[opti_min_index]], max_shear_strength, 'ro',
+                                   label='glob. optimum')
         m = cm.ScalarMappable(cmap=cm.jet)
         m.set_array(weight)
         cbar = plt.colorbar(m)
         cbar.set_label('structure weight in kg', rotation=270)
-        limit = np.full((n_thick, n_rib),max_shear_strength)
+        limit = np.full((n_thick, n_rib), max_shear_strength)
         plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.1)
         plot3d.ax.set_zlim3d(0, max_shear_strength)
         plot3d.finalize()
         plot3d.show()
 
     def convergence_analysis_run(self, cleanup=False):
-        sizes = np.arange(0.04, .26, 0.01)
+        sizes = np.arange(0.08, .26, 0.01)
         sizes = list(sizes)
         projects = []
         for s in sizes:
@@ -271,7 +269,7 @@ class MultiRun:
         output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
         output_f.write(
-            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,stressMisesMaxFixed,loadError\n')
+            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
         for p in projects:
             out_str = self.collect_results(p)
             if out_str != '':
@@ -289,11 +287,11 @@ class MultiRun:
 
 if __name__ == '__main__':
     multi = MultiRun()
-    #multi.convergence_analysis_run(cleanup=True)
+    #multi.convergence_analysis_run(cleanup=False)
 
-    #output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
+    # output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
-    #output_file_name = '2drun_2018-08-09_17_47_11.csv'
+    # output_file_name = '2drun_2018-08-09_17_47_11.csv'
     output_file_name = '2drun_2018-08-16_12_17_24.csv'
-    #output_file_name = multi.main_run(cleanup=False)
+    output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)

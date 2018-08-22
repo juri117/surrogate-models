@@ -28,7 +28,7 @@ class Project:
         if not os.path.isdir(self.workingDir):
             os.mkdir(self.workingDir)
 
-        self.clx = None
+        self.clx = Calculix(workingDir=self.workingDir)
         self.geo = None
         self.aba = None
 
@@ -44,6 +44,11 @@ class Project:
         self.elementSize = 0.25
         self.elemType = 'qu4'
         self.shellThickness = 0.01
+
+        self.dispD3Min = 0
+        self.dispD3Max = 0
+        self.stressMisesMin = 0
+        self.stressMisesMax = 0
 
     def generate_geometry(self, nonlinear=False):
         if self.geo is None:
@@ -65,6 +70,19 @@ class Project:
             self.clx = Calculix(workingDir=self.workingDir)
         self.clx.generate_mesh('wingGeo')
 
+    def calc_span_division(self):
+        if self.geo is None:
+            self.geo = WingConstruction(self.workingDir,
+                                        self.halfSpan,
+                                        self.boxDepth,
+                                        self.boxHeight,
+                                        self.ribs,
+                                        self.shellThickness,
+                                        self.enginePos,
+                                        box_overhang=self.boxOverhang)
+            self.geo.element_size = self.elementSize
+        return self.geo.calc_span_division(self.halfSpan)
+
     def generate_geometry_abaqus(self):
         if self.aba is None:
             self.aba = Abaqus(self.workingDir)
@@ -81,6 +99,10 @@ class Project:
         if self.aba is None:
             self.aba = Abaqus(self.workingDir)
         self.aba.post_processing()
+        self.dispD3Min = 0
+        self.dispD3Max = 0
+        self.stressMisesMin = self.aba.stressMisesMin
+        self.stressMisesMax = self.aba.stressMisesMax
 
     def solve(self):
         if self.clx is None:
@@ -96,6 +118,10 @@ class Project:
         self.clx.run_postprocessing(template+'.fbd')
         if self.clx.errorFlag:
             self.errorFlag = True
+        self.dispD3Min = self.clx.dispD3Min
+        self.dispD3Max = self.clx.dispD3Max
+        self.stressMisesMin = self.clx.stressMisesMin
+        self.stressMisesMax = self.clx.stressMisesMax
 
     def validate_load(self, load_file_name):
         load_f = open(self.workingDir + '/' + load_file_name)

@@ -172,7 +172,7 @@ class Abaqus():
     # fem post-processing
 
     def post_processing(self, save_to_file=False):
-        print('run fem solver ccx(' + self._workingDir + ')')
+        print('run fem post-processing abaqus(' + self._workingDir + ')')
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'odbreport', 'odb=abaqusJob', 'mode=CSV', 'results', 'invariants'],
                              cwd=self._workingDir,
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -198,8 +198,9 @@ class Abaqus():
                 break
             misis.append(float(vals[5].strip()))
 
-        self.stressMisesMax = max(misis)
-        self.stressMisesMin = min(misis)
+        if len(misis) > 0:
+            self.stressMisesMax = max(misis)
+            self.stressMisesMin = min(misis)
 
 
 
@@ -210,73 +211,18 @@ class Abaqus():
     # calls the fem solver (all input files must be present in the working directory)
     def solve_model(self):
         # print('--- start ccx output ---------------------------------------')
-        print('run fem solver ccx('+self._workingDir+')')
-        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(Constants().config.getint('meta', 'used_cores')), 'int', 'ask=off'], cwd=self._workingDir,
+        print('run fem solver abaqus('+self._workingDir+')')
+        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(1), 'int', 'ask=off'], cwd=self._workingDir,
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         out = out.decode('UTF-8')
         print(out)
         if not 'COMPLETED' in out:
             self.errorFlag = True
-
-
-    def process_cgx_output(self, strOut):
-        lines = strOut.split(b'\n')
-        for i in range(0, len(lines) - 3):
-            if b'DISP' in lines[i] and b'D3' in lines[i]:
-                if b'max:' in lines[i + 2]:
-                    str = lines[i + 2].replace(b' max:', b'')
-                    str = str.split(b' ')[0]
-                    self.dispD3Max = float(str)
-                if b'min:' in lines[i + 3]:
-                    str = lines[i + 3].replace(b' min:', b'')
-                    str = str.split(b' ')[0]
-                    self.dispD3Min = float(str)
-            if b'STRESS' in lines[i] and b'Mises' in lines[i]:
-                if b'max:' in lines[i + 2]:
-                    str = lines[i + 2].replace(b' max:', b'')
-                    str = str.split(b' ')[0]
-                    self.stressMisesMax = float(str)
-                if b'min:' in lines[i + 3]:
-                    str = lines[i + 3].replace(b' min:', b'')
-                    str = str.split(b' ')[0]
-                    self.stressMisesMin = float(str)
-            if b'mode:h' in lines[i]:
-                if b'node' in lines[i+1] and b'value' in lines[i+1]:
-                    str = lines[i + 1].replace(b' node:', b'')
-                    str = str.replace(b'value:', b'')
-                    str = str.replace(b'dist:', b'')
-                    vals = str.split(b' ')
-                    self.stressMisesMaxFixed = float(vals[1])
+            print('ERROR: run fem solver abaqus(' + self._workingDir + ')')
 
     ##############################################
     # helper functions
-
-    def run_ccx(self, fileName, pipe_response=False):
-        if pipe_response:
-            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, fileName], cwd=self._workingDir,
-                                 stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-        else:
-            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, fileName], cwd=self._workingDir)
-            p.wait()
-        return p
-
-    def run_cgx(self, file_name, pipe_response=False):
-        if pipe_response:
-            p = subprocess.Popen([Constants().CALCULIX_CGX_EXE_PATH, '-b', file_name], cwd=self._workingDir,
-                                 stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        else:
-            p = subprocess.Popen([Constants().CALCULIX_CGX_EXE_PATH, '-b', file_name], cwd=self._workingDir)
-            p.wait()
-        return p
-
-    '''
-    def run_cgx_postprocessing(self, partName):
-        p = subprocess.Popen([self.pathCGX, '-b', partName + '.fbd'], cwd=self.workingDir)
-        p.wait()
-        print("done")
-        return p
-    '''
 
     def get_file_path(self, fileName):
         return self._workingDir + '/' + fileName
@@ -290,11 +236,5 @@ class Load:
 
 
 if __name__ == '__main__':
-    clx = Calculix(workingDir='../dataOut/test01')
-    clx.generate_mesh('test')
-    #clx.generate_geometry()
-    #clx.generate_mesh()
-    #clx.generate_bc()
-    #clx.generate_load()
-    #clx.generate_inp()
-    #clx.solve_model()
+    clx = Abaqus(workingDir='../dataOut/test01')
+
