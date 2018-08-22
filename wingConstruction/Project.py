@@ -39,6 +39,7 @@ class Project:
         self.enginePos = 3.
         self.engineWeight = 1000. * 9.81
         self.boxOverhang = 0.5
+        self.stringerHeight = 0.
         self.forceTop = 0.
         self.forceBot = 0.
         self.elementSize = 0.25
@@ -59,7 +60,8 @@ class Project:
                                         self.ribs,
                                         self.shellThickness,
                                         self.enginePos,
-                                        box_overhang=self.boxOverhang)
+                                        box_overhang=self.boxOverhang,
+                                        stringer_height=self.stringerHeight)
         self.geo.generate_wing(self.forceTop,
                                self.forceBot,
                                self.engineWeight,

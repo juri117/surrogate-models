@@ -31,7 +31,7 @@ NON_LINEAR = False
 #if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 1.  # 2.5
+max_g = 2.5
 safety_fac = 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
@@ -44,7 +44,7 @@ chord_length = 3.
 chord_height = 0.55
 
 density = 2810  # kg/m^3
-shear_strength = 5.72e8  # 3.31e8 #Pa
+shear_strength = 5.72e8 / safety_fac  # 3.31e8 #Pa
 
 max_shear_strength = shear_strength
 
@@ -77,6 +77,7 @@ class MultiRun:
         # pro1.elementSize = 0.05
         pro.elemType = 'qu4'
         pro.shellThickness = 0.002
+        pro.stringerHeight = 0.1
         return pro
 
     def run_project(self, pro):
@@ -130,7 +131,7 @@ class MultiRun:
     def main_run(self, cleanup=False):
         ribs = np.arange(5, 26, 1)
         ribs = list(ribs)
-        thick = np.arange(0.001, 0.003, 0.0001)
+        thick = np.arange(0.001, 0.005, 0.0001)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -191,7 +192,7 @@ class MultiRun:
 
     def plot_results(self, file_name):
         ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed = self.read_data_file(file_name)
-        max_stress = max_stress_fixed
+        #max_stress = max_stress_fixed
         n_rib = len(ribs)
         n_thick = len(shell_thick)
         opti_ribs = []
@@ -293,6 +294,6 @@ if __name__ == '__main__':
     # output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     # output_file_name = '2drun_2018-08-09_17_47_11.csv'
-    output_file_name = '2drun_2018-08-16_12_17_24.csv'
-    output_file_name = multi.main_run(cleanup=False)
+    output_file_name = '2drun_2018-08-22_23_05_32.csv'
+    #output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)

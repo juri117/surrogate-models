@@ -15,7 +15,7 @@ from wingConstruction.utils.Constants import Constants
 
 class WingConstruction:
 
-    def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, engine_pos, box_overhang=0.):
+    def __init__(self, project_path, half_span, box_depth, box_height, ribs, shell_thickness, engine_pos, box_overhang=0., stringer_height=0.):
         self.projectPath = project_path
         self.halfSpan = half_span
         self.boxDepth = box_depth
@@ -26,7 +26,7 @@ class WingConstruction:
         self.pylonHeight = 0.3
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
-        self.stringerHeight = 0.
+        self.stringerHeight = stringer_height
 
     def calc_weight(self, density):
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
