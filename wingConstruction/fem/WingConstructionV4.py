@@ -27,7 +27,7 @@ class WingConstruction:
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
         self.stringerHeight = stringer_height
-        self.beamLoad = True
+        self.beamLoad = False
 
     def calc_weight(self, density):
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness

@@ -33,7 +33,7 @@ NON_LINEAR = False
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
 max_g = 1.#2.5
-safety_fac = 1. # 1.5
+safety_fac = 1.5 # 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
 first_wing_struct_mass = 2 * 1000.
@@ -106,23 +106,23 @@ class MultiRun:
         l = pro.validate_load('loadTop.frc')
         l += pro.validate_load('loadBot.frc')
         load_error = (-1. * wing_load) - l
-        if not pro.errorFlag:
-            export_row = str(pro.elementSize) + ',' \
-                         + str(pro.calc_span_division()) + ',' \
-                         + str(pro.ribs) + ',' \
-                         + str(pro.shellThickness) + ',' \
-                         + str(pro.geo.calc_weight(density)) + ',' \
-                         + str(pro.resultsCalcu.dispD3Min) + ',' \
-                         + str(pro.resultsCalcu.dispD3Max) + ',' \
-                         + str(pro.resultsCalcu.stressMisesMin) + ',' \
-                         + str(pro.resultsCalcu.stressMisesMax) + ',' \
-                         + str(pro.resultsAba.dispD3Min) + ',' \
-                         + str(pro.resultsAba.dispD3Max) + ',' \
-                         + str(pro.resultsAba.stressMisesMin) + ',' \
-                         + str(pro.resultsAba.stressMisesMax) + ',' \
-                         + str(load_error) + '\n'
-            return export_row
-        return ''
+        #if not pro.errorFlag:
+        export_row = str(pro.elementSize) + ',' \
+                     + str(pro.calc_span_division()) + ',' \
+                     + str(pro.ribs) + ',' \
+                     + str(pro.shellThickness) + ',' \
+                     + str(pro.geo.calc_weight(density)) + ',' \
+                     + str(pro.resultsCalcu.dispD3Min) + ',' \
+                     + str(pro.resultsCalcu.dispD3Max) + ',' \
+                     + str(pro.resultsCalcu.stressMisesMin) + ',' \
+                     + str(pro.resultsCalcu.stressMisesMax) + ',' \
+                     + str(pro.resultsAba.dispD3Min) + ',' \
+                     + str(pro.resultsAba.dispD3Max) + ',' \
+                     + str(pro.resultsAba.stressMisesMin) + ',' \
+                     + str(pro.resultsAba.stressMisesMax) + ',' \
+                     + str(load_error) + '\n'
+        return export_row
+        #return ''
 
     def pool_run(self, projects):
         self.task_done = 0
@@ -134,9 +134,9 @@ class MultiRun:
         return projects
 
     def main_run(self, cleanup=False):
-        ribs = np.arange(5, 26, 1)
+        ribs = np.arange(5, 36, 1)
         ribs = list(ribs)
-        thick = np.arange(0.001, 0.0031, 0.0001)
+        thick = np.arange(0.002, 0.0051, 0.0001)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -168,19 +168,19 @@ class MultiRun:
         print('DONE with ALL')
         return output_file_name
 
-    def read_data_file(self, file_name, use_abaqus=True):
+    def read_data_file(self, file_name, use_abaqus=False):
         file_path = Constants().WORKING_DIR + '/' + file_name
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
         ribs_raw = data[:, 2]
         shell_thick_raw = data[:, 3]
         weight_raw = data[:, 4]
         if not use_abaqus:
-            max_stress_raw = data[:, 9]
+            max_stress_raw = data[:, 8]
             max_disp_raw = data[:, 5]
             #max_stress_fixed_raw = data[:, 9]
         else:
-            max_stress_raw = data[:, 13]
-            max_disp_raw = data[:, 11]
+            max_stress_raw = data[:, 12]
+            max_disp_raw = data[:, 10]
 
         n_rib = len(set(ribs_raw))
         n_thick = len(set(shell_thick_raw))
@@ -201,7 +201,7 @@ class MultiRun:
         return ribs, shell_thick, max_stress, max_disp, weight#, max_stress_fixed
 
     def plot_results(self, file_name):
-        ribs, shell_thick, max_stress, max_disp, weight = self.read_data_file(file_name)
+        ribs, shell_thick, max_stress, max_disp, weight = self.read_data_file(file_name, use_abaqus=True)
         # max_stress = max_stress_fixed
         n_rib = len(ribs)
         n_thick = len(shell_thick)
@@ -306,5 +306,6 @@ if __name__ == '__main__':
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     output_file_name = '2drun_2018-08-22_23_57_54.csv'
     output_file_name = '2drun_2018-08-22_23_05_32.csv'
+    output_file_name = '2drun_2018-08-23_15_32_32.csv'
     # output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)
