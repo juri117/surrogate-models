@@ -32,8 +32,8 @@ NON_LINEAR = False
 # if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 2.5
-safety_fac = 1.  # 1.5
+max_g = 1.#2.5
+safety_fac = 1. # 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
 first_wing_struct_mass = 2 * 1000.
@@ -77,7 +77,7 @@ class MultiRun:
         pro.elementSize = element_size
         # pro1.elementSize = 0.05
         pro.elemType = 'qu4'
-        pro.shellThickness = 0.003
+        pro.shellThickness = 0.005
         pro.stringerHeight = 0.
         return pro
 
@@ -136,7 +136,7 @@ class MultiRun:
     def main_run(self, cleanup=False):
         ribs = np.arange(5, 26, 1)
         ribs = list(ribs)
-        thick = np.arange(0.001, 0.005, 0.0001)
+        thick = np.arange(0.001, 0.0031, 0.0001)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -168,15 +168,19 @@ class MultiRun:
         print('DONE with ALL')
         return output_file_name
 
-    def read_data_file(self, file_name):
+    def read_data_file(self, file_name, use_abaqus=True):
         file_path = Constants().WORKING_DIR + '/' + file_name
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
         ribs_raw = data[:, 2]
         shell_thick_raw = data[:, 3]
         weight_raw = data[:, 4]
-        max_stress_raw = data[:, 8]
-        max_disp_raw = data[:, 5]
-        max_stress_fixed_raw = data[:, 9]
+        if not use_abaqus:
+            max_stress_raw = data[:, 9]
+            max_disp_raw = data[:, 5]
+            #max_stress_fixed_raw = data[:, 9]
+        else:
+            max_stress_raw = data[:, 13]
+            max_disp_raw = data[:, 11]
 
         n_rib = len(set(ribs_raw))
         n_thick = len(set(shell_thick_raw))
@@ -186,18 +190,18 @@ class MultiRun:
         # shellThick = [x * 1000 for x in shellThick]
         weight = np.zeros((n_thick, n_rib))
         max_stress = np.zeros((n_thick, n_rib))
-        max_stress_fixed = np.zeros((n_thick, n_rib))
+        #max_stress_fixed = np.zeros((n_thick, n_rib))
         max_disp = np.zeros((n_thick, n_rib))
         for i in range(0, len(ribs_raw)):
             weight[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = weight_raw[i]
             max_stress[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_stress_raw[i]
-            max_stress_fixed[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_stress_fixed_raw[i]
+            #max_stress_fixed[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_stress_fixed_raw[i]
             max_disp[shell_thick.index(shell_thick_raw[i])][ribs.index(ribs_raw[i])] = max_disp_raw[i]
 
-        return ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed
+        return ribs, shell_thick, max_stress, max_disp, weight#, max_stress_fixed
 
     def plot_results(self, file_name):
-        ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed = self.read_data_file(file_name)
+        ribs, shell_thick, max_stress, max_disp, weight = self.read_data_file(file_name)
         # max_stress = max_stress_fixed
         n_rib = len(ribs)
         n_thick = len(shell_thick)
@@ -296,11 +300,11 @@ class MultiRun:
 
 if __name__ == '__main__':
     multi = MultiRun()
-    multi.convergence_analysis_run(cleanup=False)
+    #multi.convergence_analysis_run(cleanup=False)
 
     # output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     output_file_name = '2drun_2018-08-22_23_57_54.csv'
     output_file_name = '2drun_2018-08-22_23_05_32.csv'
     # output_file_name = multi.main_run(cleanup=False)
-    #multi.plot_results(output_file_name)
+    multi.plot_results(output_file_name)

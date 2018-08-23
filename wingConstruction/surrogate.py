@@ -33,6 +33,7 @@ from scipy.optimize import minimize
 from scipy import optimize
 
 RESULTS_FILE = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
+RESULTS_FILE = '/2drun_2018-08-22_23_05_32.csv'
 
 wing_length = 12.87
 chord_length = 3.

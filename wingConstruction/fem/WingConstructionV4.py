@@ -27,6 +27,7 @@ class WingConstruction:
         self.boxOverhang = box_overhang
         self.elementSize = 0.1
         self.stringerHeight = stringer_height
+        self.beamLoad = True
 
     def calc_weight(self, density):
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
@@ -201,15 +202,31 @@ class WingConstruction:
         out_lines.append('send all abq')
         out_lines.append('')
 
-        node_count = (self.calc_span_division(self.halfSpan)+1) * (self.calc_division(self.boxDepth)+1)
-        node_count_engine = self.calc_division(self.boxDepth)+1
-        if element_type == 'qu8':
-            node_count -= 0.5*self.calc_span_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
+        if self.beamLoad:
+            node_count = (self.calc_span_division(self.halfSpan) + 1) * 2
+        else:
+            node_count = (self.calc_span_division(self.halfSpan)+1) * (self.calc_division(self.boxDepth)+1)
+            if element_type == 'qu8':
+                node_count -= 0.5*self.calc_span_division(self.halfSpan) * 0.5*self.calc_division(self.boxDepth)
+        node_count_engine = self.calc_division(self.boxDepth) + 1
         noad_load_top = force_top/node_count
         noad_load_bot = force_bot / node_count
         node_load_engine = engine_weight / node_count_engine
+        if self.beamLoad:
+            out_lines.append('# fix load node sets so only the beams are affected')
+            out_lines.append('#top')
+            out_lines.append('seta loadTopN n loadTop')
+            out_lines.append('enq loadTopN loadTopLine1 rec _ 0. 0. 0.001')
+            out_lines.append('enq loadTopN loadTopLine2 rec _ {:f} 0. 0.001'.format(self.boxDepth))
+            out_lines.append('setr loadTop n all')
+            out_lines.append('seta loadTop n loadTopLine1 loadTopLine2')
+            out_lines.append('#top')
+            out_lines.append('seta loadBotN n loadBot')
+            out_lines.append('enq loadBotN loadBotLine1 rec _ 0. {:f} 0.001'.format(self.boxHeight))
+            out_lines.append('enq loadBotN loadBotLine2 rec _ {:f} {:f} 0.001'.format(self.boxDepth, self.boxHeight))
+            out_lines.append('setr loadBot n all')
+            out_lines.append('seta loadBot n loadBotLine1 loadBotLine2')
         out_lines.append('# load application')
-
         out_lines.append('# top')
         out_lines.append('send loadTop abq force 0 0 {:f}'.format(noad_load_top))
         out_lines.append('# bottom')
