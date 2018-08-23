@@ -223,7 +223,7 @@ class MultiRun:
             #   opti_shell.append(shellThick[i])
             plot1.ax.plot(ribs, max_stress[i], label='shell= {:03f}'.format(shell_thick[i]))
         plot1.ax.plot(ribs, np.full((len(ribs), 1), max_shear_strength), 'r--', label='Limit-Load')
-        plot1.finalize(legendNcol=2)
+        plot1.finalize(legendNcol=2, tighten_layout=False)
         # plot1.show()
 
         plot2 = PlotHelper(['shellthickness in mm', 'max stress'])
@@ -306,6 +306,8 @@ if __name__ == '__main__':
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     output_file_name = '2drun_2018-08-22_23_57_54.csv'
     output_file_name = '2drun_2018-08-22_23_05_32.csv'
-    output_file_name = '2drun_2018-08-23_16_49_18.csv'
+    output_file_name = '2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
+    #output_file_name = '2drun_2018-08-23_18_12_26_realLoad25.csv'
+
     # output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)

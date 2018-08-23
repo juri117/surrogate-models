@@ -9,8 +9,8 @@ from matplotlib import rcParams
 
 class PlotHelper:
 
-    def __init__(self, axis_labels, fancy=False):
-        self.FONT_SIZE = 14
+    def __init__(self, axis_labels, fancy=False, font_size=14):
+        self.FONT_SIZE = font_size
         self.font = {'family': 'sans-serif', 'size': self.FONT_SIZE}
         if len(axis_labels) == 2:
             self.fig, self.ax = plt.subplots()
