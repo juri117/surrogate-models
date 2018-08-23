@@ -32,7 +32,7 @@ NON_LINEAR = False
 # if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 1.#2.5
+max_g = 2.5
 safety_fac = 1.5 # 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
@@ -90,7 +90,7 @@ class MultiRun:
                 if NON_LINEAR:
                     pro.post_process(template='wing_post_nl_simple')
                 else:
-                    pro.post_process(template='wing_post')
+                    pro.post_process(template='wing_post_simple')
         if USE_ABAQUS:
             pro.generate_geometry_abaqus()
             pro.solve_abaqus()
@@ -136,7 +136,7 @@ class MultiRun:
     def main_run(self, cleanup=False):
         ribs = np.arange(5, 36, 1)
         ribs = list(ribs)
-        thick = np.arange(0.002, 0.0051, 0.0001)
+        thick = np.arange(0.002, 0.0091, 0.0001)
         thick = list(thick)
         projects = []
         for r in ribs:
@@ -306,6 +306,6 @@ if __name__ == '__main__':
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
     output_file_name = '2drun_2018-08-22_23_57_54.csv'
     output_file_name = '2drun_2018-08-22_23_05_32.csv'
-    output_file_name = '2drun_2018-08-23_15_32_32.csv'
+    output_file_name = '2drun_2018-08-23_16_49_18.csv'
     # output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)

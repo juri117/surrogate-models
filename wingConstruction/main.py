@@ -49,7 +49,7 @@ pro1.forceBot = -(1./3.) * wing_load
 pro1.elementSize = .1
 #pro1.elementSize = 0.05
 pro1.elemType = 'qu4'
-pro1.shellThickness = 0.002
+pro1.shellThickness = 0.008
 pro1.stringerHeight = 0.
 pro1.generate_geometry(nonlinear=False)
 
