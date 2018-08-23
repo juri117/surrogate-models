@@ -170,7 +170,7 @@ class Abaqus():
     ##############################################
     # fem post-processing
 
-    def post_processing(self, save_to_file=True):
+    def post_processing(self, save_to_file=False):
         print('run fem post-processing abaqus(' + self._workingDir + ')')
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'odbreport', 'odb=abaqusJob', 'mode=CSV', 'results', 'invariants'],
                              cwd=self._workingDir,

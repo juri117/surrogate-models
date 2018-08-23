@@ -77,8 +77,8 @@ class MultiRun:
         pro.elementSize = element_size
         # pro1.elementSize = 0.05
         pro.elemType = 'qu4'
-        pro.shellThickness = 0.002
-        pro.stringerHeight = 0.1
+        pro.shellThickness = 0.003
+        pro.stringerHeight = 0.
         return pro
 
     def run_project(self, pro):
