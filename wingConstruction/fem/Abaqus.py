@@ -38,7 +38,6 @@ class Abaqus():
         self.dispD3Max = 0
         self.stressMisesMin = 0
         self.stressMisesMax = 0
-        self.stressMisesMaxFixed = 0
 
     ##############################################
     # fem pre-processing
@@ -171,7 +170,7 @@ class Abaqus():
     ##############################################
     # fem post-processing
 
-    def post_processing(self, save_to_file=False):
+    def post_processing(self, save_to_file=True):
         print('run fem post-processing abaqus(' + self._workingDir + ')')
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'odbreport', 'odb=abaqusJob', 'mode=CSV', 'results', 'invariants'],
                              cwd=self._workingDir,
@@ -184,6 +183,7 @@ class Abaqus():
             out_f.close()
         print('done')
         lines = out.split('\n')
+        # go thrue file until misis stress list starts
         for i in range(0, len(lines)):
             if 'Invariants of field \'S\'' in lines[i]:
                 i += 2
@@ -201,6 +201,27 @@ class Abaqus():
         if len(misis) > 0:
             self.stressMisesMax = max(misis)
             self.stressMisesMin = min(misis)
+
+        # go thrue file until displacement list starts
+        for i in range(i2, len(lines)):
+            if 'Invariants of field \'U\'' in lines[i]:
+                i += 2
+                break
+
+        disp = []
+        for i2 in range(i, len(lines)):
+            if lines[i2] == '':
+                break
+            vals = lines[i2].split(',')
+            if len(vals) != 6:
+                break
+            disp.append(float(vals[5].strip()))
+
+        if len(disp) > 0:
+            self.dispD3Max = max(disp)
+            self.dispD3Min = min(disp)
+
+
 
 
 

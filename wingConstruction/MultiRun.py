@@ -26,13 +26,14 @@ from scipy.interpolate import interp1d
 from scipy import interpolate
 
 USE_ABAQUS = True
+USE_CALCULIX = True
 NON_LINEAR = False
-#USED_CORES = 1
-#if not USE_ABAQUS:
+# USED_CORES = 1
+# if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
 max_g = 2.5
-safety_fac = 1.5
+safety_fac = 1.  # 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
 first_wing_struct_mass = 2 * 1000.
@@ -82,7 +83,7 @@ class MultiRun:
 
     def run_project(self, pro):
         pro.generate_geometry(nonlinear=NON_LINEAR)
-        if not USE_ABAQUS:
+        if USE_CALCULIX:
             pro.solve()
             print('############ DONE ############')
             if not pro.errorFlag:
@@ -90,7 +91,7 @@ class MultiRun:
                     pro.post_process(template='wing_post_nl_simple')
                 else:
                     pro.post_process(template='wing_post')
-        else:
+        if USE_ABAQUS:
             pro.generate_geometry_abaqus()
             pro.solve_abaqus()
             if not pro.errorFlag:
@@ -111,10 +112,14 @@ class MultiRun:
                          + str(pro.ribs) + ',' \
                          + str(pro.shellThickness) + ',' \
                          + str(pro.geo.calc_weight(density)) + ',' \
-                         + str(pro.dispD3Min) + ',' \
-                         + str(pro.dispD3Max) + ',' \
-                         + str(pro.stressMisesMin) + ',' \
-                         + str(pro.stressMisesMax) + ',' \
+                         + str(pro.resultsCalcu.dispD3Min) + ',' \
+                         + str(pro.resultsCalcu.dispD3Max) + ',' \
+                         + str(pro.resultsCalcu.stressMisesMin) + ',' \
+                         + str(pro.resultsCalcu.stressMisesMax) + ',' \
+                         + str(pro.resultsAba.dispD3Min) + ',' \
+                         + str(pro.resultsAba.dispD3Max) + ',' \
+                         + str(pro.resultsAba.stressMisesMin) + ',' \
+                         + str(pro.resultsAba.stressMisesMax) + ',' \
                          + str(load_error) + '\n'
             return export_row
         return ''
@@ -146,8 +151,9 @@ class MultiRun:
         output_f = open(Constants().WORKING_DIR + '/'
                         + output_file_name,
                         'w')
-        output_f.write(
-            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
+        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,'
+                       'dispD3Min(Cal),dispD3Max(Cal),stressMisesMin(Cal),stressMisesMax(Cal),'
+                       'dispD3Min(Aba),dispD3Max(Aba),stressMisesMin(Aba),stressMisesMax(Aba),loadError\n')
         for p in projects:
             outStr = self.collect_results(p)
             if outStr != '':
@@ -192,7 +198,7 @@ class MultiRun:
 
     def plot_results(self, file_name):
         ribs, shell_thick, max_stress, max_disp, weight, max_stress_fixed = self.read_data_file(file_name)
-        #max_stress = max_stress_fixed
+        # max_stress = max_stress_fixed
         n_rib = len(ribs)
         n_thick = len(shell_thick)
         opti_ribs = []
@@ -270,8 +276,9 @@ class MultiRun:
         projects = self.pool_run(projects)
         output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
-        output_f.write(
-            'elementSizes,spanElementCount,ribs,shellThickness,weight,dispD3Min,dispD3Max,stressMisesMin,stressMisesMax,loadError\n')
+        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,'
+                       'dispD3Min(Cal),dispD3Max(Cal),stressMisesMin(Cal),stressMisesMax(Cal),'
+                       'dispD3Min(Aba),dispD3Max(Aba),stressMisesMin(Aba),stressMisesMax(Aba),loadError\n')
         for p in projects:
             out_str = self.collect_results(p)
             if out_str != '':
@@ -289,11 +296,11 @@ class MultiRun:
 
 if __name__ == '__main__':
     multi = MultiRun()
-    #multi.convergence_analysis_run(cleanup=False)
+    multi.convergence_analysis_run(cleanup=False)
 
     # output_file_name = '/dataOut/newRun/2drun_2018-08-10_12_07_48.csv'
     output_file_name = '/dataOut/oldRun/2drun_2018-08-10_12_13_55.csv'
-    # output_file_name = '2drun_2018-08-09_17_47_11.csv'
+    output_file_name = '2drun_2018-08-22_23_57_54.csv'
     output_file_name = '2drun_2018-08-22_23_05_32.csv'
-    #output_file_name = multi.main_run(cleanup=False)
-    multi.plot_results(output_file_name)
+    # output_file_name = multi.main_run(cleanup=False)
+    #multi.plot_results(output_file_name)

@@ -46,10 +46,12 @@ class Project:
         self.elemType = 'qu4'
         self.shellThickness = 0.01
 
-        self.dispD3Min = 0
-        self.dispD3Max = 0
-        self.stressMisesMin = 0
-        self.stressMisesMax = 0
+        self.resultsCalcu = ResultMax()
+        self.resultsAba = ResultMax()
+        #self.dispD3Min = 0
+        #self.dispD3Max = 0
+        #self.stressMisesMin = 0
+        #self.stressMisesMax = 0
 
     def generate_geometry(self, nonlinear=False):
         if self.geo is None:
@@ -101,10 +103,10 @@ class Project:
         if self.aba is None:
             self.aba = Abaqus(self.workingDir)
         self.aba.post_processing()
-        self.dispD3Min = 0
-        self.dispD3Max = 0
-        self.stressMisesMin = self.aba.stressMisesMin
-        self.stressMisesMax = self.aba.stressMisesMax
+        self.resultsAba.dispD3Min = self.aba.dispD3Min
+        self.resultsAba.dispD3Max = self.aba.dispD3Max
+        self.resultsAba.stressMisesMin = self.aba.stressMisesMin
+        self.resultsAba.stressMisesMax = self.aba.stressMisesMax
 
     def solve(self):
         if self.clx is None:
@@ -120,10 +122,10 @@ class Project:
         self.clx.run_postprocessing(template+'.fbd')
         if self.clx.errorFlag:
             self.errorFlag = True
-        self.dispD3Min = self.clx.dispD3Min
-        self.dispD3Max = self.clx.dispD3Max
-        self.stressMisesMin = self.clx.stressMisesMin
-        self.stressMisesMax = self.clx.stressMisesMax
+        self.resultsCalcu.dispD3Min = self.clx.dispD3Min
+        self.resultsCalcu.dispD3Max = self.clx.dispD3Max
+        self.resultsCalcu.stressMisesMin = self.clx.stressMisesMin
+        self.resultsCalcu.stressMisesMax = self.clx.stressMisesMax
 
     def validate_load(self, load_file_name):
         load_f = open(self.workingDir + '/' + load_file_name)
@@ -141,3 +143,11 @@ class Project:
 
     def remove(self):
         rmtree(self.workingDir)
+
+
+class ResultMax:
+    def __init__(self):
+        self.dispD3Min = 0
+        self.dispD3Max = 0
+        self.stressMisesMin = 0
+        self.stressMisesMax = 0
