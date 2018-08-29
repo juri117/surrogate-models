@@ -9,18 +9,25 @@ from matplotlib import rcParams
 
 class PlotHelper:
 
-    def __init__(self, axis_labels, fancy=False, font_size=14):
+    def __init__(self, axis_labels, fancy=False, font_size=14, ax=None):
+        self.fig = None
         self.FONT_SIZE = font_size
         self.font = {'family': 'sans-serif', 'size': self.FONT_SIZE}
         if len(axis_labels) == 2:
-            self.fig, self.ax = plt.subplots()
+            if ax is None:
+                self.fig, self.ax = plt.subplots()
+            else:
+                self.ax = ax
             self.ax.set_xlabel(axis_labels[0], fontdict=self.font)
             self.ax.set_ylabel(axis_labels[1], fontdict=self.font)
             rc('xtick', labelsize=self.FONT_SIZE)
             rc('ytick', labelsize=self.FONT_SIZE)
         elif len(axis_labels) == 3:
-            self.fig = plt.figure()
-            self.ax = self.fig.gca(projection='3d')
+            if ax is None:
+                self.fig = plt.figure()
+                self.ax = self.fig.gca(projection='3d')
+            else:
+                self.ax = ax
             self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=17)
             self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=17)
             self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=17)
@@ -40,7 +47,8 @@ class PlotHelper:
             legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=(0.5, -0.25))
         else:
             legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
-        self.fig.set_size_inches(width, height)
+        if self.fig is not None:
+            self.fig.set_size_inches(width, height)
         self.ax.autoscale_view(tight=True)
         if tighten_layout:
             plt.tight_layout()

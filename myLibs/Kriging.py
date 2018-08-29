@@ -161,7 +161,7 @@ class Kriging:
         return fx
 
 
-    def plot_theta_likelihood_R2(self):
+    def plot_theta_likelihood_R2(self, ax=None):
         if self._k != 2:
             print('ERROR: plot_theta_likelihood_R2 only works with exactly 2 inputs')
             return
@@ -177,20 +177,21 @@ class Kriging:
         self._theta = opt_theta
         self.update_param(self._theta, self._p)
         # plot it
-        plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{1}$'], fancy=False)
+        plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{2}$'], fancy=True, font_size=18, ax=ax)
         plt_theta.ax.set_xscale('log')
         plt_theta.ax.set_yscale('log')
         pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
-        cbar = plt_theta.fig.colorbar(pcol)
-        cbar.set_label('neg. log. likelihood')
+        #cbar = plt_theta.fig.colorbar(pcol)
+        #cbar.set_label('neg. log. likelihood')
         plt_theta.ax.plot(self._theta[0], self._theta[1], 'wo', label='minimum')
-        legend = plt_theta.finalize(legendLoc=4)
+        legend = plt_theta.finalize(width=6, height=5, legendLoc=4)
         legend.get_frame().set_facecolor('#000000')
         for text in legend.get_texts():
             text.set_color('#FFFFFF')
         #plt_theta.show()
+        return pcol
 
-    def plot_p_likelihood_R2(self):
+    def plot_p_likelihood_R2(self, ax=None):
         if self._k != 2:
             print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
             return
@@ -205,16 +206,35 @@ class Kriging:
         self._p = opt_p
         self.update_param(self._theta, self._p)
         # plot it
-        plt_P = PlotHelper([r'$p_{1}$', r'$p_{1}$'], fancy=False)
+        plt_P = PlotHelper([r'$p_{1}$', r'$p_{2}$'], fancy=True, font_size=18, ax=ax)
         pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
-        cbar = plt_P.fig.colorbar(pcol)
-        cbar.set_label('neg. log. likelihood')
+        #cbar = plt_P.fig.colorbar(pcol)
+        #cbar.set_label('neg. log. likelihood')
         plt_P.ax.plot(self._p[0], self._p[1], 'wo', label='minimum')
-        legend = plt_P.finalize(legendLoc=4)
+        legend = plt_P.finalize(width=6, height=5, legendLoc=4)
         legend.get_frame().set_facecolor('#000000')
         for text in legend.get_texts():
             text.set_color('#FFFFFF')
         # plt_theta.show()
+        return pcol
+
+    def plot_likelihoods(self):
+        figLike = plt.figure(figsize=(6, 4))
+        ax1 = figLike.add_subplot(211)
+        ax2 = figLike.add_subplot(212)
+
+        pcol1 = self.plot_p_likelihood_R2(ax=ax1)
+        pcol2 = self.plot_theta_likelihood_R2(ax=ax2)
+
+        figLike.set_size_inches(6, 9)
+        plt.tight_layout()
+
+        # cbar = figLike.colorbar(pcol1)
+        figLike.subplots_adjust(right=0.75)
+        cbar_ax = figLike.add_axes([0.80, 0.15, 0.05, 0.78])
+        figLike.colorbar(pcol2, cax=cbar_ax)
+        # cbar_ax.set_label('neg. log. likelihood')
+        figLike.text(0.93, 0.6, 'neg. log. likelihood', size=20, rotation=90.)
 
 
 class BasinHoppingBounds(object):

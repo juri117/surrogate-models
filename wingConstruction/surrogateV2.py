@@ -10,6 +10,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
+import sys
 import numpy as np
 from datetime import datetime
 from wingConstruction.utils.Constants import Constants
@@ -115,8 +116,9 @@ krig.update_param([0.002261264770141511, 277826.21903867245], [1.876617016804350
 
 #krig.optimize()
 
-#krig.plot_theta_likelihood_R2()
-#krig.plot_p_likelihood_R2()
+krig.plot_likelihoods()
+
+
 
 minLike = krig.calc_likelihood()
 print('minLike = ' + str(minLike))
@@ -124,7 +126,6 @@ print('@theta1 = ' + str(krig._theta[0]))
 print('@theta2 = ' + str(krig._theta[1]))
 print('@p1 = ' + str(krig._p[0]))
 print('@p2 = ' + str(krig._p[1]))
-
 
 ##################################################
 # validate

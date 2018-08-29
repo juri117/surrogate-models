@@ -36,7 +36,7 @@ class Sampling:
     '''
     def enhanced_latin_hypercube(self, n):
         cube_size = n
-        if math.sqrt(cube_size) > 0.:
+        if math.sqrt(cube_size) % 1 > 0.:
             cube_size = (int(math.sqrt(cube_size))+1)**2
         samples = self.enhanced_latin_hypercube_n_x_n(cube_size)
         #i_far_away = [0, 0]
@@ -53,7 +53,7 @@ class Sampling:
             samples = np.delete(samples, max_dist_pos[1], axis=1)
             dist_mat = np.delete(dist_mat, max_dist_pos[0], axis=0)
             dist_mat = np.delete(dist_mat, max_dist_pos[1], axis=1)
-            print('kicked out: {:d}, {:d}'.format(max_dist_pos[0], max_dist_pos[1]))
+            print('kicked out: {:d}, {:d}'.format(max_dist_pos[1], max_dist_pos[0]))
         return samples
 
     '''
@@ -82,13 +82,42 @@ class Sampling:
 
 if __name__ == '__main__':
     sam = Sampling()
-    sample_mat = sam.enhanced_latin_hypercube(14)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 2, 1)
+
+    sample_mat_full = sam.enhanced_latin_hypercube(16)
+    xy_full = sam.bool_mat_to_list(sample_mat_full)
+    plotXY_full = np.array(xy_full).T.tolist()
+    ax.plot(plotXY_full[0], plotXY_full[1], 'bo')
+
+    deleteX = [0, 15, 4, 1]
+    deleteY = [0, 15, 1, 4]
+    for i in range(0, len(deleteX)):
+        ax.plot([deleteX[i]], [deleteY[i]], 'rx', mew=4, ms=15)
+        ax.plot([-1, 16], [deleteY[i], deleteY[i]], 'r-')
+        ax.plot([deleteX[i], deleteX[i]], [-1, 16], 'r-')
+
+    ax.set_xticks(range(0, 16), minor=False)
+    ax.set_yticks(range(0, 16), minor=False)
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
+    plt.xlim(16, -1)
+    plt.ylim(16, -1)
+    ax.grid(True)
+
+    ax = fig.add_subplot(1, 2, 2)
+
+    sample_mat = sam.enhanced_latin_hypercube(12)
     xy = sam.bool_mat_to_list(sample_mat)
     plotXY = np.array(xy).T.tolist()
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-    ax.plot(plotXY[0], plotXY[1], 'o-')
-    ax.set_xticks(range(0,14), minor=False)
-    ax.set_yticks(range(0,14), minor=False)
+
+    ax.plot(plotXY[0], plotXY[1], 'bo')
+    ax.set_xticks(range(0,12), minor=False)
+    ax.set_yticks(range(0,12), minor=False)
+    ax.xaxis.set_ticklabels([])
+    ax.yaxis.set_ticklabels([])
+    plt.xlim(12, -1)
+    plt.ylim(12, -1)
+    ax.grid(True)
     ax.grid(True)
     plt.show()
