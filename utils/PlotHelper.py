@@ -1,15 +1,27 @@
 
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import rc
-import matplotlib
+
+#import matplotlib.pyplot as plt
+#from mpl_toolkits.mplot3d import Axes3D
+#from matplotlib import rc
+#import matplotlib
 import numpy as np
-from matplotlib import rcParams
+#from matplotlib import rcParams
 
 
 class PlotHelper:
 
-    def __init__(self, axis_labels, fancy=False, font_size=14, ax=None):
+    def __init__(self, axis_labels, fancy=False, font_size=12, ax=None, pgf=False):
+        self._use_pgf = pgf
+        if pgf:
+            import matplotlib
+            matplotlib.use('pgf')
+            pgf_with_custom_preamble = {
+                'pgf.rcfonts': False
+            }
+            matplotlib.rcParams.update(pgf_with_custom_preamble)
+        import matplotlib.pyplot as plt
+        from matplotlib import rc
+
         self.fig = None
         self.FONT_SIZE = font_size
         self.font = {'family': 'sans-serif', 'size': self.FONT_SIZE}
@@ -23,6 +35,7 @@ class PlotHelper:
             rc('xtick', labelsize=self.FONT_SIZE)
             rc('ytick', labelsize=self.FONT_SIZE)
         elif len(axis_labels) == 3:
+            from mpl_toolkits.mplot3d import Axes3D
             if ax is None:
                 self.fig = plt.figure()
                 self.ax = self.fig.gca(projection='3d')
@@ -35,32 +48,44 @@ class PlotHelper:
             rc('ytick', labelsize=self.FONT_SIZE)
             #rc('ztick', labelsize=self.FONT_SIZE)
             #self.ax.xaxis._axinfo['label']['space_factor'] = 4
+        elif len(axis_labels) == 0:
+            self.fig = plt.figure()
+            self.ax = None
         else:
             raise ValueError('length of axis_labels should be 2(D) or 3(D)')
-        self.ax.tick_params(labelsize=self.FONT_SIZE, length=6, width=2)
+        if self.ax != None:
+            self.ax.tick_params(labelsize=self.FONT_SIZE, length=6, width=2)
         if fancy:
             rc('text', usetex=True)
         rc('font', **self.font)
 
-    def finalize(self, width=8, height=5, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True):
-        if bbox_to_anchor is not None:
-            legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=(0.5, -0.25))
-        else:
-            legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
+    def finalize(self, width=6, height=4, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True):
+        if self.ax != None:
+            if bbox_to_anchor is not None:
+                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=(0.5, -0.25))
+            else:
+                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
         if self.fig is not None:
             self.fig.set_size_inches(width, height)
-        self.ax.autoscale_view(tight=True)
+        if self.ax != None:
+            self.ax.autoscale_view(tight=True)
         if tighten_layout:
+            import matplotlib.pyplot as plt
             plt.tight_layout()
         return legend
 
     def save(self, file_path):
+        import matplotlib.pyplot as plt
         plt.savefig(file_path)
+        if self._use_pgf and '.pdf' in file_path:
+            plt.savefig(file_path.replace('pdf', 'pgf'))
 
     def show(self):
+        import matplotlib.pyplot as plt
         plt.show()
 
     def animate(self):
+        import matplotlib.pyplot as plt
         for angle in np.linspace(0, 360, 1000):
             self.ax.view_init(30, angle)
             plt.draw()

@@ -70,7 +70,7 @@ if __name__ == '__main__':
     pltTheta.finalize()
     #pltTheta.show()
 
-    plt1.plot_function_3D(krig.predict, fx, fy, r'$f_{krig}$', color='b')
+    plt1.plot_function_3D(krig.predict, fx, fy, r'$\widehat{f}_{krig}$', color='b')
     plt1.ax.view_init(20, 50)
     plt1.finalize()
     #plt1.save('dataOut/krigingRn.svg')

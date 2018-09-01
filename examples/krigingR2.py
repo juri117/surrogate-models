@@ -13,6 +13,17 @@ __status__ = "Development"
 import numpy as np
 from scipy.optimize import minimize
 from scipy import optimize
+import matplotlib
+
+PGF = False
+
+#matplotlib.use('pgf')
+#pgf_with_custom_preamble = {
+#    "pgf.rcfonts": False
+#}
+#matplotlib.rcParams.update(pgf_with_custom_preamble)
+
+#import matplotlib.pyplot as plt
 
 from myLibs.Kriging import Kriging
 from utils.samples import *
@@ -40,8 +51,8 @@ if __name__ == '__main__':
     print('negLnLike = ' + str(NegLnLike))
 
     #thetas = np.linspace(0.01, 10, 1000+1)
-    thetas = np.logspace(-2, 1, num=5000)
-    ps = [2.]#np.linspace(1., 2., 100)
+    thetas = np.logspace(-2, 3, num=500)
+    ps = np.linspace(1., 2., 100)
     likely = np.zeros((len(ps), len(thetas)))
     for it in range(0, len(thetas)):
         for ip in range(0, len(ps)):
@@ -49,18 +60,18 @@ if __name__ == '__main__':
             likely[ip][it] = krig1.calc_likelihood()
 
     krig1.optimize()
+    #krig1.update_param(krig1._theta, krig1._p)
 
     minLike = krig1.calc_likelihood()
     print('minLike = '+str(minLike))
     print('@theta = ' + str(krig1._theta[0]))
     print('@p = ' + str(krig1._p[0]))
 
-    plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=False)
+    plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=False, pgf=PGF)
     plt0.ax.semilogx(thetas, likely[-1])
     plt0.ax.semilogx(krig1._theta[0], minLike, 'rx', markersize=10, label='Minimum')
-    plt0.finalize(width=7, height=4, legendLoc='upper right', legendNcol=1)
-    #plt0.save('dataOut/krigingR2likelihood.svg')
-    #plt0.save('dataOut/krigingR2likelihood.pdf')
+    plt0.finalize(width=6, height=3.5, legendLoc='upper right', legendNcol=1)
+    plt0.save('../dataOut/krigingR2likelihood.pdf')
     #plt0.show()
 
     #fig, ax = plt.subplots()
@@ -68,17 +79,17 @@ if __name__ == '__main__':
     #pcol = ax.pcolor(thetas, ps, likely, cmap='viridis_r')
     #fig.colorbar(pcol)
     #ax.plot(krig1._theta[0], krig1._p[0], 'rx')
-    #ax.set_xlabel('$\theta$', fontdict=font)
-    #ax.set_ylabel('p', fontdict=font)
+    #ax.set_xlabel('$\theta$')
+    #ax.set_ylabel('p')
     #plt.show()
 
-    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=False)
+    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=PGF)
 
     plt1.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     plt1.ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
 
     krigY = list(map(krig1.predict, fx.reshape((len(fx), 1))))
-    plt1.ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
+    plt1.ax.plot(fx, krigY, 'b-', label=r'$\widehat{f}_{krig}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
 
     # scipy minimize
     res = minimize(krig1.predict, [3.], method='SLSQP', bounds=[(px[0], px[-1])])
@@ -87,7 +98,6 @@ if __name__ == '__main__':
     res = optimize.differential_evolution(krig1.predict, [(px[0], px[-1])])
     plt1.ax.plot([res.x], [krig1.predict(res.x)], 'go', label=r'Minimum, diff. evo.')
 
-    plt1.finalize(width=8, height=5, legendLoc='upper left', legendNcol=1)
-    #plt1.save('dataOut/krigingR2.svg')
-    #plt1.save('dataOut/krigingR2.pdf')
+    plt1.finalize(width=6, height=4, legendLoc='upper left', legendNcol=1)
+    plt1.save('../dataOut/krigingR2.pdf')
     plt1.show()

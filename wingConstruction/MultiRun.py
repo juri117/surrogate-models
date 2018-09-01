@@ -18,7 +18,7 @@ from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
 
 from mpl_toolkits.mplot3d import axes3d
-import matplotlib.pyplot as plt
+
 from matplotlib import cm
 from multiprocessing import Pool
 import time
@@ -201,6 +201,7 @@ class MultiRun:
         return ribs, shell_thick, max_stress, max_disp, weight#, max_stress_fixed
 
     def plot_results(self, file_name):
+        import matplotlib.pyplot as plt
         ribs, shell_thick, max_stress, max_disp, weight = self.read_data_file(file_name, use_abaqus=True)
         # max_stress = max_stress_fixed
         n_rib = len(ribs)

@@ -11,7 +11,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-import matplotlib.pyplot as plt
+
 import numpy as np
 import math
 import sys
@@ -81,6 +81,7 @@ class Sampling:
 
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     sam = Sampling()
     fig = plt.figure()
     ax = fig.add_subplot(1, 2, 1)

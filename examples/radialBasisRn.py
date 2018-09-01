@@ -8,7 +8,7 @@ from utils.samples import *
 
 if __name__ == '__main__':
     t1 = TimeTrack('OverAllTimer')
-    plt1 = PlotHelper(['Eingang 1', 'Eingang 2', 'Ausgang'], fancy=False)
+    plt1 = PlotHelper(['Eingang 1', 'Eingang 2', 'Ausgang'], fancy=False, pgf=False)
 
     fx = np.linspace(-2, 12, 101)
     fy = np.linspace(-2, 12, 101)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     a = 0.17
     rbf.update_param(a, 'gaus')
 
-    plt1.plot_function_3D(rbf.predict, fx, fy, r'$f_{RBF}$', color='b')
+    plt1.plot_function_3D(rbf.predict, fx, fy, r'$\widehat{f}_{RBF}$', color='b')
     t1.toc()
 
     plt1.ax.view_init(20, 50)

@@ -18,6 +18,7 @@ from myLibs.Kriging import Kriging
 from utils.samples import *
 from utils.PlotHelper import PlotHelper
 
+PGF = False
 
 if __name__ == '__main__':
     # the smooth whole function
@@ -59,8 +60,7 @@ if __name__ == '__main__':
     plt0.ax.semilogx(thetas, likely[-1])
     plt0.ax.semilogx(krig1._theta[0], minLike, 'rx', markersize=10, label='Minimum')
     plt0.finalize(width=7, height=4, legendLoc='upper right', legendNcol=1)
-    #plt0.save('dataOut/krigingR2likelihood.svg')
-    #plt0.save('dataOut/krigingR2likelihood.pdf')
+    #plt0.save('dataOut/krigingR2likelihood_.pdf')
     #plt0.show()
 
     #fig, ax = plt.subplots()
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     plt1.ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
 
     krigY = list(map(krig1.predict, fx.reshape((len(fx), 1))))
-    plt1.ax.plot(fx, krigY, 'b-', label=r'$f_{kriging}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
+    plt1.ax.plot(fx, krigY, 'b-', label=r'$\widehat{f}_{kriging}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
 
     # scipy minimize
     res = minimize(krig1.predict, [3.], method='SLSQP', bounds=[(px[0], px[-1])])
@@ -88,6 +88,5 @@ if __name__ == '__main__':
     plt1.ax.plot([res.x], [krig1.predict(res.x)], 'go', label=r'Minimum, diff. evo.')
 
     plt1.finalize(width=8, height=5, legendLoc='upper left', legendNcol=1)
-    #plt1.save('dataOut/krigingR2.svg')
-    #plt1.save('dataOut/krigingR2.pdf')
+    #plt1.save('dataOut/krigingR2_.pdf')
     plt1.show()

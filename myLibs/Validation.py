@@ -11,7 +11,6 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-import matplotlib.pyplot as plt
 import numpy as np
 import math
 import sys

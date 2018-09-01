@@ -23,15 +23,9 @@ from myLibs.Sampling import Sampling
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 
-from mpl_toolkits.mplot3d import axes3d
-import matplotlib.pyplot as plt
-from matplotlib import cm
-from multiprocessing import Pool
-import time
-from scipy.interpolate import interp1d
-from scipy import interpolate
-from scipy.optimize import minimize
 from scipy import optimize
+
+PGF = True
 
 RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
 
@@ -116,7 +110,8 @@ krig.update_param([0.002261264770141511, 277826.21903867245], [1.876617016804350
 
 #krig.optimize()
 
-krig.plot_likelihoods()
+pltLike = krig.plot_likelihoods(pgf=PGF)
+pltLike.save('../dataOut/wingSurroLikely.pdf')
 
 
 
@@ -193,10 +188,15 @@ opti_weights = opti_weights[1:]
 
 best_i = opti_weights.index(min(opti_weights))
 
-optWeightPlot = PlotHelper(['ribs', 'weight'])
+optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=PGF)
 optWeightPlot.ax.plot(opti_ribs, opti_weights, 'b-')
 optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
 optWeightPlot.finalize()
+
+print('optimum:')
+print('ribs: {:f}'.format(opti_ribs[best_i]))
+print('shell: {:f}'.format(opti_shell[best_i]))
+print('weight: {:f}'.format(opti_weights[best_i]))
 
 ##################################################
 # plot it
@@ -206,17 +206,19 @@ shell = np.array(shell)
 opti_shell = np.array(opti_shell)
 known_shell = np.array(known_shell)
 
-plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False, font_size=16)
+plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False, font_size=16, pgf=PGF)
 
 #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
 # plot FEM data as lines
 # plot FEM data as lines
+
 for i in range(0,len(ribs)):
     if i == 0:
         plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='fem data')
     else:
         plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
+
 
 #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
 
@@ -227,7 +229,7 @@ for i in range(0,len(ribs)):
 # plot surrogate model as wireframe
 ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
 shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
-kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b', scale=[1.,1000.,1.])
+krigPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1.,1000.,1.])
 samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
 # plot limit load line
@@ -240,7 +242,7 @@ plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
 
 plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
 plot3d.ax.view_init(18, 40)
-plot3d.save('../dataOut/surroPlotV2.pdf')
+plot3d.save('../dataOut/wingSurro.pdf')
 plot3d.show()
 
 print('done')
