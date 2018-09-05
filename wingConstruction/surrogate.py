@@ -18,7 +18,7 @@ from wingConstruction.MultiRun import MultiRun
 from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
-from myLibs.Sampling import Sampling
+from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 
@@ -64,7 +64,7 @@ sample_indices = np.array([known_y_i, known_x_i]).T.tolist()
 
 
 # latin hypercube
-sam = Sampling()
+sam = LatinHyperCube()
 sample_mat = sam.enhanced_latin_hypercube(14)
 sample_indices = sam.bool_mat_to_list(sample_mat)
 

@@ -17,7 +17,7 @@ import math
 import sys
 
 
-class Sampling:
+class LatinHyperCube:
 
     def __init__(self):
         print('done')
@@ -38,7 +38,7 @@ class Sampling:
         cube_size = n
         if math.sqrt(cube_size) % 1 > 0.:
             cube_size = (int(math.sqrt(cube_size))+1)**2
-        samples = self.enhanced_latin_hypercube_n_x_n(cube_size)
+        samples = self.enhanced_latin_hypercube_2_pow_x(cube_size)
         #i_far_away = [0, 0]
         #dist_at_i = -1.
         center = (cube_size-1)/2
@@ -62,7 +62,7 @@ class Sampling:
     where the sample places are marked with 1
     it has to be a n x n design space where n is int(x)**2
     '''
-    def enhanced_latin_hypercube_n_x_n(self, n):
+    def enhanced_latin_hypercube_2_pow_x(self, n):
         edge_devision = math.sqrt(n)
         if edge_devision % 1 > 0.:
             print('ERROR, n has to be x^2')
@@ -79,10 +79,13 @@ class Sampling:
             col_count += 1
         return samples
 
+    ######################################################
+    ###
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
-    sam = Sampling()
+    sam = LatinHyperCube()
+
     fig = plt.figure()
     ax = fig.add_subplot(1, 2, 1)
 

@@ -254,6 +254,12 @@ class Kriging:
         pltLike.fig.text(0.93, 0.6, 'neg. log. likelihood', size=20, rotation=90.)
         return pltLike
 
+    def get_p(self):
+        return self._p
+
+    def get_theta(self):
+        return self._theta
+
 
 class BasinHoppingBounds(object):
 

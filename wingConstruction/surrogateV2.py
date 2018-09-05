@@ -19,13 +19,16 @@ from wingConstruction.MultiRun import MultiRun
 from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
-from myLibs.Sampling import Sampling
+from myLibs.RBF import RBF
+from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 
 from scipy import optimize
 
-PGF = True
+SURRO_TYPE = 'rbf' # krig, rbf
+
+PGF = False
 
 RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
 
@@ -81,7 +84,7 @@ sample_indices = np.array([known_y_i, known_x_i]).T.tolist()
 
 
 # latin hypercube
-sam = Sampling()
+sam = LatinHyperCube()
 sample_mat = sam.enhanced_latin_hypercube(14)
 sample_indices = sam.bool_mat_to_list(sample_mat)
 
@@ -98,44 +101,44 @@ known_params = [known_rib, known_shell]
 print('sample plan using {:d} known values'.format(len(sample_indices)))
 
 ##################################################
-# build surrogate model
+# build surrogate model and fit it
 
-krig = Kriging(known_params, known_stress)
+if 'krig' in SURRO_TYPE:
+    surro = Kriging(known_params, known_stress)
+    # prev stored results:
+    surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
+    # krig.optimize()
+    pltLike = surro.plot_likelihoods(pgf=PGF)
+    pltLike.save('../dataOut/wingSurroLikely.pdf')
 
-##################################################
-# fit surrogate model
-
-#prev stored results:
-krig.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
-
-#krig.optimize()
-
-pltLike = krig.plot_likelihoods(pgf=PGF)
-pltLike.save('../dataOut/wingSurroLikely.pdf')
-
-
-
-minLike = krig.calc_likelihood()
-print('minLike = ' + str(minLike))
-print('@theta1 = ' + str(krig._theta[0]))
-print('@theta2 = ' + str(krig._theta[1]))
-print('@p1 = ' + str(krig._p[0]))
-print('@p2 = ' + str(krig._p[1]))
+    minLike = surro.calc_likelihood()
+    print('minLike = ' + str(minLike))
+    print('@theta1 = ' + str(surro.get_theta()[0]))
+    print('@theta2 = ' + str(surro.get_theta()[1]))
+    print('@p1 = ' + str(surro.get_p()[0]))
+    print('@p2 = ' + str(surro.get_p()[1]))
+elif 'rbf' in SURRO_TYPE:
+    surro = RBF(known_params, known_stress)
+    a = .0946
+    surro.update_param(a, 'gaus')
+else:
+    print('unknown surrogate type selected')
+    sys.exit(-1)
 
 ##################################################
 # validate
 
 vali = Validation()
-vali.calc_deviation(ribs, shell, stress, krig.predict)
+vali.calc_deviation(ribs, shell, stress, surro.predict)
 
 
 ##################################################
 # optimize
 
-def shell_predict(shell_thick, krig_inst, rib_num):
+def shell_predict(shell_thick, surro_inst, rib_num):
     #krig_inst = args[0]
     #rib_num = args[1]
-    stress_val = krig_inst.predict([rib_num, shell_thick])
+    stress_val = surro_inst.predict([rib_num, shell_thick])
     #return stress_val
     return stress_val - max_shear_strength
 
@@ -152,10 +155,10 @@ for i in used_ribs_indices:
     bnds = [(min(known_shell), max(known_shell))]
     #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
     #opti_shell.append(res.x[0])
-    root = optimize.newton(shell_predict, init_guess, args=[krig, ribs[i]])
+    root = optimize.newton(shell_predict, init_guess, args=[surro, ribs[i]])
     opti_ribs.append(ribs[i])
     opti_shell.append(root)
-    opti_stress.append(krig.predict([ribs[i], root]))
+    opti_stress.append(surro.predict([ribs[i], root]))
     weight = WingConstruction.calc_weight_stat(wing_length,
                                                chord_length,
                                                chord_height,
@@ -229,7 +232,7 @@ for i in range(0,len(ribs)):
 # plot surrogate model as wireframe
 ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
 shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
-krigPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1.,1000.,1.])
+krigPlot = plot3d.plot_function_3D(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
 samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
 # plot limit load line
