@@ -16,6 +16,7 @@ from wingConstruction.utils.Constants import Constants
 from wingConstruction.Project import Project
 from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
+from wingConstruction.utils.defines import *
 
 from mpl_toolkits.mplot3d import axes3d
 
@@ -29,22 +30,6 @@ from scipy import interpolate
 # if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 1. #2.5
-safety_fac = 1.5 # 1.5
-mtow = 27987.
-fuel_mass_in_wings = 2 * 2659.
-first_wing_struct_mass = 2 * 1000.
-wing_load = ((mtow - fuel_mass_in_wings - first_wing_struct_mass) * 9.81) * max_g * 0.5
-engine_weight = (873.1 + 251.9 + 112.7 + 62.8) * 9.81  # engine, prop, wheel, brake
-engine_pos_y = 3.
-wing_length = 12.87
-chord_length = 3.
-chord_height = 0.55
-shell_thickness = 0.005
-
-shear_strength = 5.72e8 / safety_fac  # 3.31e8 #Pa
-
-max_shear_strength = shear_strength
 
 
 class MultiRun:

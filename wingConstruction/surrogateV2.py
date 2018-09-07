@@ -24,6 +24,7 @@ from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Hammersley import Hammersley
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
+from wingConstruction.utils.defines import *
 
 from scipy import optimize
 
@@ -31,19 +32,13 @@ if __name__ == '__main__':
 
     USE_ABAQUS = False
 
-    SURRO_TYPE = 'krig' # krig, rbf
-    SAMPLE_PLAN = 'hammers' # latin, hammers
+    SURRO_TYPE = KRIGING # KRIGING, RBF
+    SAMPLE_PLAN = LATIN # LATIN, HAMMERS
     SAMPLE_POINT_COUNT = 14
     PGF = False
 
     RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
-    RESULTS_COLLECTION = '/2drun_collection.csv'
 
-    wing_length = 12.87
-    chord_length = 3.
-    chord_height = 0.55
-    density = 2810 #kg/m^3
-    max_shear_strength = 5.72e8 / 1.5
     multi = MultiRun(use_calcu=True, use_aba=True, non_liner=False)
 
     ##################################################
@@ -83,26 +78,10 @@ if __name__ == '__main__':
     ##################################################
     # sample plan
 
-    # latin hypercube
-    sam = LatinHyperCube()
-    sample_mat = sam.enhanced_latin_hypercube(SAMPLE_POINT_COUNT)
-    sample_indices = sam.bool_mat_to_list(sample_mat)
-
-    #known_rib = []
-    #known_shell = []
-    #known_stress = []
-    #for i in range(0, len(sample_indices)):
-    #    known_rib.append(ribs[sample_indices[i][0]])
-    #    known_shell.append(shell[sample_indices[i][1]])
-    #    known_stress.append(stress[sample_indices[i][1]][sample_indices[i][0]])
-    #known_params = np.array([known_rib, known_shell])
-
-
-    ### new Stuff here
-    if 'latin' in SAMPLE_PLAN:
+    if SAMPLE_PLAN == LATIN:
         sam = LatinHyperCube()
         sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
-    elif 'hammer' in SAMPLE_PLAN:
+    elif SAMPLE_PLAN == HAMMERS:
         sam = Hammersley()
         sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
         # make the ribs be int
@@ -112,53 +91,25 @@ if __name__ == '__main__':
         print('unknown sample plan selected')
         sys.exit(9061626)
 
-
     known_params = np.array(sample_points).T
+    known_rib = known_params[0, :]
+    known_shell = known_params[1, :]
 
-    known_rib = known_params[0,:]
-    known_shell = known_params[1,:]
-
-    #import matplotlib.pyplot as plt
-    #plt.plot(np.array(known_params)[0,:],np.array(known_params)[1,:],'bo', markersize=8)
-    #plt.plot(np.array(sample_points)[0,:],np.array(sample_points)[1,:],'ro', markersize=6)
-    #plt.show()
-
-    print('sample plan using {:d} known values'.format(len(sample_indices)))
+    print('sample plan using {:d} known values'.format(len(known_rib)))
 
     ##################################################
     # FEM calculation, collecting results
-
-    '''
-    known_stress = np.zeros((len(known_rib)))
-    multi = MultiRun(use_calcu=True, use_aba=True, non_liner=False)
-    projects = []
-    for i in range(0, len(known_rib)):
-        r = int(known_rib[i])
-        t = known_shell[i]
-        project_name = 'pro_r{:02d}_t{:5f}'.format(r, t)
-        pro = multi.new_project(project_name)
-        pro.ribs = r
-        pro.shellThickness = t
-        projects.append(pro)
-    projects = multi.pool_run(projects)
-    for i in range(0, len(projects)):
-        if projects[i].ribs == known_rib[i] and projects[i].shellThickness == known_shell[i]:
-            known_stress[i] = projects[i].resultsCalcu.stressMisesMax
-        else:
-            print('ERROR, pool returned shuffled project list')
-            sys.exit(9061636)
-    '''
 
     known_stress = multi.run_sample_points(known_rib, known_shell, use_abaqus=USE_ABAQUS)
 
     ##################################################
     # build surrogate model and fit it
 
-    if 'krig' in SURRO_TYPE:
+    if SURRO_TYPE == KRIGING:
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
-        # krig.optimize()
+        #krig.optimize()
         #pltLike = surro.plot_likelihoods(pgf=PGF)
         #pltLike.save('../dataOut/wingSurroLikely.pdf')
 
@@ -168,13 +119,13 @@ if __name__ == '__main__':
         print('@theta2 = ' + str(surro.get_theta()[1]))
         print('@p1 = ' + str(surro.get_p()[0]))
         print('@p2 = ' + str(surro.get_p()[1]))
-    elif 'rbf' in SURRO_TYPE:
+    elif SURRO_TYPE == RBF:
         surro = RBF(known_params, known_stress)
         a = .0946
         surro.update_param(a, 'gaus')
     else:
         print('unknown surrogate type selected')
-        sys.exit(-1)
+        sys.exit(9061857)
 
     ##################################################
     # validate
@@ -190,18 +141,14 @@ if __name__ == '__main__':
         #krig_inst = args[0]
         #rib_num = args[1]
         stress_val = surro_inst.predict([rib_num, shell_thick])
-        #return stress_val
         return stress_val - max_shear_strength
 
     opti_ribs = []
     opti_shell = []
     opti_stress = []
     opti_weights = []
-    #used_ribs_indices = list(range(ribs.index(min(known_rib)), ribs.index(max(known_rib))))
-    #used_shell_indices = list(range(shell.index(min(known_shell)), shell.index(max(known_shell))))
     used_ribs = list(range(int(min(known_rib)), int(max(known_rib))))
     for i in range(0, len(used_ribs)):
-        #stress = stress[:,i]
         # SLSQP: proplem; find local min not glob. depending on init-vals
         init_guess = shell[int(len(known_shell)/2.)]
         bnds = [(min(known_shell), max(known_shell))]
