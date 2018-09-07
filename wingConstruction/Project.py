@@ -13,6 +13,7 @@ __status__ = "Development"
 import os
 from shutil import copyfile
 from shutil import rmtree
+import numpy as np
 
 from wingConstruction.utils.Constants import Constants
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
@@ -22,11 +23,25 @@ from wingConstruction.fem.Abaqus import Abaqus
 
 class Project:
 
+    EXPORT_HEADER = 'elementSizes,spanElementCount,ribs,shellThickness,weight,' \
+                    + 'dispD3Min(Cal),dispD3Max(Cal),stressMisesMin(Cal),stressMisesMax(Cal),' \
+                    + 'dispD3Min(Aba),dispD3Max(Aba),stressMisesMin(Aba),stressMisesMax(Aba),loadError\n'
+
     def __init__(self, project_name):
         self.errorFlag = False
+        # indicates if the project was calculated before
+        self.preexisting = False
+
+        self.resultsCalcu = ResultMax()
+        self.resultsAba = ResultMax()
+
         self.workingDir = Constants().WORKING_DIR + '/' + project_name
         if not os.path.isdir(self.workingDir):
             os.mkdir(self.workingDir)
+        else:
+            if os.path.isfile(self.workingDir + '/' + 'results.csv'):
+                self.preexisting = True
+                self.parse_from_results()
 
         self.clx = Calculix(workingDir=self.workingDir)
         self.geo = None
@@ -46,8 +61,8 @@ class Project:
         self.elemType = 'qu4'
         self.shellThickness = 0.01
 
-        self.resultsCalcu = ResultMax()
-        self.resultsAba = ResultMax()
+        self.density = 2810  # kg/m^3
+
         #self.dispD3Min = 0
         #self.dispD3Max = 0
         #self.stressMisesMin = 0
@@ -140,6 +155,43 @@ class Project:
                 print('invalid line in Load file')
         print('sum of Loads in ' + load_file_name + ': ' + str(load_sum))
         return load_sum
+
+    def collect_results(self):
+        l = self.validate_load('loadTop.frc')
+        l += self.validate_load('loadBot.frc')
+        load_error = (self.forceTop + self.forceBot) - l
+        export_row = str(self.elementSize) + ',' \
+                     + str(self.calc_span_division()) + ',' \
+                     + str(self.ribs) + ',' \
+                     + str(self.shellThickness) + ',' \
+                     + str(self.geo.calc_weight(self.density)) + ',' \
+                     + str(self.resultsCalcu.dispD3Min) + ',' \
+                     + str(self.resultsCalcu.dispD3Max) + ',' \
+                     + str(self.resultsCalcu.stressMisesMin) + ',' \
+                     + str(self.resultsCalcu.stressMisesMax) + ',' \
+                     + str(self.resultsAba.dispD3Min) + ',' \
+                     + str(self.resultsAba.dispD3Max) + ',' \
+                     + str(self.resultsAba.stressMisesMin) + ',' \
+                     + str(self.resultsAba.stressMisesMax) + ',' \
+                     + str(load_error) + '\n'
+        return export_row
+
+    def save_results(self):
+        output_f = open(self.workingDir + '/' + 'results.csv', 'w')
+        output_f.write(Project.EXPORT_HEADER)
+        output_f.write(self.collect_results())
+        output_f.close()
+
+    def parse_from_results(self):
+        data = np.genfromtxt(self.workingDir + '/' + 'results.csv', delimiter=',', skip_header=1)
+        self.resultsCalcu.stressMisesMin = data[7]
+        self.resultsCalcu.stressMisesMax = data[8]
+        self.resultsCalcu.dispD3Min = data[6]
+        self.resultsCalcu.dispD3Max = data[5]
+        self.resultsAba.stressMisesMin = data[11]
+        self.resultsAba.stressMisesMax = data[12]
+        self.resultsAba.dispD3Min = data[9]
+        self.resultsAba.dispD3Max = data[10]
 
     def remove(self):
         rmtree(self.workingDir)

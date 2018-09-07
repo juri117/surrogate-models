@@ -22,13 +22,13 @@ class Hammersley:
     def __init__(self):
         print('done')
 
-    def bool_mat_to_list(self, mat):
-        samples = []
-        for r in range(0, mat.shape[0]):
-            for c in range(0, mat.shape[0]):
-                if mat[c][r] == 1:
-                    samples.append([c, r])
-        return samples
+    #def bool_mat_to_list(self, mat):
+    #    samples = []
+    #    for r in range(0, mat.shape[0]):
+    #        for c in range(0, mat.shape[0]):
+    #            if mat[c][r] == 1:
+    #                samples.append([c, r])
+    #    return samples
 
     def prime(self, n):
         ##  PRIME returns returns any of the first PRIME_MAX prime numbers.
@@ -209,6 +209,8 @@ class Hammersley:
             print('  0 <= N < %d' % (prime_max))
             exit('PRIME - Fatal error!')
 
+        return 2
+        print(prime_vector[n])
         return prime_vector[n]
 
     def hammersley(self, i, m, n):
@@ -240,6 +242,18 @@ class Hammersley:
                 t[j] = (t[j] // self.prime(j))
         return r
 
+    def generate_sample_plan(self, point_count, dimension, bounds, base=None):
+        usedBase = point_count
+        if not base is None:
+            usedBase = base
+        points = []
+        for i in range(0, point_count):
+            normPoint = ham.hammersley(i, dimension, usedBase)
+            scaledPoint = []
+            for d in range(0, dimension):
+                scaledPoint.append(bounds[d][0] + (normPoint[d] * (bounds[d][1]- bounds[d][0])))
+            points.append(scaledPoint)
+        return points
 
 
 
@@ -248,7 +262,15 @@ if __name__ == '__main__':
 
     ham = Hammersley()
 
-    for i in range(0, 14):
-        point = ham.hammersley(i, 2, 250)
+    #sys.exit(15)
+
+
+    for i in range(0, 100):
+        point = ham.hammersley(i, 2, 100)
         plt.plot([point[0]], [point[1]], 'bo')
+    plt.show()
+
+    samples = ham.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
+    for i in range(0, 14):
+        plt.plot([samples[i][0]], [samples[i][1]], 'bo')
     plt.show()

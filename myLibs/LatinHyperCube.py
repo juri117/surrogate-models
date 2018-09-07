@@ -27,7 +27,7 @@ class LatinHyperCube:
         for r in range(0, mat.shape[0]):
             for c in range(0, mat.shape[0]):
                 if mat[c][r] == 1:
-                    samples.append([c, r])
+                    samples.append([r, c])
         return samples
 
     '''
@@ -79,12 +79,26 @@ class LatinHyperCube:
             col_count += 1
         return samples
 
-    ######################################################
-    ###
+    def generate_sample_plan(self, point_count, dimension, bounds, base=None):
+        if dimension != 2:
+            print('LatinHyperCube does not support dimensions other than 2 yet!')
+            sys.exit(9061548)
+        sample_mat = self.enhanced_latin_hypercube(point_count)
+        sample_indices = self.bool_mat_to_list(sample_mat)
+        normPoint = list(np.array(sample_indices) * (1/(point_count-1)))
+        points = []
+        for i in range(0, point_count):
+            scaledPoint = []
+            for d in range(0, dimension):
+                scaledPoint.append(bounds[d][0] + (normPoint[i][d] * (bounds[d][1] - bounds[d][0])))
+            points.append(scaledPoint)
+        return points
 
 if __name__ == '__main__':
     import matplotlib.pyplot as plt
     sam = LatinHyperCube()
+
+    sam.generate_sample_plan(14, 2, [(6,30),(0.001, 0.004)])
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 2, 1)

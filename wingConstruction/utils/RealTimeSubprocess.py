@@ -27,6 +27,7 @@ try:
 except ImportError:
     from queue import Queue, Empty  # python 3.x
 
+
 class RealTimeSubprocess:
 
     def __init__(self):

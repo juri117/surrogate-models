@@ -25,14 +25,11 @@ import time
 from scipy.interpolate import interp1d
 from scipy import interpolate
 
-USE_ABAQUS = True
-USE_CALCULIX = True
-NON_LINEAR = False
 # USED_CORES = 1
 # if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores')
 
-max_g = 2.5
+max_g = 1. #2.5
 safety_fac = 1.5 # 1.5
 mtow = 27987.
 fuel_mass_in_wings = 2 * 2659.
@@ -43,24 +40,33 @@ engine_pos_y = 3.
 wing_length = 12.87
 chord_length = 3.
 chord_height = 0.55
+shell_thickness = 0.005
 
-density = 2810  # kg/m^3
 shear_strength = 5.72e8 / safety_fac  # 3.31e8 #Pa
 
 max_shear_strength = shear_strength
 
-element_size = 0.1
-
 
 class MultiRun:
 
-    def __init__(self):
-        print('init done')
+    def __init__(self, use_calcu=True, use_aba=True, non_liner=False, project_name_prefix='pro'):
+        self.use_calculix = use_calcu
+        self.use_abaqus = use_aba
+        self.non_linear = non_liner
+        self.project_name_prefix = project_name_prefix
         self.task_total = 0
         self.task_done = 0
 
     def print_state(self):
         print('done with {:d} of {:d}'.format(self.task_done, self.task_totals))
+
+    def new_project_r_t(self, rib, thick, element_size=0.1):
+        project_name = self.project_name_prefix + '_r{:02d}_t{:5f}'.format(rib, thick)
+        pro = self.new_project(project_name)
+        pro.ribs = rib
+        pro.shellThickness = thick
+        pro.elementSize = element_size
+        return pro
 
     def new_project(self, project_name):
         # project_name = 'meshSize_r{:02d}_t{:5f}'.format(rib_count, shell_thick)
@@ -74,7 +80,7 @@ class MultiRun:
         pro.boxOverhang = 0.
         pro.forceTop = -(2. / 3.) * wing_load
         pro.forceBot = -(1. / 3.) * wing_load
-        pro.elementSize = element_size
+        pro.elementSize = 0.1
         # pro1.elementSize = 0.05
         pro.elemType = 'qu4'
         pro.shellThickness = 0.005
@@ -82,47 +88,26 @@ class MultiRun:
         return pro
 
     def run_project(self, pro):
-        pro.generate_geometry(nonlinear=NON_LINEAR)
-        if USE_CALCULIX:
-            pro.solve()
-            print('############ DONE ############')
-            if not pro.errorFlag:
-                if NON_LINEAR:
-                    pro.post_process(template='wing_post_nl_simple')
-                else:
-                    pro.post_process(template='wing_post_simple')
-        if USE_ABAQUS:
-            pro.generate_geometry_abaqus()
-            pro.solve_abaqus()
-            if not pro.errorFlag:
-                pro.post_process_abaqus()
-
+        if not pro.preexisting:
+            pro.generate_geometry(nonlinear=self.non_linear)
+            if self.use_calculix:
+                pro.solve()
+                print('############ DONE ############')
+                if not pro.errorFlag:
+                    if self.non_linear:
+                        pro.post_process(template='wing_post_nl_simple')
+                    else:
+                        pro.post_process(template='wing_post_simple')
+            if self.use_abaqus:
+                pro.generate_geometry_abaqus()
+                pro.solve_abaqus()
+                if not pro.errorFlag:
+                    pro.post_process_abaqus()
+            pro.save_results()
         print('#########################################')
         print('finished: ' + pro.workingDir)
         self.task_done += 1
         return pro
-
-    def collect_results(self, pro):
-        l = pro.validate_load('loadTop.frc')
-        l += pro.validate_load('loadBot.frc')
-        load_error = (-1. * wing_load) - l
-        #if not pro.errorFlag:
-        export_row = str(pro.elementSize) + ',' \
-                     + str(pro.calc_span_division()) + ',' \
-                     + str(pro.ribs) + ',' \
-                     + str(pro.shellThickness) + ',' \
-                     + str(pro.geo.calc_weight(density)) + ',' \
-                     + str(pro.resultsCalcu.dispD3Min) + ',' \
-                     + str(pro.resultsCalcu.dispD3Max) + ',' \
-                     + str(pro.resultsCalcu.stressMisesMin) + ',' \
-                     + str(pro.resultsCalcu.stressMisesMax) + ',' \
-                     + str(pro.resultsAba.dispD3Min) + ',' \
-                     + str(pro.resultsAba.dispD3Max) + ',' \
-                     + str(pro.resultsAba.stressMisesMin) + ',' \
-                     + str(pro.resultsAba.stressMisesMax) + ',' \
-                     + str(load_error) + '\n'
-        return export_row
-        #return ''
 
     def pool_run(self, projects):
         self.task_done = 0
@@ -141,21 +126,16 @@ class MultiRun:
         projects = []
         for r in ribs:
             for t in thick:
-                project_name = 'pro_r{:02d}_t{:5f}'.format(r, t)
-                pro = self.new_project(project_name)
-                pro.ribs = r
-                pro.shellThickness = t
+                pro = self.new_project_r_t(r, t)
                 projects.append(pro)
         projects = self.pool_run(projects)
         output_file_name = '2drun_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/'
                         + output_file_name,
                         'w')
-        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,'
-                       'dispD3Min(Cal),dispD3Max(Cal),stressMisesMin(Cal),stressMisesMax(Cal),'
-                       'dispD3Min(Aba),dispD3Max(Aba),stressMisesMin(Aba),stressMisesMax(Aba),loadError\n')
+        output_f.write(Project.EXPORT_HEADER)
         for p in projects:
-            outStr = self.collect_results(p)
+            outStr = p.collect_results()
             if outStr != '':
                 output_f.write(outStr)
                 output_f.flush()
@@ -273,19 +253,14 @@ class MultiRun:
         sizes = list(sizes)
         projects = []
         for s in sizes:
-            project_name = 'meshSize_s{:5f}'.format(s)
-            pro = self.new_project(project_name)
-            pro.elementSize = s
-            pro.ribs = 14
+            pro = self.new_project_r_t(14, shell_thickness, element_size=s)
             projects.append(pro)
         projects = self.pool_run(projects)
         output_file_name = 'convAna_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
         output_f = open(Constants().WORKING_DIR + '/' + output_file_name, 'w')
-        output_f.write('elementSizes,spanElementCount,ribs,shellThickness,weight,'
-                       'dispD3Min(Cal),dispD3Max(Cal),stressMisesMin(Cal),stressMisesMax(Cal),'
-                       'dispD3Min(Aba),dispD3Max(Aba),stressMisesMin(Aba),stressMisesMax(Aba),loadError\n')
+        output_f.write(Project.EXPORT_HEADER)
         for p in projects:
-            out_str = self.collect_results(p)
+            out_str = p.collect_results()
             if out_str != '':
                 output_f.write(out_str)
                 output_f.flush()
@@ -297,6 +272,23 @@ class MultiRun:
                 p.remove()
         print('DONE with ALL')
         return output_file_name
+
+    def run_sample_points(self, ribs, shells, use_abaqus=False):
+        stress = np.zeros((len(ribs)))
+        projects = []
+        for i in range(0, len(ribs)):
+            pro = self.new_project_r_t(int(ribs[i]), shells[i])
+            projects.append(pro)
+        projects = self.pool_run(projects)
+        for i in range(0, len(projects)):
+            if projects[i].ribs == ribs[i] and projects[i].shellThickness == shells[i]:
+                if use_abaqus:
+                    stress[i] = projects[i].resultsAba.stressMisesMax
+                else:
+                    stress[i] = projects[i].resultsCalcu.stressMisesMax
+            else:
+                print('ERROR, pool returned shuffled project list')
+        return stress
 
 
 if __name__ == '__main__':
@@ -310,5 +302,5 @@ if __name__ == '__main__':
     output_file_name = '2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
     #output_file_name = '2drun_2018-08-23_18_12_26_realLoad25.csv'
 
-    # output_file_name = multi.main_run(cleanup=False)
+    #output_file_name = multi.main_run(cleanup=False)
     multi.plot_results(output_file_name)
