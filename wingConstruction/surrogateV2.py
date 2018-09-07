@@ -32,7 +32,7 @@ if __name__ == '__main__':
     USE_ABAQUS = False
 
     SURRO_TYPE = 'krig' # krig, rbf
-    SAMPLE_PLAN = 'latin' # latin, hammers
+    SAMPLE_PLAN = 'hammers' # latin, hammers
     SAMPLE_POINT_COUNT = 14
     PGF = False
 
@@ -101,13 +101,18 @@ if __name__ == '__main__':
     ### new Stuff here
     if 'latin' in SAMPLE_PLAN:
         sam = LatinHyperCube()
+        sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
     elif 'hammer' in SAMPLE_PLAN:
         sam = Hammersley()
+        sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
+        # make the ribs be int
+        for i in range(0, len(sample_points)):
+            sample_points[i][0] = int(round(sample_points[i][0]))
     else:
         print('unknown sample plan selected')
         sys.exit(9061626)
 
-    sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
+
     known_params = np.array(sample_points).T
 
     known_rib = known_params[0,:]
@@ -154,8 +159,8 @@ if __name__ == '__main__':
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         # krig.optimize()
-        pltLike = surro.plot_likelihoods(pgf=PGF)
-        pltLike.save('../dataOut/wingSurroLikely.pdf')
+        #pltLike = surro.plot_likelihoods(pgf=PGF)
+        #pltLike.save('../dataOut/wingSurroLikely.pdf')
 
         minLike = surro.calc_likelihood()
         print('minLike = ' + str(minLike))
@@ -192,23 +197,24 @@ if __name__ == '__main__':
     opti_shell = []
     opti_stress = []
     opti_weights = []
-    used_ribs_indices = list(range(ribs.index(min(known_rib)), ribs.index(max(known_rib))))
-    used_shell_indices = list(range(shell.index(min(known_shell)), shell.index(max(known_shell))))
-    for i in used_ribs_indices:
+    #used_ribs_indices = list(range(ribs.index(min(known_rib)), ribs.index(max(known_rib))))
+    #used_shell_indices = list(range(shell.index(min(known_shell)), shell.index(max(known_shell))))
+    used_ribs = list(range(int(min(known_rib)), int(max(known_rib))))
+    for i in range(0, len(used_ribs)):
         #stress = stress[:,i]
         # SLSQP: proplem; find local min not glob. depending on init-vals
         init_guess = shell[int(len(known_shell)/2.)]
         bnds = [(min(known_shell), max(known_shell))]
         #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
         #opti_shell.append(res.x[0])
-        root = optimize.newton(shell_predict, init_guess, args=[surro, ribs[i]])
-        opti_ribs.append(ribs[i])
+        root = optimize.newton(shell_predict, init_guess, args=[surro, used_ribs[i]])
+        opti_ribs.append(used_ribs[i])
         opti_shell.append(root)
-        opti_stress.append(surro.predict([ribs[i], root]))
+        opti_stress.append(surro.predict([used_ribs[i], root]))
         weight = WingConstruction.calc_weight_stat(wing_length,
                                                    chord_length,
                                                    chord_height,
-                                                   ribs[i],
+                                                   used_ribs[i],
                                                    root,
                                                    density)
         opti_weights.append(weight)

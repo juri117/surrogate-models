@@ -248,7 +248,7 @@ class Hammersley:
             usedBase = base
         points = []
         for i in range(0, point_count):
-            normPoint = ham.hammersley(i, dimension, usedBase)
+            normPoint = self.hammersley(i, dimension, usedBase)
             scaledPoint = []
             for d in range(0, dimension):
                 scaledPoint.append(bounds[d][0] + (normPoint[d] * (bounds[d][1]- bounds[d][0])))
