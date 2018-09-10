@@ -54,24 +54,24 @@ class Halton:
         return decimal
 
     '''
-    :param bin string
-    :return the inverse string of bin
+    :param number list
+    :return the inverse list of numbers
     '''
-    def str_inverse(self, str):
-        strInv = ""
-        for s in str:
-            strInv = s + strInv
-        return strInv
+    def str_inverse(self, nums):
+        strInv = np.zeros((len(nums)))
+        for i in range(0, len(nums)):
+            strInv[len(nums)-1 - i ] = nums[i]
+        return list(strInv)
 
     '''
-    :param baseFracStr a string that represents a number with base notation
+    :param baseFracs a list that represents a number with base notation
     :param the base of baseFracStr
-    :return a float of baseFracStr evaluated with base, as fraction
+    :return a float of baseFracs evaluated with base, as fraction
     '''
-    def base_fract_str_to_float(self, baseFracStr, base):
+    def base_fract_str_to_float(self, baseFracs, base):
         res = 0.
-        for i in range(0, len(baseFracStr)):
-            res += int(baseFracStr[i]) * int(base) ** (-1 * (i + 1))
+        for i in range(0, len(baseFracs)):
+            res += int(baseFracs[i]) * int(base) ** (-1 * (i + 1))
         return res
 
     '''
@@ -80,15 +80,15 @@ class Halton:
     :return the decimal number noted as base-number
     '''
     def base(self, decimal, base):
-        list = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        other_base = ""
+        #list = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        other_base = []
         while decimal != 0:
-            other_base = list[int(decimal % base)] + other_base
+            other_base.append(int(decimal % base))
             decimal = decimal / base
-        out = ''
-        for s in other_base:
-            if s != '0' or len(out) > 0:
-                out = out + s
+        out = []
+        for s in reversed(other_base):
+            if s != 0 or len(out) > 0:
+                out.append(s)
         return out
 
 
@@ -116,13 +116,13 @@ if __name__ == '__main__':
     hal = Halton()
 
     #for i in range(0, 10):
-    #    point = hal.halton(i, 3)
+    #    point = hal.halton(i, 2)
 
     #sys.exit(15)
 
     for i in range(0, 200):
-        point = [hal.halton(i, 5), hal.halton(i, 3)]
-        plt.plot([point[0]], [point[1]], 'bo')
+        point = [hal.halton(i, 5), hal.halton(i, 29)]
+        plt.plot([point[1]], [point[0]], 'bo')
     plt.show()
 
     samples = hal.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
