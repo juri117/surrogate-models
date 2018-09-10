@@ -37,6 +37,7 @@ shear_strength = 3.31e8 / safety_fac
 
 LATIN = 1
 HAMMERS = 2
+HALTON = 3
 
 KRIGING = 1
 RBF = 2

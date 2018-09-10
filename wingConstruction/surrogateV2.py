@@ -22,6 +22,7 @@ from myLibs.Kriging import Kriging
 from myLibs.RBF import RBF
 from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Hammersley import Hammersley
+from myLibs.Halton import Halton
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.utils.defines import *
@@ -33,7 +34,7 @@ if __name__ == '__main__':
     USE_ABAQUS = False
 
     SURRO_TYPE = KRIGING # KRIGING, RBF
-    SAMPLE_PLAN = LATIN # LATIN, HAMMERS
+    SAMPLE_PLAN = HALTON # LATIN, HAMMERS, HALTON
     SAMPLE_POINT_COUNT = 14
     PGF = False
 
@@ -80,10 +81,16 @@ if __name__ == '__main__':
 
     if SAMPLE_PLAN == LATIN:
         sam = LatinHyperCube()
-        sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
+        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
     elif SAMPLE_PLAN == HAMMERS:
         sam = Hammersley()
-        sample_points = sam.generate_sample_plan(14, 2, [(5, 18), (0.002, 0.0033)])
+        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
+        # make the ribs be int
+        for i in range(0, len(sample_points)):
+            sample_points[i][0] = int(round(sample_points[i][0]))
+    elif SAMPLE_PLAN == HALTON:
+        sam = Halton()
+        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
         # make the ribs be int
         for i in range(0, len(sample_points)):
             sample_points[i][0] = int(round(sample_points[i][0]))

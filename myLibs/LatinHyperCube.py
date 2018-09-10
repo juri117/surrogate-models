@@ -15,6 +15,7 @@ __status__ = "Development"
 import numpy as np
 import math
 import sys
+from utils.PlotHelper import PlotHelper
 
 
 class LatinHyperCube:
@@ -95,47 +96,54 @@ class LatinHyperCube:
         return points
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
+    #import matplotlib.pyplot as plt
     sam = LatinHyperCube()
 
     sam.generate_sample_plan(14, 2, [(6,30),(0.001, 0.004)])
 
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 2, 1)
+    pltHalton = PlotHelper([], fancy=True, pgf=True)
+    import matplotlib.pyplot as plt
+
+    ax1 = pltHalton.fig.add_subplot(121)
+    ax2 = pltHalton.fig.add_subplot(122)
 
     sample_mat_full = sam.enhanced_latin_hypercube(16)
     xy_full = sam.bool_mat_to_list(sample_mat_full)
     plotXY_full = np.array(xy_full).T.tolist()
-    ax.plot(plotXY_full[0], plotXY_full[1], 'bo')
+    ax1.plot(plotXY_full[0], plotXY_full[1], 'bo', markersize=4)
 
     deleteX = [0, 15, 4, 1]
     deleteY = [0, 15, 1, 4]
     for i in range(0, len(deleteX)):
-        ax.plot([deleteX[i]], [deleteY[i]], 'rx', mew=4, ms=15)
-        ax.plot([-1, 16], [deleteY[i], deleteY[i]], 'r-')
-        ax.plot([deleteX[i], deleteX[i]], [-1, 16], 'r-')
+        ax1.plot([deleteX[i]], [deleteY[i]], 'rx', mew=2, ms=10)
+        ax1.plot([-1, 16], [deleteY[i], deleteY[i]], 'r-', linewidth=2)
+        ax1.plot([deleteX[i], deleteX[i]], [-1, 16], 'r-', linewidth=2)
 
-    ax.set_xticks(range(0, 16), minor=False)
-    ax.set_yticks(range(0, 16), minor=False)
-    ax.xaxis.set_ticklabels([])
-    ax.yaxis.set_ticklabels([])
-    plt.xlim(16, -1)
-    plt.ylim(16, -1)
-    ax.grid(True)
+    ax1.set_xticks(range(0, 16), minor=False)
+    ax1.set_yticks(range(0, 16), minor=False)
+    ax1.xaxis.set_ticklabels([])
+    ax1.yaxis.set_ticklabels([])
+    ax1.set_xlim(16, -1)
+    ax1.set_ylim(16, -1)
+    ax1.grid(True)
 
-    ax = fig.add_subplot(1, 2, 2)
+    #ax = fig.add_subplot(1, 2, 2)
 
     sample_mat = sam.enhanced_latin_hypercube(12)
     xy = sam.bool_mat_to_list(sample_mat)
     plotXY = np.array(xy).T.tolist()
 
-    ax.plot(plotXY[0], plotXY[1], 'bo')
-    ax.set_xticks(range(0,12), minor=False)
-    ax.set_yticks(range(0,12), minor=False)
-    ax.xaxis.set_ticklabels([])
-    ax.yaxis.set_ticklabels([])
-    plt.xlim(12, -1)
-    plt.ylim(12, -1)
-    ax.grid(True)
-    ax.grid(True)
-    plt.show()
+    ax2.plot(plotXY[0], plotXY[1], 'bo', markersize=4)
+    ax2.set_xticks(range(0,12), minor=False)
+    ax2.set_yticks(range(0,12), minor=False)
+    ax2.xaxis.set_ticklabels([])
+    ax2.yaxis.set_ticklabels([])
+    ax2.set_xlim(12, -1)
+    ax2.set_ylim(12, -1)
+    ax2.grid(True)
+    ax2.grid(True)
+    #plt.show()
+    pltHalton.fig.set_size_inches(5, 2.5)
+    plt.tight_layout()
+    pltHalton.save('../dataOut/latinHyper.pdf')
+    pltHalton.show()
