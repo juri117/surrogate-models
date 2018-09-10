@@ -35,9 +35,11 @@ shear_strength = 3.31e8 / safety_fac
 #######################################################
 # CONSTANTS FOR INDEXING AND CHOICE
 
-LATIN = 1
-HAMMERS = 2
-HALTON = 3
+SAMPLE_NAMES = ['LatinHyperCube', 'Hammersley', 'Halton']
+LATIN = 0
+HAMMERS = 1
+HALTON = 2
 
-KRIGING = 1
-RBF = 2
+SURRO_NAMES = ['Kriging', 'RBF']
+KRIGING = 0
+RBF = 1

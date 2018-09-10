@@ -13,6 +13,8 @@ __status__ = "Development"
 import sys
 import numpy as np
 from datetime import datetime
+from scipy import optimize
+
 from wingConstruction.utils.Constants import Constants
 from wingConstruction.Project import Project
 from wingConstruction.MultiRun import MultiRun
@@ -27,17 +29,22 @@ from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.utils.defines import *
 
-from scipy import optimize
 
-if __name__ == '__main__':
 
-    USE_ABAQUS = False
-
-    SURRO_TYPE = KRIGING # KRIGING, RBF
-    SAMPLE_PLAN = HALTON # LATIN, HAMMERS, HALTON
-    SAMPLE_POINT_COUNT = 14
-    PGF = False
-
+'''
+performs full surrogate analysis and comparison to real FEM-Model
+:param sampling_type LATIN, HAMMERS, HALTON
+:param sample_point_count amount of sample points
+:param surro_type KRIGING, RBF
+:param use_abaqus if False Calculix will be used
+:param pgf if set to True LaTex ready plot files will be written to disk
+:param show_plots weather plots will be displayed at runtime
+:return SurroResults with all the results
+'''
+def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True):
+    timer = TimeTrack('surrogateAnalysis')
+    timer.tic()
+    results = SurroResults()
     RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
 
     multi = MultiRun(use_calcu=True, use_aba=True, non_liner=False)
@@ -45,10 +52,10 @@ if __name__ == '__main__':
     ##################################################
     # collect data
 
-    ribs, shell, stress, disp, weight = multi.read_data_file(RESULTS_FILE, use_abaqus=USE_ABAQUS)
-    n_rib = len(ribs)
-    n_thick = len(shell)
-    rib_mat, shell_mat = np.meshgrid(ribs, shell)
+    ribs, shell, stress, disp, weight = multi.read_data_file(RESULTS_FILE, use_abaqus=use_abaqus)
+    #n_rib = len(ribs)
+    #n_thick = len(shell)
+    #rib_mat, shell_mat = np.meshgrid(ribs, shell)
 
     # input 0 is ribs
     # input 1 is shell_thick
@@ -61,12 +68,12 @@ if __name__ == '__main__':
     newRib = []
     newShell = []
     newStress = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
-    newWeight = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
+    #newWeight = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
     for r in range(0, i_rib_n-i_rib_0):
         newRib.append(ribs[i_rib_0+r])
         for s in range(0, i_shell_n-i_shell_0):
             newStress[s][r] = stress[i_shell_0+s][i_rib_0+r]
-            newWeight[s][r] = weight[i_shell_0 + s][i_rib_0 + r]
+            #newWeight[s][r] = weight[i_shell_0 + s][i_rib_0 + r]
 
     for s in range(0, i_shell_n-i_shell_0):
         newShell.append(shell[i_shell_0+s])
@@ -74,23 +81,23 @@ if __name__ == '__main__':
     ribs = newRib
     shell = newShell
     stress = newStress
-    weight = newWeight
+    #weight = newWeight
 
     ##################################################
     # sample plan
 
-    if SAMPLE_PLAN == LATIN:
+    if sampling_type == LATIN:
         sam = LatinHyperCube()
-        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
-    elif SAMPLE_PLAN == HAMMERS:
+        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
+    elif sampling_type == HAMMERS:
         sam = Hammersley()
-        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
+        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
         # make the ribs be int
         for i in range(0, len(sample_points)):
             sample_points[i][0] = int(round(sample_points[i][0]))
-    elif SAMPLE_PLAN == HALTON:
+    elif sampling_type == HALTON:
         sam = Halton()
-        sample_points = sam.generate_sample_plan(SAMPLE_POINT_COUNT, 2, [(5, 18), (0.002, 0.0033)])
+        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
         # make the ribs be int
         for i in range(0, len(sample_points)):
             sample_points[i][0] = int(round(sample_points[i][0]))
@@ -107,18 +114,19 @@ if __name__ == '__main__':
     ##################################################
     # FEM calculation, collecting results
 
-    known_stress = multi.run_sample_points(known_rib, known_shell, use_abaqus=USE_ABAQUS)
+    known_stress = multi.run_sample_points(known_rib, known_shell, use_abaqus=use_abaqus)
 
     ##################################################
     # build surrogate model and fit it
 
-    if SURRO_TYPE == KRIGING:
+    if surro_type == KRIGING:
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         #krig.optimize()
-        #pltLike = surro.plot_likelihoods(pgf=PGF)
-        #pltLike.save('../dataOut/wingSurroLikely.pdf')
+        if show_plots:
+            pltLike = surro.plot_likelihoods(pgf=PGF)
+            pltLike.save('../dataOut/wingSurroLikely.pdf')
 
         minLike = surro.calc_likelihood()
         print('minLike = ' + str(minLike))
@@ -126,7 +134,7 @@ if __name__ == '__main__':
         print('@theta2 = ' + str(surro.get_theta()[1]))
         print('@p1 = ' + str(surro.get_p()[0]))
         print('@p2 = ' + str(surro.get_p()[1]))
-    elif SURRO_TYPE == RBF:
+    elif surro_type == RBF:
         surro = RBF(known_params, known_stress)
         a = .0946
         surro.update_param(a, 'gaus')
@@ -138,7 +146,7 @@ if __name__ == '__main__':
     # validate
 
     vali = Validation()
-    vali.calc_deviation(ribs, shell, stress, surro.predict)
+    results.deviation = vali.calc_deviation(ribs, shell, stress, surro.predict)
 
 
     ##################################################
@@ -197,61 +205,84 @@ if __name__ == '__main__':
 
     best_i = opti_weights.index(min(opti_weights))
 
-    optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=PGF)
-    optWeightPlot.ax.plot(opti_ribs, opti_weights, 'b-')
-    optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
-    optWeightPlot.finalize()
+    if show_plots:
+        optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=pgf)
+        optWeightPlot.ax.plot(opti_ribs, opti_weights, 'b-')
+        optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
+        optWeightPlot.finalize()
 
     print('optimum:')
     print('ribs: {:f}'.format(opti_ribs[best_i]))
     print('shell: {:f}'.format(opti_shell[best_i]))
     print('weight: {:f}'.format(opti_weights[best_i]))
 
+    results.optimumRib = opti_ribs[best_i]
+    results.optimumShell = opti_shell[best_i]
+    results.optimumWeights = opti_weights[best_i]
+
     ##################################################
     # plot it
 
-    # convert all to np arrays
-    shell = np.array(shell)
-    opti_shell = np.array(opti_shell)
-    known_shell = np.array(known_shell)
+    if show_plots:
+        # convert all to np arrays
+        shell = np.array(shell)
+        opti_shell = np.array(opti_shell)
+        known_shell = np.array(known_shell)
 
-    plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False, font_size=16, pgf=PGF)
+        plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False, font_size=16, pgf=pgf)
 
-    #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
+        #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
-    # plot FEM data as lines
-    # plot FEM data as lines
+        # plot FEM data as lines
+        # plot FEM data as lines
 
-    for i in range(0,len(ribs)):
-        if i == 0:
-            plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='fem data')
-        else:
-            plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
+        for i in range(0,len(ribs)):
+            if i == 0:
+                plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='fem data')
+            else:
+                plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
 
 
-    #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
+        #realDatMark = plot3d.ax.scatter(rib_mat, shell_mat, stress, c='g', marker='x', label='fem measurements')
 
-    # plot limit load as wireframe
-    #limit = np.full((n_thick, n_rib),max_shear_strength)
-    #plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
+        # plot limit load as wireframe
+        #limit = np.full((n_thick, n_rib),max_shear_strength)
+        #plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
-    # plot surrogate model as wireframe
-    ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
-    shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
-    krigPlot = plot3d.plot_function_3D(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
-    samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
+        # plot surrogate model as wireframe
+        ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
+        shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
+        krigPlot = plot3d.plot_function_3D(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
+        samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
-    # plot limit load line
-    plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. stress line')
-    # plot optimal point
-    plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
-    plot3d.ax.locator_params(nbins=7, axis='y')
+        # plot limit load line
+        plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. stress line')
+        # plot optimal point
+        plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
+        plot3d.ax.locator_params(nbins=7, axis='y')
 
-    plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
+        plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
 
-    plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
-    plot3d.ax.view_init(18, 40)
-    plot3d.save('../dataOut/wingSurro.pdf')
-    plot3d.show()
-
+        plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
+        plot3d.ax.view_init(18, 40)
+        plot3d.save('../dataOut/wingSurro.pdf')
+        plot3d.show()
+    results.runtime = timer.toc()
     print('done')
+    return results
+
+
+class SurroResults:
+
+    def __init__(self):
+        self.deviation = 0.
+        self.optimumRib = 0.
+        self.optimumShell = 0.
+        self.optimumWeights = 0.
+        self.runtime = 0.
+
+
+if __name__ == '__main__':
+    # KRIGING, RBF
+    # LATIN, HAMMERS, HALTON
+    surrogate_analysis(HALTON, 14, KRIGING, use_abaqus=False, pgf=False, show_plots=True)
