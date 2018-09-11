@@ -122,7 +122,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         #krig.optimize()
         if show_plots:
             pltLike = surro.plot_likelihoods(pgf=pgf)
-            pltLike.save('../dataOut/wingSurroLikely.pdf')
+            pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.pdf')
 
         minLike = surro.calc_likelihood()
         print('minLike = ' + str(minLike))
@@ -264,7 +264,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
         plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
         plot3d.ax.view_init(18, 40)
-        plot3d.save('../dataOut/wingSurro.pdf')
+        plot3d.save(Constants().PLOT_PATH + 'wingSurro.pdf')
         plot3d.show()
     results.runtime = timer.toc()
     print('done')

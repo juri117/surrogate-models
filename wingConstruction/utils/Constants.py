@@ -40,9 +40,14 @@ class Constants(object):
         self.config.read(self.INPUT_DIR+'/setup.ini')
 
         ### PATHS
-        self.WORKING_DIR = self.config['meta']['working_dir']
+        self.WORKING_DIR = os.path.abspath(self.config['meta']['working_dir'])
         if not os.path.isdir(self.WORKING_DIR):
             os.mkdir(self.WORKING_DIR)
+
+        self.PLOT_PATH = self.WORKING_DIR + '\\plot'
+        if not os.path.isdir(self.PLOT_PATH):
+            os.mkdir(self.PLOT_PATH)
+        self.PLOT_PATH = self.PLOT_PATH + '\\'
 
         self.CALCULIX_BIN_PATH = self.config['fem']['calculix_path']
         if not os.path.isdir(self.CALCULIX_BIN_PATH):
