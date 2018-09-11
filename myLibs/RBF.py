@@ -34,7 +34,11 @@ class RBF:
 
     def update_param(self, rbf_const, rbf_name):
         self._rbfConst = rbf_const
-        if rbf_name == 'gaus':
+        if rbf_name == 'lin':
+            self._rbf = linRBF
+        elif rbf_name == 'cubic':
+            self._rbf = cubicRBF
+        elif rbf_name == 'gaus':
             self._rbf = gausRBF
         elif rbf_name == 'multi-quadratic':
             self._rbf = multiQuadRBF
@@ -62,6 +66,9 @@ class RBF:
         self._coeff = np.linalg.solve(mat, self._knownVal)
         return self._coeff
 
+    def get_coeff(self):
+        return self._coeff
+
     def predict(self, x_pred):
         res = 0.
         for i in range(0, self._n):
@@ -71,6 +78,13 @@ class RBF:
             radius = math.sqrt(radSum)
             res += self._coeff[i] * self._rbf(self._rbfConst, radius)
         return res
+
+
+def linRBF(a, r):
+    return r
+
+def cubicRBF(a, r):
+    return r**3
 
 def gausRBF(a, r):
     return math.e**(-((a*r)**2))

@@ -33,9 +33,9 @@ from wingConstruction.utils.defines import *
 
 '''
 performs full surrogate analysis and comparison to real FEM-Model
-:param sampling_type LATIN, HAMMERS, HALTON
+:param sampling_type SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
 :param sample_point_count amount of sample points
-:param surro_type KRIGING, RBF
+:param surro_type SURRO_KRIGING, SURRO_RBF
 :param use_abaqus if False Calculix will be used
 :param pgf if set to True LaTex ready plot files will be written to disk
 :param show_plots weather plots will be displayed at runtime
@@ -86,25 +86,21 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # sample plan
 
-    if sampling_type == LATIN:
+    if sampling_type == SAMPLE_LATIN:
         sam = LatinHyperCube()
-        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
-    elif sampling_type == HAMMERS:
+    elif sampling_type == SAMPLE_HAMMERS:
         sam = Hammersley()
-        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
-        # make the ribs be int
-        for i in range(0, len(sample_points)):
-            sample_points[i][0] = int(round(sample_points[i][0]))
-    elif sampling_type == HALTON:
+    elif sampling_type == SAMPLE_HALTON:
         sam = Halton()
-        sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
-        # make the ribs be int
-        for i in range(0, len(sample_points)):
-            sample_points[i][0] = int(round(sample_points[i][0]))
     else:
         print('unknown sample plan selected')
-        sys.exit(9061626)
+        results.errorStr = 'unknown sample plan selected'
+        return results
 
+    sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
+    # make the ribs be int
+    for i in range(0, len(sample_points)):
+        sample_points[i][0] = int(round(sample_points[i][0]))
     known_params = np.array(sample_points).T
     known_rib = known_params[0, :]
     known_shell = known_params[1, :]
@@ -119,13 +115,13 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # build surrogate model and fit it
 
-    if surro_type == KRIGING:
+    if surro_type == SURRO_KRIGING:
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         #krig.optimize()
         if show_plots:
-            pltLike = surro.plot_likelihoods(pgf=PGF)
+            pltLike = surro.plot_likelihoods(pgf=pgf)
             pltLike.save('../dataOut/wingSurroLikely.pdf')
 
         minLike = surro.calc_likelihood()
@@ -134,13 +130,16 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('@theta2 = ' + str(surro.get_theta()[1]))
         print('@p1 = ' + str(surro.get_p()[0]))
         print('@p2 = ' + str(surro.get_p()[1]))
-    elif surro_type == RBF:
+    elif surro_type == SURRO_RBF:
         surro = RBF(known_params, known_stress)
-        a = .0946
-        surro.update_param(a, 'gaus')
+        a = .078
+        surro.update_param(a, 'multi-quadratic')
+        print('coeff1 = ' + str(surro.get_coeff()[0]))
+        print('coeff2 = ' + str(surro.get_coeff()[1]))
     else:
         print('unknown surrogate type selected')
-        sys.exit(9061857)
+        results.errorStr = 'unknown surrogate type selected'
+        return results
 
     ##################################################
     # validate
@@ -280,9 +279,10 @@ class SurroResults:
         self.optimumShell = 0.
         self.optimumWeights = 0.
         self.runtime = 0.
+        self.errorStr = '-'
 
 
 if __name__ == '__main__':
-    # KRIGING, RBF
-    # LATIN, HAMMERS, HALTON
-    surrogate_analysis(HALTON, 14, KRIGING, use_abaqus=False, pgf=False, show_plots=True)
+    # SURRO_KRIGING, SURRO_RBF
+    # SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
+    surrogate_analysis(SAMPLE_LATIN, 20, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
