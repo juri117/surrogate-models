@@ -34,13 +34,14 @@ USED_CORES = Constants().config.getint('meta', 'used_cores')
 
 class MultiRun:
 
-    def __init__(self, use_calcu=True, use_aba=True, non_liner=False, project_name_prefix='pro'):
+    def __init__(self, use_calcu=True, use_aba=True, non_liner=False, project_name_prefix='pro', force_recalc=False):
         self.use_calculix = use_calcu
         self.use_abaqus = use_aba
         self.non_linear = non_liner
         self.project_name_prefix = project_name_prefix
         self.task_total = 0
         self.task_done = 0
+        self.force_recalc = force_recalc
 
     def print_state(self):
         print('done with {:d} of {:d}'.format(self.task_done, self.task_totals))
@@ -73,7 +74,7 @@ class MultiRun:
         return pro
 
     def run_project(self, pro):
-        if not pro.preexisting:
+        if not pro.preexisting or self.force_recalc:
             pro.generate_geometry(nonlinear=self.non_linear)
             if self.use_calculix:
                 pro.solve()

@@ -41,9 +41,10 @@ if __name__ == '__main__':
                                              surroM,
                                              use_abaqus=useAbaqus,
                                              pgf=usePGF,
-                                             show_plots=False)
+                                             show_plots=False,
+                                             force_recalc=False)
                 except Exception as e:
-                    print('ERROR')
+                    print('ERROR ' + str(e))
                     res = SurroResults()
                     res.errorStr = 'general fail: ' + str(e)
                 output_f.write(SAMPLE_NAMES[sampleM] + ','

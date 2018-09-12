@@ -42,13 +42,13 @@ performs full surrogate analysis and comparison to real FEM-Model
 :param show_plots weather plots will be displayed at runtime
 :return SurroResults with all the results
 '''
-def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True):
+def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False):
     timer = TimeTrack('surrogateAnalysis')
     timer.tic()
     results = SurroResults()
     RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
 
-    multi = MultiRun(use_calcu=True, use_aba=True, non_liner=False)
+    multi = MultiRun(use_calcu=True, use_aba=True, non_liner=False, force_recalc=force_recalc)
 
     ##################################################
     # collect data
@@ -170,7 +170,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     used_ribs = list(range(int(min(known_rib)), int(max(known_rib))))
     for i in range(0, len(used_ribs)):
         # SLSQP: proplem; find local min not glob. depending on init-vals
-        init_guess = shell[int(len(known_shell)/2.)]
+        init_guess = (min(known_shell) + max(known_shell))/2
         bnds = [(min(known_shell), max(known_shell))]
         #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
         #opti_shell.append(res.x[0])
