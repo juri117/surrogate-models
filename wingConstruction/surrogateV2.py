@@ -251,7 +251,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         # plot surrogate model as wireframe
         ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
         shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
-        krigPlot = plot3d.plot_function_3D(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
+        krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
         samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
         # plot limit load line

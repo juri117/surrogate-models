@@ -85,7 +85,7 @@ class PlotHelper:
             #print(str(angle))
             plt.pause(.001)
 
-    def plot_function_3D(self, f, fx, fy, label, color='b', scale=[1.,1.,1.]):
+    def plot_function_3d(self, f, fx, fy, label, color='b', scale=[1., 1., 1.]):
         fz = np.zeros((len(fy), len(fx)))
         for iX in range(0, len(fx)):
             for iY in range(0, len(fy)):
@@ -93,9 +93,15 @@ class PlotHelper:
                 fz[iY][iX] = f(coords)
 
         plotX, plotY = np.meshgrid(fx, fy)
-        surf = self.ax.plot_wireframe(plotX*scale[0], plotY*scale[1], fz*scale[2], color=color, label=label, rcount=20, ccount=20,
-                                       linewidths=1,
-                                       alpha=0.5)  # , rstride=1, cstride=1)#, cmap=cm.coolwarm) # ,linewidth=0, antialiased=False
+        surf = self.ax.plot_wireframe(plotX * scale[0],
+                                      plotY * scale[1],
+                                      fz * scale[2],
+                                      color=color,
+                                      label=label,
+                                      rcount=20,
+                                      ccount=20,
+                                      linewidths=1,
+                                      alpha=0.5)
         return surf
 
     '''

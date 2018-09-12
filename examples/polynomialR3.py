@@ -1,7 +1,7 @@
 
 import numpy as np
 
-from myLibs.RBF import RBF
+from myLibs.Polynomial import Polynomial
 from utils.PlotHelper import PlotHelper
 from utils.TimeTrack import TimeTrack
 from utils.samples import *
@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     fx = np.linspace(-2, 12, 101)
     fy = np.linspace(-2, 12, 101)
-    plt1.plot_function_3D(f_3D, fx, fy, r'$f_{original}$', color='r')
+    plt1.plot_function_3d(f_3D, fx, fy, r'$f_{original}$', color='r')
     # the smooth whole function
 
     # now we pretend we only know a view points
@@ -23,16 +23,25 @@ if __name__ == '__main__':
     knownParams.append(px)
     knownParams.append(py)
 
-    scat1 = plt1.ax.scatter(py, px, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
+    scat1 = plt1.ax.scatter(px, py, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
-    rbf = RBF(knownParams, pz)
-    a = 0.17
-    rbf.update_param(a, 'gaus')
+    poly = Polynomial(knownParams, pz)
+    color = ['dodgerblue', 'gold', 'fuchsia', 'lime', 'lightsalmon', 'maroon']
+    ic = 0
+    for o in [6]:
+        poly.update_param(o)
+        plt1.plot_function_3d(poly.predict,
+                              fx,
+                              fy,
+                              r'$\widehat{f}_{Poly} mit o = ' + str(o) + '$',
+                              color=color[ic])
+        poly.generate_formula()
+        ic += 1
 
-    plt1.plot_function_3D(rbf.predict, fx, fy, r'$\widehat{f}_{RBF}$', color='b')
     t1.toc()
 
     plt1.ax.view_init(20, 50)
+    plt1.ax.set_zlim3d(np.min(pz), max(pz) * 1.2)
     plt1.finalize(width=8, height=5)
     plt1.show()
 

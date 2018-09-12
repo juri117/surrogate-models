@@ -22,7 +22,7 @@ from utils.PlotHelper import PlotHelper
 class Halton:
 
     def __init__(self):
-        print('done')
+        pass
 
     '''
     :param n
@@ -51,7 +51,7 @@ class Halton:
         baseStr = self.base(i, prim)
         baseStrInv = self.str_inverse(baseStr)
         decimal = self.base_fract_str_to_float(baseStrInv, prim)
-        print(decimal)
+        #print(decimal)
         return decimal
 
     '''

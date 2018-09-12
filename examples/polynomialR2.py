@@ -1,12 +1,12 @@
 
 import numpy as np
 
-from myLibs.Polynomial2d import Polynomial2d
+from myLibs.Polynomial import Polynomial
 from utils.PlotHelper import PlotHelper
 from utils.samples import *
 
 if __name__ == '__main__':
-    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=True)
+    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=False)
 
     # the smooth whole function
     fx = np.linspace(0, 10, 1001)
@@ -20,8 +20,9 @@ if __name__ == '__main__':
 
     fx = fx.reshape((len(fx), 1))
     # Polynomials
-    poly = Polynomial2d([knownParams], knownValues)
-    for i in [4, 6, 7, 8]:
+    poly = Polynomial([knownParams], knownValues)
+
+    for i in [3, 5, 6, 7]:
         o = i
         poly.update_param(o)
         rbfY1 = list(map(poly.predict, fx))

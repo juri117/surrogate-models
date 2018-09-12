@@ -25,7 +25,7 @@ if __name__ == '__main__':
     # now we pretend we only know a view points
     fx = np.linspace(-2, 12, 101)
     fy = np.linspace(-2, 12, 101)
-    plt1.plot_function_3D(f_3D, fx, fy, r'$f_{original}$', color='r')
+    plt1.plot_function_3d(f_3D, fx, fy, r'$f_{original}$', color='r')
     # the smooth whole function
 
     # now we pretend we only know a view points
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     pltTheta.finalize()
     #pltTheta.show()
 
-    plt1.plot_function_3D(krig.predict, fx, fy, r'$\widehat{f}_{krig}$', color='b')
+    plt1.plot_function_3d(krig.predict, fx, fy, r'$\widehat{f}_{krig}$', color='b')
     plt1.ax.view_init(20, 50)
     plt1.finalize()
     #plt1.save('dataOut/krigingRn.svg')

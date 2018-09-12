@@ -200,7 +200,7 @@ for i in range(0,len(ribs)):
 # plot surrogate model as wiregrame
 ribs_sample = np.linspace(min(ribs), max(ribs), 200)
 shell_sample = np.linspace(min(shell), max(shell), 200)
-kritPlot = plot3d.plot_function_3D(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b', scale=[1.,1000.,1.])
+kritPlot = plot3d.plot_function_3d(krig.predict, ribs_sample, shell_sample, r'$f_{krig}$', color='b', scale=[1., 1000., 1.])
 samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
 # plot limit load line
