@@ -42,6 +42,9 @@ class Abaqus():
     ##############################################
     # fem pre-processing
 
+    '''
+    reads in the files created by Calculix.py and writes a abaqus-runnable inp file
+    '''
     def calculix_to_abaqus(self, shell_thickness):
         # open a new file
         aba_f = open(self._workingDir + '/' + 'abaqusJob.inp', 'w')
@@ -170,6 +173,10 @@ class Abaqus():
     ##############################################
     # fem post-processing
 
+    '''
+    calls abaqus with odbreport and the odb-file (binary) with the results
+    the reply of abaqus is a List of results that is parsed in python
+    '''
     def post_processing(self, save_to_file=False):
         print('run fem post-processing abaqus(' + self._workingDir + ')')
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'odbreport', 'odb=abaqusJob', 'mode=CSV', 'results', 'invariants'],
@@ -220,11 +227,6 @@ class Abaqus():
         if len(disp) > 0:
             self.dispD3Max = max(disp)
             self.dispD3Min = min(disp)
-
-
-
-
-
 
     ##############################################
     # fem calls

@@ -22,6 +22,7 @@ from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
 from myLibs.RBF import RBF
+from myLibs.Polynomial import Polynomial
 from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Hammersley import Hammersley
 from myLibs.Halton import Halton
@@ -136,6 +137,11 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro.update_param(a, 'multi-quadratic')
         print('coeff1 = ' + str(surro.get_coeff()[0]))
         print('coeff2 = ' + str(surro.get_coeff()[1]))
+    elif surro_type == SURRO_POLYNOM:
+        surro = Polynomial(known_params, known_stress)
+        o = 3
+        surro.update_param(o)
+        surro.generate_formula()
     else:
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
@@ -285,4 +291,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF
     # SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
-    surrogate_analysis(SAMPLE_LATIN, 20, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=False, pgf=False, show_plots=True)

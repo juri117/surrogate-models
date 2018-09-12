@@ -131,7 +131,7 @@ class Polynomial:
                             strPrint += ' + {:f} * {:s}^({:d}) * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o, VARS[ikc],
                                                                             ioc)
                             iw += 1
-        strPrint.replace('+-', '-')
+        strPrint = strPrint.replace('+ -', '- ')
         print(strPrint)
         return strPrint
 
