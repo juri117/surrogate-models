@@ -6,7 +6,7 @@ from utils.PlotHelper import PlotHelper
 from utils.samples import *
 
 if __name__ == '__main__':
-    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=False)
+    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=True)
 
     # the smooth whole function
     fx = np.linspace(0, 10, 1001)
@@ -51,5 +51,5 @@ if __name__ == '__main__':
 
     plt1.finalize(width=6, height=4, legendLoc='lower left', legendNcol=2)
     plt1.ax.legend(loc='upper left', ncol=2)  # , mode="expand")
-    plt1.save('../dataOut/radialBasisR2.pdf')
+    plt1.save('../dataOut/plot/radialBasisR2.pdf')
     plt1.show()

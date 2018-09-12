@@ -54,7 +54,7 @@ class LatinHyperCube:
             samples = np.delete(samples, max_dist_pos[1], axis=1)
             dist_mat = np.delete(dist_mat, max_dist_pos[0], axis=0)
             dist_mat = np.delete(dist_mat, max_dist_pos[1], axis=1)
-            print('kicked out: {:d}, {:d}'.format(max_dist_pos[1], max_dist_pos[0]))
+            #print('kicked out: {:d}, {:d}'.format(max_dist_pos[1], max_dist_pos[0]))
         return samples
 
     '''

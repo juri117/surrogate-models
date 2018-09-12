@@ -18,11 +18,13 @@ from wingConstruction.surrogateV2 import SurroResults
 from wingConstruction.utils.Constants import Constants
 
 if __name__ == '__main__':
-    surroMethods = [SURRO_KRIGING] # SURRO_KRIGING, SURRO_RBF
-    sampleMethods = [SAMPLE_LATIN, SAMPLE_HALTON] # SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
-    samplePointCount = [6, 8, 10, 12, 14, 16, 18, 20]
+    surroMethods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
+    sampleMethods = [SAMPLE_LATIN, SAMPLE_HALTON]  # SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
+    samplePointCount = list(range(5, 31))
     useAbaqus = False
     usePGF = False
+
+    print('required runs: {:d}'.format(len(surroMethods)*len(sampleMethods)*sum(samplePointCount)))
 
     output_file_name = 'surro_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     output_f = open(Constants().WORKING_DIR + '/'

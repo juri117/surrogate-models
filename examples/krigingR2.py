@@ -71,7 +71,7 @@ if __name__ == '__main__':
     plt0.ax.semilogx(thetas, likely[-1])
     plt0.ax.semilogx(krig1._theta[0], minLike, 'rx', markersize=10, label='Minimum')
     plt0.finalize(width=6, height=3.5, legendLoc='upper right', legendNcol=1)
-    plt0.save('../dataOut/krigingR2likelihood.pdf')
+    plt0.save('../dataOut/plot/krigingR2likelihood.pdf')
     #plt0.show()
 
     #fig, ax = plt.subplots()
@@ -99,5 +99,5 @@ if __name__ == '__main__':
     plt1.ax.plot([res.x], [krig1.predict(res.x)], 'go', label=r'Minimum, diff. evo.')
 
     plt1.finalize(width=6, height=4, legendLoc='upper left', legendNcol=1)
-    plt1.save('../dataOut/krigingR2.pdf')
+    plt1.save('../dataOut/plot/krigingR2.pdf')
     plt1.show()
