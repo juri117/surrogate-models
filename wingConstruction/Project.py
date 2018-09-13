@@ -60,13 +60,7 @@ class Project:
         self.elementSize = 0.25
         self.elemType = 'qu4'
         self.shellThickness = 0.01
-
         self.density = 2810  # kg/m^3
-
-        #self.dispD3Min = 0
-        #self.dispD3Max = 0
-        #self.stressMisesMin = 0
-        #self.stressMisesMax = 0
 
     def generate_geometry(self, nonlinear=False):
         if self.geo is None:

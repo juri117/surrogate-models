@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     #sys.exit(15)
 
-    pltHalton = PlotHelper([], fancy=True, pgf=True)
+    pltHalton = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
 
     ax1 = pltHalton.fig.add_subplot(121)

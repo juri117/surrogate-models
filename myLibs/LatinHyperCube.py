@@ -99,9 +99,13 @@ if __name__ == '__main__':
     #import matplotlib.pyplot as plt
     sam = LatinHyperCube()
 
-    sam.generate_sample_plan(14, 2, [(6,30),(0.001, 0.004)])
+    import matplotlib.pyplot as plt
+    samples = sam.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
+    for i in range(0, 14):
+        plt.plot([samples[i][0]], [samples[i][1]], 'bo')
+    plt.show()
 
-    pltHalton = PlotHelper([], fancy=True, pgf=True)
+    pltHalton = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
 
     ax1 = pltHalton.fig.add_subplot(121)

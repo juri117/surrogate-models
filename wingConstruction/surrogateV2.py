@@ -10,13 +10,10 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-import sys
 import numpy as np
-from datetime import datetime
 from scipy import optimize
 
 from wingConstruction.utils.Constants import Constants
-from wingConstruction.Project import Project
 from wingConstruction.MultiRun import MultiRun
 from utils.TimeTrack import TimeTrack
 from utils.PlotHelper import PlotHelper
@@ -24,8 +21,9 @@ from myLibs.Kriging import Kriging
 from myLibs.RBF import RBF
 from myLibs.Polynomial import Polynomial
 from myLibs.LatinHyperCube import LatinHyperCube
-from myLibs.Hammersley import Hammersley
+from trash.Hammersley import Hammersley
 from myLibs.Halton import Halton
+from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.utils.defines import *
@@ -34,7 +32,7 @@ from wingConstruction.utils.defines import *
 
 '''
 performs full surrogate analysis and comparison to real FEM-Model
-:param sampling_type SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
+:param sampling_type SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
 :param sample_point_count amount of sample points
 :param surro_type SURRO_KRIGING, SURRO_RBF
 :param use_abaqus if False Calculix will be used
@@ -89,10 +87,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
     if sampling_type == SAMPLE_LATIN:
         sam = LatinHyperCube()
-    elif sampling_type == SAMPLE_HAMMERS:
-        sam = Hammersley()
     elif sampling_type == SAMPLE_HALTON:
         sam = Halton()
+    elif sampling_type == SAMPLE_STRUCTURE:
+        sam = StructuredSample()
     else:
         print('unknown sample plan selected')
         results.errorStr = 'unknown sample plan selected'
@@ -120,7 +118,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
-        #krig.optimize()
+        surro.optimize()
         if show_plots:
             pltLike = surro.plot_likelihoods(pgf=pgf)
             pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.pdf')
@@ -133,7 +131,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('@p2 = ' + str(surro.get_p()[1]))
     elif surro_type == SURRO_RBF:
         surro = RBF(known_params, known_stress)
-        a = .078
+        a = -.06 #.078
         surro.update_param(a, 'multi-quadratic')
         print('coeff1 = ' + str(surro.get_coeff()[0]))
         print('coeff2 = ' + str(surro.get_coeff()[1]))
@@ -267,13 +265,13 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.ax.locator_params(nbins=7, axis='y')
 
         plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
+        plot3d.ax.set_ylim3d(np.min(np.array(shell))*1000.,np.max(np.array(shell))*1000.)
 
         plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
         plot3d.ax.view_init(18, 40)
         plot3d.save(Constants().PLOT_PATH + 'wingSurro.pdf')
         plot3d.show()
     results.runtime = timer.toc()
-    print('done')
     return results
 
 
@@ -289,6 +287,6 @@ class SurroResults:
 
 
 if __name__ == '__main__':
+    # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
     # SURRO_KRIGING, SURRO_RBF
-    # SAMPLE_LATIN, SAMPLE_HAMMERS, SAMPLE_HALTON
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=False, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_STRUCTURE, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)

@@ -35,10 +35,10 @@ shear_strength = 3.31e8 / safety_fac
 #######################################################
 # CONSTANTS FOR INDEXING AND CHOICE
 
-SAMPLE_NAMES = ['LatinHyperCube', 'Hammersley', 'Halton']
+SAMPLE_NAMES = ['LatinHyperCube', 'Halton', 'StructuredSampling']
 SAMPLE_LATIN = 0
-SAMPLE_HAMMERS = 1
-SAMPLE_HALTON = 2
+SAMPLE_HALTON = 1
+SAMPLE_STRUCTURE = 2
 
 SURRO_NAMES = ['Kriging', 'RBF', 'Polynom']
 SURRO_KRIGING = 0
