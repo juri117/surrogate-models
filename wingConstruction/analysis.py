@@ -22,7 +22,7 @@ from utils.PlotHelper import PlotHelper
 def run_analysis():
     surroMethods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
     sampleMethods = [SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
-    samplePointCount = list(range(3, 41))
+    samplePointCount = list(range(2, 41))
     useAbaqus = False
     usePGF = False
     jobCount = len(surroMethods) * len(sampleMethods) * sum(samplePointCount)
@@ -62,9 +62,9 @@ def run_analysis():
                                + '{:f}'.format(res.runtime) + ','
                                + res.errorStr + '\n')
                 output_f.flush()
-                jobsDone += 1
+                jobsDone += samplePoints
                 print('#########################################')
-                print('jobs done: {:d}/{:d}'.format(jobsDone, jobCount))
+                print('### jobs done: {:d}/{:d} -> {:d}%'.format(jobsDone, jobCount, 100. * jobsDone / jobCount))
 
     output_f.close()
     return output_file_name

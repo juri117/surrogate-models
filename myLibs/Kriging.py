@@ -141,7 +141,7 @@ class Kriging:
         bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
         step = BasinHoppingStep()
         #L-BFGS-B
-        minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 1e6}, tol=1e-4)
+        minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e6}, tol=1e-4)
         res = basinhopping(self._calc_likelihood_opti,
                            init_guess,
                            minimizer_kwargs=minimizer_kwargs,

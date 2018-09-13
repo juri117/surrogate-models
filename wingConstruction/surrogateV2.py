@@ -21,7 +21,6 @@ from myLibs.Kriging import Kriging
 from myLibs.RBF import RBF
 from myLibs.Polynomial import Polynomial
 from myLibs.LatinHyperCube import LatinHyperCube
-from trash.Hammersley import Hammersley
 from myLibs.Halton import Halton
 from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
@@ -118,6 +117,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
+        print('starting Likelihood optimization')
         surro.optimize()
         if show_plots:
             pltLike = surro.plot_likelihoods(pgf=pgf)
@@ -289,4 +289,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
     # SURRO_KRIGING, SURRO_RBF
-    surrogate_analysis(SAMPLE_STRUCTURE, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
