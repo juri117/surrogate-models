@@ -64,7 +64,7 @@ def run_analysis():
                 output_f.flush()
                 jobsDone += samplePoints
                 print('#########################################')
-                print('### jobs done: {:d}/{:d} -> {:d}%'.format(jobsDone, jobCount, 100. * jobsDone / jobCount))
+                print('### jobs done: {:d}/{:d} -> {:f}%'.format(jobsDone, jobCount, 100. * jobsDone / jobCount))
 
     output_f.close()
     return output_file_name
