@@ -62,7 +62,7 @@ def run_analysis():
                                + '{:f}'.format(res.optimumShell) + ','
                                + '{:f}'.format(res.optimumWeights) + ','
                                + '{:f}'.format(res.runtime) + ','
-                               + res.errorStr + '\n')
+                               + res.errorStr.replace(',', ';') + '\n')
                 output_f.flush()
                 jobs_done += sample_points
                 print('jobs done: {:d}/{:d} -> {:f}%'.format(jobs_done, job_count, 100. * jobs_done / job_count))
@@ -93,6 +93,6 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    file = run_analysis()
+    #file = run_analysis()
     #plot_sample_point_analysis(file)
-    #plot_sample_point_analysis('surro_2018-09-13_13_45_10.csv')
+    plot_sample_point_analysis('surro_2018-09-14_23_26_04.csv')
