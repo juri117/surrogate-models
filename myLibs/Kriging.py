@@ -23,6 +23,7 @@ import scipy
 from scipy.optimize import minimize
 from scipy.optimize import basinhopping
 from scipy import optimize
+import sys
 
 
 class Kriging:
@@ -44,6 +45,8 @@ class Kriging:
         self._coreMatInv = None
         self._mu = None
 
+        self._matU = None
+
     def update_param(self, theta, p):
         self._theta = np.array(theta)
         self._p = np.array(p)
@@ -62,12 +65,12 @@ class Kriging:
                     sum += self._theta[ik] * (abs(self._knownIn[ik][row] - self._knownIn[ik][column]) ** self._p[ik])
                 corMat[row][column] = math.exp(-sum)
                 corMat[column][row] = corMat[row][column]
-
         try:
             self._coreMatInv = np.linalg.inv(corMat)
             self._corMat = corMat
-        except:
-            print('ERROR: could not calc np.linalg.inv')
+        except Exception as e:
+            print('ERROR: could not calc np.linalg.inv: ' + str(e))
+        self._matU = np.transpose(np.linalg.cholesky(self._corMat))
         return corMat
 
     def _calc_mu(self):
@@ -80,7 +83,14 @@ class Kriging:
     def calc_likelihood(self):
         #lnDetCorMat = np.log(np.linalg.det(corMat))
         #ToDo: sometimes this throws an warning (C:\python\Python365_x64\lib\site-packages\numpy\linalg\linalg.py:1817: RuntimeWarning: invalid value encountered in slogdet sign, logdet = _umath_linalg.slogdet(a, signature=signature))
+        lnDetCorMat2 = 2 * sum(np.log(abs(np.diag(self._matU))))
+        print('lnDetCorMat2 = {:f}'.format(lnDetCorMat2))
         lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
+        print('slogdet = {:f}'.format(lnDetCorMat), flush=True)
+        if np.isnan(lnDetCorMat):
+            print('NaN Alarm')
+            return float('inf')
+
         one = np.ones((self._n, 1)).flatten()
         #ToDo: sometimes this throws a warning (RuntimeWarning: invalid value encountered in log negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat))
         sigmaSqr = (np.transpose(self._knownVal - one * self._mu) @ self._coreMatInv @ (self._knownVal - one * self._mu)) / self._n
@@ -90,6 +100,7 @@ class Kriging:
         negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat)
         if negLnLike == float('nan'):
             print('Error: nan')
+            return float('inf')
         return negLnLike
 
     def _calc_likelihood_opti_theta_only(self, params, *args):
@@ -278,9 +289,12 @@ class BasinHoppingStep(object):
 
     def __init__(self, stepsize=1.):
         self.stepsize = stepsize
+        #self.counter = 0
 
     def __call__(self, x):
-        s = self.stepsize
+        #print('call: {:d}'.format(self.counter))
+        #self.counter += 1
+        #s = self.stepsize
         for i in range(0, len(x)):
             if i < len(x) / 2:
                 # theta
