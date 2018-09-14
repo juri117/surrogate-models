@@ -20,9 +20,10 @@ class LikeliOptimizer:
         self.debug = debug
         self.pBounds = (1., 2.)
         self.thetaBoundsExp = (-5, 10)
+        self.maxIter = 5e3
 
     def find(self, func, dimensions):
-        opt={'disp': False, 'maxiter': 5e6}
+        opt={'disp': True, 'maxiter': self.maxIter}
         guess = self.generate_grid(func, dimensions, 15, 5)
 
         bnds = []
@@ -35,6 +36,8 @@ class LikeliOptimizer:
 
         minima_res = minimize(func, guess, method='SLSQP', tol=1e-8,
                        options=opt, bounds=bnds)
+        if minima_res.nit >= self.maxIter:
+            print('WARNING: max iter was used (LikeliOptimizer.py)')
         return minima_res
 
     def generate_grid(self, func, dimensions, theta_sections, p_sections):
