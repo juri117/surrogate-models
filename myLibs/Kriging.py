@@ -117,6 +117,8 @@ class Kriging:
         return NegLnLike
 
     def _calc_likelihood_opti_exp(self, params, *args):
+        if np.isnan(params).any():
+            return float('nan')
         exps = params[0:self._k]
         thetas = []
         for e in exps:
