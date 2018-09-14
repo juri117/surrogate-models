@@ -13,6 +13,7 @@ __status__ = "Development"
 
 from utils.PlotHelper import PlotHelper
 from utils.TimeTrack import TimeTrack
+from myLibs.LikeliOptimizer import LikeliOptimizer
 
 import numpy as np
 import math
@@ -70,7 +71,7 @@ class Kriging:
             self._corMat = corMat
         except Exception as e:
             print('ERROR: could not calc np.linalg.inv: ' + str(e))
-        self._matU = np.transpose(np.linalg.cholesky(self._corMat))
+        #self._matU = np.transpose(np.linalg.cholesky(self._corMat))
         return corMat
 
     def _calc_mu(self):
@@ -83,10 +84,10 @@ class Kriging:
     def calc_likelihood(self):
         #lnDetCorMat = np.log(np.linalg.det(corMat))
         #ToDo: sometimes this throws an warning (C:\python\Python365_x64\lib\site-packages\numpy\linalg\linalg.py:1817: RuntimeWarning: invalid value encountered in slogdet sign, logdet = _umath_linalg.slogdet(a, signature=signature))
-        lnDetCorMat2 = 2 * sum(np.log(abs(np.diag(self._matU))))
-        print('lnDetCorMat2 = {:f}'.format(lnDetCorMat2))
+        #lnDetCorMat2 = 2 * sum(np.log(abs(np.diag(self._matU))))
+        #print('lnDetCorMat2 = {:f}'.format(lnDetCorMat2))
         lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
-        print('slogdet = {:f}'.format(lnDetCorMat), flush=True)
+        #print('slogdet = {:f}'.format(lnDetCorMat), flush=True)
         if np.isnan(lnDetCorMat):
             print('NaN Alarm')
             return float('inf')
@@ -111,6 +112,16 @@ class Kriging:
 
     def _calc_likelihood_opti(self, params, *args):
         self.update_param(params[0:self._k], params[self._k:])
+        NegLnLike = self.calc_likelihood()
+        #print(str(NegLnLike))
+        return NegLnLike
+
+    def _calc_likelihood_opti_exp(self, params, *args):
+        exps = params[0:self._k]
+        thetas = []
+        for e in exps:
+            thetas.append(10.**e)
+        self.update_param(thetas, params[self._k:])
         NegLnLike = self.calc_likelihood()
         #print(str(NegLnLike))
         return NegLnLike
@@ -140,8 +151,6 @@ class Kriging:
         for i in range(0, self._k):
             bnds.append((1., 2.))
 
-        #tim1 = TimeTrack('LikelihoodOpti')
-        #tim1.tic()
         # SLSQP: proplem; find local min not glob. depending on init-vals
         #res = minimize(self._calc_likelihood_opti, init_guess, method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
 
@@ -153,17 +162,34 @@ class Kriging:
         step = BasinHoppingStep()
         #L-BFGS-B
         minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e6}, tol=1e-4)
-        res = basinhopping(self._calc_likelihood_opti,
+
+        '''
+        timer = TimeTrack('optiTimer')
+        timer.tic()
+        resB = basinhopping(self._calc_likelihood_opti,
                            init_guess,
                            minimizer_kwargs=minimizer_kwargs,
                            accept_test=bounds,
                            take_step=step,
                            niter=1000,
                            niter_success=100)
-        #self._theta = res.x[0:self._k]
-        #self._p = res.x[self._k:]
-        self.update_param(res.x[0:self._k], res.x[self._k:])
-        #tim1.toc()
+        timer.toc()
+        print('basin min: {:f}'.format(resB.fun))
+        print('@: ' + str(resB.x[0:self._k])+str(resB.x[self._k:]))
+        '''
+        skipper = LikeliOptimizer(debug=True)
+        #timer.tic()
+        res = skipper.find(self._calc_likelihood_opti_exp, self._k)
+        #timer.toc()
+
+        exps = res.x[0:self._k]
+        thetas = []
+        for e in exps:
+            thetas.append(10. ** e)
+        #print('MY min: {:f}'.format(res.fun))
+        #print('@: ' + str(thetas)+str(res.x[self._k:]))
+        #print('diff: {:f}'.format(res.fun - resB.fun))
+        self.update_param(thetas, res.x[self._k:])
 
     def predict(self, x_pred):
         one = np.ones((self._n, 1)).flatten()
@@ -183,7 +209,7 @@ class Kriging:
             return
 
         opt_theta = self._theta
-        thetas = np.logspace(-5, 9, num=50)
+        thetas = np.logspace(-5, 9, num=100)
         likely_thet = np.zeros((len(thetas), len(thetas)))
         for i1 in range(0, len(thetas)):
             for i2 in range(0, len(thetas)):
@@ -212,7 +238,7 @@ class Kriging:
             print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
             return
         opt_p = self._p
-        ps = np.linspace(1., 2., num=50)
+        ps = np.linspace(1., 2., num=100)
         likely_p = np.zeros((len(ps), len(ps)))
         for i1 in range(0, len(ps)):
             for i2 in range(0, len(ps)):

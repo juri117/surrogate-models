@@ -21,8 +21,8 @@ from utils.PlotHelper import PlotHelper
 
 def run_analysis():
     surro_methods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
-    sample_methods = [SAMPLE_LATIN]#, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
-    sample_point_count = [32]#list(range(2, 41))
+    sample_methods = [SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
+    sample_point_count = list(range(2, 41))
     use_abaqus = False
     use_pgf = False
     job_count = len(surro_methods) * len(sample_methods) * sum(sample_point_count)
