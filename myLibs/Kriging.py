@@ -129,8 +129,8 @@ class Kriging:
         for i in range(0, self._k):
             bnds.append((1., 2.))
 
-        tim1 = TimeTrack('LikelihoodOpti')
-        tim1.tic()
+        #tim1 = TimeTrack('LikelihoodOpti')
+        #tim1.tic()
         # SLSQP: proplem; find local min not glob. depending on init-vals
         #res = minimize(self._calc_likelihood_opti, init_guess, method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
 
@@ -152,7 +152,7 @@ class Kriging:
         #self._theta = res.x[0:self._k]
         #self._p = res.x[self._k:]
         self.update_param(res.x[0:self._k], res.x[self._k:])
-        tim1.toc()
+        #tim1.toc()
 
     def predict(self, x_pred):
         one = np.ones((self._n, 1)).flatten()

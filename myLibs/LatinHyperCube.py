@@ -21,7 +21,7 @@ from utils.PlotHelper import PlotHelper
 class LatinHyperCube:
 
     def __init__(self):
-        print('done')
+        pass
 
     def bool_mat_to_list(self, mat):
         samples = []

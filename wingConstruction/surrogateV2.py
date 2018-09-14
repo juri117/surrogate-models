@@ -50,30 +50,44 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # collect data
 
+    range_rib = (5, 18)
+    range_shell = (0.002, 0.0033)
+
     ribs, shell, stress, disp, weight = multi.read_data_file(RESULTS_FILE, use_abaqus=use_abaqus)
-    #n_rib = len(ribs)
-    #n_thick = len(shell)
-    #rib_mat, shell_mat = np.meshgrid(ribs, shell)
 
     # input 0 is ribs
     # input 1 is shell_thick
 
     # reduce data range
     i_rib_0 = 0
-    i_rib_n = 15
+    i_rib_n = len(ribs)-1
+    for i in range(0, len(ribs)):
+        if range_rib[0] >= ribs[i]:
+            i_rib_0 = i
+        if range_rib[1] <= ribs[i]:
+            i_rib_n = i
+            break
     i_shell_0 = 0
-    i_shell_n = 15
+    i_shell_n = len(shell)-1
+    for i in range(0, len(shell)):
+        if range_shell[0] >= shell[i]:
+            i_shell_0 = i
+        if range_shell[1] <= shell[i]:
+            i_shell_n = i
+            break
+
+
     newRib = []
     newShell = []
-    newStress = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
+    newStress = np.zeros((i_shell_n-i_shell_0+1, i_rib_n-i_rib_0+1))
     #newWeight = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
-    for r in range(0, i_rib_n-i_rib_0):
+    for r in range(0, i_rib_n-i_rib_0+1):
         newRib.append(ribs[i_rib_0+r])
-        for s in range(0, i_shell_n-i_shell_0):
+        for s in range(0, i_shell_n-i_shell_0+1):
             newStress[s][r] = stress[i_shell_0+s][i_rib_0+r]
             #newWeight[s][r] = weight[i_shell_0 + s][i_rib_0 + r]
 
-    for s in range(0, i_shell_n-i_shell_0):
+    for s in range(0, i_shell_n-i_shell_0+1):
         newShell.append(shell[i_shell_0+s])
 
     ribs = newRib
@@ -95,7 +109,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         results.errorStr = 'unknown sample plan selected'
         return results
 
-    sample_points = sam.generate_sample_plan(sample_point_count, 2, [(5, 18), (0.002, 0.0033)])
+    sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
     # make the ribs be int
     for i in range(0, len(sample_points)):
         sample_points[i][0] = int(round(sample_points[i][0]))
@@ -122,19 +136,19 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         if show_plots:
             pltLike = surro.plot_likelihoods(pgf=pgf)
             pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.pdf')
-
-        minLike = surro.calc_likelihood()
-        print('minLike = ' + str(minLike))
-        print('@theta1 = ' + str(surro.get_theta()[0]))
-        print('@theta2 = ' + str(surro.get_theta()[1]))
-        print('@p1 = ' + str(surro.get_p()[0]))
-        print('@p2 = ' + str(surro.get_p()[1]))
+            minLike = surro.calc_likelihood()
+            print('minLike = ' + str(minLike))
+            print('@theta1 = ' + str(surro.get_theta()[0]))
+            print('@theta2 = ' + str(surro.get_theta()[1]))
+            print('@p1 = ' + str(surro.get_p()[0]))
+            print('@p2 = ' + str(surro.get_p()[1]))
     elif surro_type == SURRO_RBF:
         surro = RBF(known_params, known_stress)
         a = -.06 #.078
         surro.update_param(a, 'multi-quadratic')
-        print('coeff1 = ' + str(surro.get_coeff()[0]))
-        print('coeff2 = ' + str(surro.get_coeff()[1]))
+        if show_plots:
+            print('coeff1 = ' + str(surro.get_coeff()[0]))
+            print('coeff2 = ' + str(surro.get_coeff()[1]))
     elif surro_type == SURRO_POLYNOM:
         surro = Polynomial(known_params, known_stress)
         o = 3
@@ -165,7 +179,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     opti_shell = []
     opti_stress = []
     opti_weights = []
-    used_ribs = list(range(int(min(known_rib)), int(max(known_rib))))
+    used_ribs = list(range(range_rib[0], range_rib[1]+1))#list(range(int(min(known_rib)), int(max(known_rib))))
     for i in range(0, len(used_ribs)):
         # SLSQP: proplem; find local min not glob. depending on init-vals
         init_guess = (min(known_shell) + max(known_shell))/2
@@ -253,8 +267,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         #plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
         # plot surrogate model as wireframe
-        ribs_sample = np.linspace(min(known_rib), max(known_rib), 200)
-        shell_sample = np.linspace(min(known_shell), max(known_shell), 200)
+        ribs_sample = np.linspace(range_rib[0], range_rib[1], 200)
+        shell_sample = np.linspace(range_shell[0], range_shell[1], 200)
         krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
         samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
 
@@ -288,5 +302,5 @@ class SurroResults:
 
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
-    # SURRO_KRIGING, SURRO_RBF
+    # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM
     surrogate_analysis(SAMPLE_HALTON, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
