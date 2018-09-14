@@ -22,6 +22,7 @@ from myLibs.RBF import RBF
 from myLibs.Polynomial import Polynomial
 from myLibs.LatinHyperCube import LatinHyperCube
 from myLibs.Halton import Halton
+from myLibs.interface.OptiLatinHyper import OptiLatinHyper
 from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
@@ -104,6 +105,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         sam = Halton()
     elif sampling_type == SAMPLE_STRUCTURE:
         sam = StructuredSample()
+    elif sampling_type == SAMPLE_OPTI_LATIN_HYPER:
+        sam = OptiLatinHyper()
     else:
         print('unknown sample plan selected')
         results.errorStr = 'unknown sample plan selected'
@@ -301,6 +304,6 @@ class SurroResults:
 
 
 if __name__ == '__main__':
-    # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
+    # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM
-    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_OPTI_LATIN_HYPER, 14, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)

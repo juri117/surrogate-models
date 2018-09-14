@@ -78,7 +78,7 @@ class MultiRun:
             pro.generate_geometry(nonlinear=self.non_linear)
             if self.use_calculix:
                 pro.solve()
-                print('############ DONE ############')
+                #print('############ DONE ############')
                 if not pro.errorFlag:
                     if self.non_linear:
                         pro.post_process(template='wing_post_nl_simple')
@@ -90,7 +90,7 @@ class MultiRun:
                 if not pro.errorFlag:
                     pro.post_process_abaqus()
             pro.save_results()
-        print('#########################################')
+        #print('#########################################')
         print('finished: ' + pro.workingDir)
         self.task_done += 1
         return pro

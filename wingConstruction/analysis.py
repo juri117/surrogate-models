@@ -20,14 +20,14 @@ from wingConstruction.utils.Constants import Constants
 from utils.PlotHelper import PlotHelper
 
 def run_analysis():
-    surroMethods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
-    sampleMethods = [SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
-    samplePointCount = list(range(2, 41))
-    useAbaqus = False
-    usePGF = False
-    jobCount = len(surroMethods) * len(sampleMethods) * sum(samplePointCount)
-    jobsDone = 0
-    print('required runs: {:d}'.format(jobCount))
+    surro_methods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
+    sample_methods = [SAMPLE_LATIN]#, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
+    sample_point_count = [29]#list(range(2, 41))
+    use_abaqus = False
+    use_pgf = False
+    job_count = len(surro_methods) * len(sample_methods) * sum(sample_point_count)
+    jobs_done = 0
+    print('required runs: {:d}'.format(job_count))
 
     output_file_name = 'surro_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     output_f = open(Constants().WORKING_DIR + '/'
@@ -35,26 +35,28 @@ def run_analysis():
                     'w')
     output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,optRib,optShell,optWight,runtime,errorStr\n')
 
-    for surroM in surroMethods:
-        for sampleM in sampleMethods:
-            for samplePoints in samplePointCount:
+    for surro_m in surro_methods:
+        for sample_m in sample_methods:
+            for sample_points in sample_point_count:
+                print('##################################################################################')
+                print('next run: surro: {:s}, sample: {:s}, points: {:d}'.format(SURRO_NAMES[surro_m], SAMPLE_NAMES[sample_m], sample_points))
                 try:
-                    res = surrogate_analysis(sampleM,
-                                             samplePoints,
-                                             surroM,
-                                             use_abaqus=useAbaqus,
-                                             pgf=usePGF,
+                    res = surrogate_analysis(sample_m,
+                                             sample_points,
+                                             surro_m,
+                                             use_abaqus=use_abaqus,
+                                             pgf=use_pgf,
                                              show_plots=False,
                                              force_recalc=False)
                 except Exception as e:
                     print('ERROR ' + str(e))
                     res = SurroResults()
                     res.errorStr = 'general fail: ' + str(e)
-                output_f.write(SAMPLE_NAMES[sampleM] + ','
-                               + '{:d}'.format(sampleM) + ','
-                               + '{:d}'.format(samplePoints) + ','
-                               + SURRO_NAMES[surroM] + ','
-                               + '{:d}'.format(surroM) + ','
+                output_f.write(SAMPLE_NAMES[sample_m] + ','
+                               + '{:d}'.format(sample_m) + ','
+                               + '{:d}'.format(sample_points) + ','
+                               + SURRO_NAMES[surro_m] + ','
+                               + '{:d}'.format(surro_m) + ','
                                + '{:f}'.format(res.deviation) + ','
                                + '{:f}'.format(res.optimumRib) + ','
                                + '{:f}'.format(res.optimumShell) + ','
@@ -62,12 +64,13 @@ def run_analysis():
                                + '{:f}'.format(res.runtime) + ','
                                + res.errorStr + '\n')
                 output_f.flush()
-                jobsDone += samplePoints
+                jobs_done += sample_points
                 print('#########################################')
-                print('### jobs done: {:d}/{:d} -> {:f}%'.format(jobsDone, jobCount, 100. * jobsDone / jobCount))
+                print('### jobs done: {:d}/{:d} -> {:f}%'.format(jobs_done, job_count, 100. * jobs_done / job_count))
 
     output_f.close()
     return output_file_name
+
 
 def plot_sample_point_analysis(file_name):
     file_path = Constants().WORKING_DIR + '/' + file_name
@@ -80,14 +83,14 @@ def plot_sample_point_analysis(file_name):
         sampling_data[samp] = []
     for i in range(0, len(sampling_plan_id)):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
-    sampPlot = PlotHelper(['Anzahl der Sampling Punkte', 'Abweichung in %'], fancy=False)
+    samp_plot = PlotHelper(['Anzahl der Sampling Punkte', 'Abweichung in %'], fancy=False)
     for key in sampling_data:
         x = [x for x,y in sampling_data[key]]
         y = [y for x,y in sampling_data[key]]
         y = np.array(y) * 100. # make it percent
-        sampPlot.ax.plot(x, y, 'x-', label=key)
-    sampPlot.finalize()
-    sampPlot.show()
+        samp_plot.ax.plot(x, y, 'x-', label=key)
+    samp_plot.finalize()
+    samp_plot.show()
 
 
 if __name__ == '__main__':
