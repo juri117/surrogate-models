@@ -21,11 +21,8 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../lib/pyKriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../lib/inspyred')
 
-import pyKriging
-from pyKriging.krige import kriging
-from pyKriging.samplingplan import samplingplan
-
-from utils.PlotHelper import PlotHelper
+#import pyKriging
+#from pyKriging.krige import kriging
 
 
 class OptiLatinHyper:
@@ -34,6 +31,7 @@ class OptiLatinHyper:
         pass
 
     def generate_sample_plan(self, point_count, dimension, bounds, base=None):
+        from pyKriging.samplingplan import samplingplan
         sp = samplingplan(dimension)
         X = sp.optimallhc(point_count)
         norm_point = X
