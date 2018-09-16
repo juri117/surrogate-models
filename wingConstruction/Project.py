@@ -42,6 +42,9 @@ class Project:
             if os.path.isfile(self.workingDir + '/' + 'results.csv'):
                 self.preexisting = True
                 self.parse_from_results()
+                # hack to recalculate failed projects
+                if self.resultsCalcu.stressMisesMax == 0 and self.resultsAba.stressMisesMax == 0:
+                    self.preexisting = False
 
         self.clx = Calculix(workingDir=self.workingDir)
         self.geo = None

@@ -20,7 +20,7 @@ from wingConstruction.utils.Constants import Constants
 from utils.PlotHelper import PlotHelper
 
 def run_analysis():
-    surro_methods = [SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF
+    surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM
     sample_methods = [SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
     sample_point_count = list(range(2, 41))
     use_abaqus = False
@@ -98,6 +98,6 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    #file = run_analysis()
+    file = run_analysis()
     #plot_sample_point_analysis(file)
     plot_sample_point_analysis('surro_2018-09-15_12_59_09.csv')
