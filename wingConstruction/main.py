@@ -20,7 +20,7 @@ from wingConstruction.utils.defines import *
 
 t = TimeTrack()
 t.tic()
-projectName = 'test000'#_r07_s002'
+projectName = 'testFullForceRef'#_r07_s002'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
@@ -34,7 +34,7 @@ pro1.forceBot = -(1./3.) * wing_load
 pro1.elementSize = .1
 #pro1.elementSize = 0.05
 pro1.elemType = 'qu4'
-pro1.shellThickness = 0.008
+pro1.shellThickness = 0.005
 pro1.stringerHeight = 0.
 pro1.generate_geometry(nonlinear=False)
 
@@ -61,5 +61,6 @@ if not pro1.errorFlag:
         l = pro1.validate_load('loadTop.frc')
         l += pro1.validate_load('loadBot.frc')
         print('load error: ' + str((-1.*wing_load) - l))
+pro1.save_results()
 
 print('done')

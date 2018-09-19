@@ -65,7 +65,7 @@ class Project:
         self.shellThickness = 0.01
         self.density = 2810  # kg/m^3
 
-    def generate_geometry(self, nonlinear=False):
+    def _get_geo(self):
         if self.geo is None:
             self.geo = WingConstruction(self.workingDir,
                                         self.halfSpan,
@@ -76,28 +76,22 @@ class Project:
                                         self.enginePos,
                                         box_overhang=self.boxOverhang,
                                         stringer_height=self.stringerHeight)
-        self.geo.generate_wing(self.forceTop,
+            self.geo.element_size = self.elementSize
+        return self.geo
+
+    def generate_geometry(self, nonlinear=False):
+        self._get_geo().generate_wing(self.forceTop,
                                self.forceBot,
                                self.engineWeight,
                                self.elementSize,
                                element_type=self.elemType)
-        self.geo.generate_inp(nonlinear=nonlinear)
+        self._get_geo().generate_inp(nonlinear=nonlinear)
         if self.clx is None:
             self.clx = Calculix(workingDir=self.workingDir)
         self.clx.generate_mesh('wingGeo')
 
     def calc_span_division(self):
-        if self.geo is None:
-            self.geo = WingConstruction(self.workingDir,
-                                        self.halfSpan,
-                                        self.boxDepth,
-                                        self.boxHeight,
-                                        self.ribs,
-                                        self.shellThickness,
-                                        self.enginePos,
-                                        box_overhang=self.boxOverhang)
-            self.geo.element_size = self.elementSize
-        return self.geo.calc_span_division(self.halfSpan)
+        return self._get_geo().calc_span_division(self.halfSpan)
 
     def generate_geometry_abaqus(self):
         if self.aba is None:
@@ -153,6 +147,9 @@ class Project:
         print('sum of Loads in ' + load_file_name + ': ' + str(load_sum))
         return load_sum
 
+    def calc_wight(self):
+        return self._get_geo().calc_weight(self.density)
+
     def collect_results(self):
         l = self.validate_load('loadTop.frc')
         l += self.validate_load('loadBot.frc')
@@ -161,7 +158,7 @@ class Project:
                      + str(self.calc_span_division()) + ',' \
                      + str(self.ribs) + ',' \
                      + str(self.shellThickness) + ',' \
-                     + str(self.geo.calc_weight(self.density)) + ',' \
+                     + str(self.calc_wight()) + ',' \
                      + str(self.resultsCalcu.dispD3Min) + ',' \
                      + str(self.resultsCalcu.dispD3Max) + ',' \
                      + str(self.resultsCalcu.stressMisesMin) + ',' \

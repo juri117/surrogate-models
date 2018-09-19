@@ -30,7 +30,10 @@ max_shear_strength = 5.72e8 / safety_fac  # 3.31e8 #Pa
 
 density = 2810 #kg/m^3
 
-shear_strength = 3.31e8 / safety_fac
+#shear_strength = 3.31e8 / safety_fac
+
+range_rib = (5, 18)
+range_shell = (0.002, 0.0033)
 
 #######################################################
 # CONSTANTS FOR INDEXING AND CHOICE
@@ -41,7 +44,8 @@ SAMPLE_HALTON = 1
 SAMPLE_STRUCTURE = 2
 SAMPLE_OPTI_LATIN_HYPER = 3
 
-SURRO_NAMES = ['Kriging', 'RBF', 'Polynom']
+SURRO_NAMES = ['Kriging', 'RBF', 'Polynom', 'PyKriging']
 SURRO_KRIGING = 0
 SURRO_RBF = 1
 SURRO_POLYNOM = 2
+SURRO_PYKRIGING = 3

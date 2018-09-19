@@ -10,6 +10,13 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
+import sys
+import os
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
+from pyKriging.krige import kriging
+
 import numpy as np
 from scipy import optimize
 
@@ -50,9 +57,6 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
     ##################################################
     # collect data
-
-    range_rib = (5, 18)
-    range_shell = (0.002, 0.0033)
 
     ribs, shell, stress, disp, weight = multi.read_data_file(RESULTS_FILE, use_abaqus=use_abaqus)
 
@@ -157,6 +161,9 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         o = 3
         surro.update_param(o)
         surro.generate_formula()
+    elif surro_type == SURRO_PYKRIGING:
+        surro = kriging(known_params.T, known_stress)
+        surro.train()
     else:
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
@@ -305,5 +312,5 @@ class SurroResults:
 
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
-    # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM
-    surrogate_analysis(SAMPLE_LATIN, 32, SURRO_KRIGING, use_abaqus=False, pgf=False, show_plots=True)
+    # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=False, pgf=False, show_plots=True)
