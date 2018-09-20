@@ -150,3 +150,4 @@ if __name__ == '__main__':
     pol.update_param(5)
 
     print(pol.predict([2.5, 2.5, 2.5]))
+    pol.generate_formula()

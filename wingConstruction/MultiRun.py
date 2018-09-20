@@ -46,6 +46,19 @@ class MultiRun:
     def print_state(self):
         print('done with {:d} of {:d}'.format(self.task_done, self.task_totals))
 
+    '''
+    :param input, a list of the inputs [ribCount, shellThinckness]
+    :return only the stress as float
+    '''
+    def calc_stress(self, input):
+        pro = self.new_project_r_t(input[0], input[1])
+        pro = self.run_project(pro)
+        if self.use_calculix:
+            return pro.resultsCalcu.stressMisesMax
+        elif self.use_abaqus:
+            return pro.resultsAba.stressMisesMax
+        return 0.
+
     def new_project_r_t(self, rib, thick, element_size=0.1):
         project_name = self.project_name_prefix + '_r{:02d}_t{:5f}'.format(rib, thick)
         pro = self.new_project(project_name)
