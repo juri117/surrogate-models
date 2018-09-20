@@ -60,6 +60,9 @@ class MultiRun:
         return 0.
 
     def new_project_r_t(self, rib, thick, element_size=0.1):
+        if rib % 1 > 0.:
+            print('WARNING: rib should be type int but was {:f} in MultiRun.new_project_r_t'.format(rib))
+        rib = int(rib)
         project_name = self.project_name_prefix + '_r{:02d}_t{:5f}'.format(rib, thick)
         pro = self.new_project(project_name)
         pro.ribs = rib

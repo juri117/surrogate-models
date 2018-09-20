@@ -21,18 +21,30 @@ from utils.PlotHelper import PlotHelper
 
 class DoE:
 
-    def __init__(self, input_names, ranges, func):
+    def __init__(self, input_names, ranges, func, level_count=2):
         self._inputNames = input_names
         self._ranges = ranges
         self._func = func
         self._k = len(input_names)
+        self._l = level_count
         self._levels = self._ranges
         self._results = []
+        self.auto_define_levels()
+
+    def auto_define_levels(self):
+        levels = []
+        for i in range(0, self._k):
+            inc = (self._ranges[i][1] - self._ranges[i][0]) / (self._l - 1)
+            lev = []
+            for l in range(0, self._l):
+                lev.append(self._ranges[i][0] + (l * inc))
+            levels.append(lev)
+        self._levels = levels
 
     def corellation(self):
         inp = np.zeros(self._k)
-        for i in range(0, 2**self._k):
-            bin = self.base(i, 2)
+        for i in range(0, self._l**self._k):
+            bin = self.base(i, self._l)
             while len(bin) < self._k:
                 bin = [0] + bin
             self._run(bin)
@@ -45,7 +57,7 @@ class DoE:
         out += '{:s}\t\t\t\t|{:s}\n'.format('result', '%')
         for r in self._results:
             for i in range(self._k):
-                out += '{:f}\t|'.format(r.inp[i])
+                out += '{:f}\t|'.format(self._levels[i][r.inp[i]])
             out += '{:f}\t|{:f}\n'.format(r.res, 100*(r.res/ref))
         print(out)
 
@@ -90,6 +102,6 @@ if __name__ == '__main__':
     ranges = [range_rib, range_shell]
     from wingConstruction.MultiRun import MultiRun
     runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, force_recalc=False, project_name_prefix='DoE')
-    d = DoE(input_names, ranges, runner.calc_stress)
+    d = DoE(input_names, ranges, runner.calc_stress, level_count=3)
     d.corellation()
     d.print_res_table()
