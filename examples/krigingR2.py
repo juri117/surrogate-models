@@ -20,11 +20,15 @@ import os
 from myLibs.Validation import Validation
 from myLibs.StructuredSample import StructuredSample
 
+PGF = True
+
+if PGF:
+    import matplotlib
+    matplotlib.use('pgf')
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
 from pyKriging.krige import kriging as PyKriging
-
-PGF = False
 
 #matplotlib.use('pgf')
 #pgf_with_custom_preamble = {
@@ -71,7 +75,7 @@ if __name__ == '__main__':
     NegLnLike = krig.calc_likelihood()
     print('negLnLike = ' + str(NegLnLike))
 
-    thetas = np.logspace(-5, 9, num=500)
+    thetas = np.logspace(-2, 3, num=500)
     ps = np.linspace(1., 2., 100)
     likely = np.zeros((len(ps), len(thetas)))
     for it in range(0, len(thetas)):
@@ -96,10 +100,10 @@ if __name__ == '__main__':
     print('@theta = ' + str(krig._theta[0]))
     print('@p = ' + str(krig._p[0]))
 
-    plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=False, pgf=PGF)
+    plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=True, pgf=PGF)
     plt0.ax.semilogx(thetas, likely[-1])
-    plt0.ax.semilogx(krig._theta[0], minLike, 'rx', markersize=10, label='Minimum')
-    plt0.finalize(width=6, height=3.5, legendLoc='upper right', legendNcol=1)
+    plt0.ax.semilogx(krig._theta[0], minLike, 'r+', markersize=8, label='Minimum')
+    plt0.finalize(width=4, height=3, legendLoc='upper right', legendNcol=1)
     plt0.save('../dataOut/plot/krigingR2likelihood.pdf')
     #plt0.show()
 
@@ -115,15 +119,16 @@ if __name__ == '__main__':
     print('rae: {:s}'.format(str(vali_r.rae)))
     print('press: {:f}'.format(vali_r.press))
 
-    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=False, pgf=PGF)
+    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=PGF)
     plt1.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
     plt1.ax.plot(knownParams, knownValues, 'ro', label=r'St\"utzstellen', markersize=10)
 
     krigY = list(map(krig.predict, fx.reshape((len(fx), 1))))
     plt1.ax.plot(fx, krigY, 'b--', label=r'$\widehat{f}_{krig}$ mit $\theta = ' +'{0:.3f}'.format(krig._theta[0]) + '$, $p = ' + '{0:.1f}'.format(krig._p[0]) + '$')
 
-    krig2Y = list(map(krig2.predict, fx.reshape((len(fx), 1))))
-    plt1.ax.plot(fx, krig2Y, '--', color='green', label=r'$\widehat{f}_{PyKrig}$')
+    # plot PyKriging
+    #krig2Y = list(map(krig2.predict, fx.reshape((len(fx), 1))))
+    #plt1.ax.plot(fx, krig2Y, '--', color='green', label=r'$\widehat{f}_{PyKrig}$')
 
     # scipy minimize
     res = minimize(krig.predict, [3.], method='SLSQP', bounds=[(knownParams[0], knownParams[-1])])
