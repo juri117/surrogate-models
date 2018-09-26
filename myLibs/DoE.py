@@ -57,7 +57,7 @@ class DoE:
         out += '{:s}\t\t\t\t|{:s}\n'.format('result', '%')
         for r in self._results:
             for i in range(self._k):
-                out += '{:f}\t|'.format(self._levels[i][r.inp[i]])
+                out += '({:d}){:02f}\t|'.format(r.inp[i], self._levels[i][r.inp[i]])
             out += '{:f}\t|{:f}\n'.format(r.res, 100*(r.res/ref))
         print(out)
 

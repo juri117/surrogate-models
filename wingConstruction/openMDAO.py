@@ -13,6 +13,7 @@ __status__ = "Development"
 import sys
 import os
 from datetime import datetime
+import numpy as np
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
@@ -30,6 +31,8 @@ PROJECT_NAME_PREFIX = 'iter'
 
 SHELL_FACTOR = 1
 RIB_FACTOR = 1e-6
+WEIGHT_FAC = 1e-2
+STRESS_FAC = 1e-7
 
 class WingStructure(ExplicitComponent):
 
@@ -45,8 +48,8 @@ class WingStructure(ExplicitComponent):
         self.add_input('shell', val=((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR, desc='thickness of the shell')
 
         ### OUTPUTS
-        self.add_output('stress', val=.2)
-        self.add_output('weight', val=.2)
+        self.add_output('stress', val=1.)
+        self.add_output('weight', val=1.)
 
         self.declare_partials('*', '*', method='fd')
         self.executionCounter = 0
@@ -54,45 +57,72 @@ class WingStructure(ExplicitComponent):
     def compute(self, inputs, outputs):
         ribs = int(round(inputs['ribs'][0] / RIB_FACTOR))
         shell = inputs['shell'][0] / SHELL_FACTOR
+        self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
         pro = self.runner.new_project_r_t(ribs, shell)
         pro = self.runner.run_project(pro)
-        outputs['stress'] = pro.resultsCalcu.stressMisesMax
-        outputs['weight'] = pro.calc_wight()
+        outputs['stress'] = pro.resultsCalcu.stressMisesMax * STRESS_FAC
+        outputs['weight'] = pro.calc_wight() * WEIGHT_FAC
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
-                     + str(inputs['ribs']) + ','
-                     + str(inputs['shell']) + ','
-                     + str(outputs['stress']) + ','
-                     + str(outputs['weight']))
+                     + str(inputs['ribs'] / RIB_FACTOR) + ','
+                     + str(ribs) + ','
+                     + str(inputs['shell'] / SHELL_FACTOR) + ','
+                     + str(outputs['stress'] / STRESS_FAC) + ','
+                     + str(outputs['weight'] / WEIGHT_FAC))
         self.executionCounter += 1
-        print('{:f}, {:f} -> {:f}, {:f}'.format(inputs['ribs'][0], inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
+        print('{:f}({:d}), {:f} -> {:f}, {:f}'.format(inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
+def write_to_log(out_str):
+    out_str = out_str.replace('[', '')
+    out_str = out_str.replace(']', '')
+    output_f = open(LOG_FILE_PATH, 'a') #'a' so we append the file
+    output_f.write(out_str + '\n')
+    output_f.close()
 
-def write_to_log(outStr):
-    outStr = outStr.replace('[', '')
-    outStr = outStr.replace(']', '')
-    outputF = open(LOG_FILE_PATH, 'a') #'a' so we append the file
-    outputF.write(outStr + '\n')
-    outputF.close()
 
-def runOpenMdao():
-    prob = Problem()
+def run_open_mdao():
 
-    indeps = prob.model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
-    indeps.add_output('ribs', range_rib[1] * RIB_FACTOR)
-    indeps.add_output('shell', (range_shell[1])*SHELL_FACTOR)
+    model = Group()
 
-    prob.model.add_subsystem('wing', WingStructure())
-    prob.model.connect('ribs', 'wing.ribs')
-    prob.model.connect('shell', 'wing.shell')
+    #indeps = prob.model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
+    indeps = IndepVarComp()
+    indeps.add_output('ribs', ((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
+    indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
+
+    model.add_subsystem('des_vars', indeps)
+    model.add_subsystem('wing', WingStructure())
+    model.connect('des_vars.ribs', 'wing.ribs')
+    model.connect('des_vars.shell', 'wing.shell')
+
+    # design variables, limits and constraints
+    #model.add_design_var('des_vars.ribs', lower=range_rib[0]*RIB_FACTOR, upper=range_rib[1]*RIB_FACTOR)
+    model.add_design_var('des_vars.shell', lower=range_shell[0]*SHELL_FACTOR, upper=range_shell[1]*SHELL_FACTOR)
+
+    # objective
+    model.add_objective('wing.weight', scaler=1)
+
+    # constraint
+    model.add_constraint('wing.stress', lower=0., upper=max_shear_strength * STRESS_FAC)
+
+    prob = Problem(model)
 
     # setup the optimization
     prob.driver = ScipyOptimizeDriver()
     prob.driver.options['optimizer'] = 'SLSQP'
     prob.driver.options['tol'] = 1e-6
+    prob.driver.opt_settings = {'eps': 1e-6}
     prob.driver.options['maxiter'] = 100000
+    prob.driver.options['disp'] = True
 
+    prob.setup()
+    prob.set_solver_print(level=0)
+    #prob.model.approx_totals()
+    prob.run_driver()
+
+
+
+    '''
     # setup recorder
     recorder = SqliteRecorder(Constants().WORKING_DIR + '/openMdaoLog.sql')
     prob.driver.add_recorder(recorder)
@@ -100,30 +130,17 @@ def runOpenMdao():
     prob.driver.recording_options['record_responses'] = True
     prob.driver.recording_options['record_objectives'] = True
     prob.driver.recording_options['record_constraints'] = True
-
-    # design variables, limits and constraints
-    prob.model.add_design_var('ribs', lower=range_rib[0]*RIB_FACTOR, upper=range_rib[1]*RIB_FACTOR)
-    prob.model.add_design_var('shell', lower=range_shell[0]*SHELL_FACTOR, upper=range_shell[1]*SHELL_FACTOR)
-
-    # objective
-    prob.model.add_objective('wing.weight', scaler=1)
-
-    # constraint
-    prob.model.add_constraint('wing.stress', lower=0., upper=max_shear_strength)
-
-    prob.setup()
-    prob.set_solver_print(level=0)
-    prob.model.approx_totals()
-    prob.run_driver()
+    '''
 
     print('done')
-    print('ribs: ' + str(prob['wing.ribs']))
-    print('cabin angle: ' + str(prob['wing.shell']) + ' m')
+    print('ribs: ' + str(prob['wing.ribs'] / RIB_FACTOR))
+    print('cabin angle: ' + str(prob['wing.shell'] / SHELL_FACTOR) + ' m')
 
-    print('weight= ' + str(prob['wing.weight']))
-    print('stress= ' + str(prob['wing.stress']))
+    print('weight= ' + str(prob['wing.weight'] / WEIGHT_FAC))
+    print('stress= ' + str(prob['wing.stress'] / STRESS_FAC))
 
     print('execution counts wing: ' + str(prob.model.wing.executionCounter))
 
+
 if __name__ == '__main__':
-    runOpenMdao()
+    run_open_mdao()

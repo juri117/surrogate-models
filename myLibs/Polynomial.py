@@ -26,18 +26,20 @@ from scipy import optimize
 
 VARS = ['x', 'y', 'z']
 
+
 class Polynomial:
 
     def __init__(self, known_in, known_val):
         self._knownIn = np.array(known_in)
         self._knownVal = np.array(known_val)
         if len(self._knownIn.shape) == 1:
-            self._knownIn = self._knownIn.reshape((1, self._knownIn.shape[0]))
-        self._k = self._knownIn.shape[0]
-        self._n = self._knownIn.shape[1]
+            self._knownIn = self._knownIn.reshape((self._knownIn.shape[0], 1))
+        self._k = self._knownIn.shape[1]
+        self._n = self._knownIn.shape[0]
         self._order = 2
-        #if self._k != 2:
-        #    raise Exception('ERROR: Polynomial3d takes only 2 dimensional input')
+
+    def train(self):
+        self.update_param(self._order)
 
     def update_param(self, order):
         self._order = order
@@ -60,28 +62,21 @@ class Polynomial:
     def _calc_vandermonde_mat(self):
         vander = np.zeros((self._n, self._calc_term_count()))
         for i in range(0, self._n):
-            strPrint = ''
             iw = 0
             vander[i][iw] = 1
-            strPrint += '1\\\\'
             iw += 1
             for o in range(1, self._order+1):
                 for ik in range(0, self._k):
-                    vander[i][iw] = self._knownIn[ik][i]**o
+                    vander[i][iw] = self._knownIn[i][ik]**o
                     iw += 1
-                    strPrint += 'x_{:d}^{:d}\\\\'.format(ik, o)
                     for ikc in range(0, self._k):
                         if ikc > ik and 2*o < self._order+1:
-                            vander[i][iw] = (self._knownIn[ik][i] ** o) * (self._knownIn[ikc][i] ** o)
+                            vander[i][iw] = (self._knownIn[i][ik] ** o) * (self._knownIn[i][ikc] ** o)
                             iw += 1
-                            strPrint += 'x_{:d}^{:d}*x_{:d}^{:d}\\\\'.format(ik, o, ikc, o)
                         if ikc != ik:
                             for ioc in range(1, min(o, (self._order+1)-o)):
-                                vander[i][iw] = (self._knownIn[ik][i]**o) * (self._knownIn[ikc][i]**ioc)
+                                vander[i][iw] = (self._knownIn[i][ik]**o) * (self._knownIn[i][ikc]**ioc)
                                 iw += 1
-                                strPrint += 'x_{:d}^{:d}*x_{:d}^{:d}\\\\'.format(ik, o, ikc, ioc)
-            #print(strPrint)
-            #print(iw)
         # delete unused columns
         for i in range(0, self._calc_term_count() - iw):
             vander = np.delete(vander, -1, axis=1)
@@ -114,26 +109,26 @@ class Polynomial:
         return fx
 
     def generate_formula(self):
-        strPrint = ''
+        str_print = ''
         iw = 0
-        strPrint += '{:f}'.format(self._weights[iw])
+        str_print += '{:f}'.format(self._weights[iw])
         iw += 1
         for o in range(1, self._order + 1):
             for ik in range(0, self._k):
-                strPrint += ' + {:f} * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o)
+                str_print += ' + {:f} * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o)
                 iw += 1
                 for ikc in range(0, self._k):
                     if ikc > ik and 2 * o < self._order + 1:
-                        strPrint += ' + {:f} * {:s}^({:d}) * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o, VARS[ikc], o)
+                        str_print += ' + {:f} * {:s}^({:d}) * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o, VARS[ikc], o)
                         iw += 1
                     if ikc != ik:
                         for ioc in range(1, min(o, (self._order + 1) - o)):
-                            strPrint += ' + {:f} * {:s}^({:d}) * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o, VARS[ikc],
+                            str_print += ' + {:f} * {:s}^({:d}) * {:s}^({:d})'.format(self._weights[iw], VARS[ik], o, VARS[ikc],
                                                                             ioc)
                             iw += 1
-        strPrint = strPrint.replace('+ -', '- ')
-        print(strPrint)
-        return strPrint
+        str_print = str_print.replace('+ -', '- ')
+        print(str_print)
+        return str_print
 
     def get_order(self):
         return self._order

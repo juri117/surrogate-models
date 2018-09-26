@@ -14,6 +14,15 @@ import numpy as np
 from scipy.optimize import minimize
 from scipy import optimize
 import matplotlib
+import sys
+import os
+
+from myLibs.Validation import Validation
+from myLibs.StructuredSample import StructuredSample
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
+from pyKriging.krige import kriging as PyKriging
 
 PGF = False
 
@@ -32,71 +41,96 @@ from utils.PlotHelper import PlotHelper
 
 if __name__ == '__main__':
     # the smooth whole function
-    fx = np.linspace(1, 11, 1001)
+    fx = np.linspace(0, 10, 1001)
     fy = list(map(f_2D,fx))
 
     # now we pretend we only know a view points
-    px = [1., 3., 5., 7., 9., 11.]
-    py = list(map(f_2D,px))
-    #first fixed exponent here
-    p = [2.]
-    #first fixed factor here
-    theta = [.5]
+    sample = StructuredSample()
+    #knownParams = np.array([1., 3., 5., 7., 9., 11.])
+    knwonParams = sample.generate_sample_plan(8, 1, [(0., 10.)])
+    knownParams = np.array(knwonParams).flatten()
+    knownValues = np.array(list(map(f_2D, knownParams)))
 
-    krig1 = Kriging(px, py)
-    krig1.update_param(theta, p)
+    # validate points
+    valiParams = np.array([2., 6., 8.])
+    valiValues = np.array(list(map(f_2D, valiParams)))
+    valiParams = valiParams.reshape((len(valiParams), 1))
+
+    #first fixed exponent here
+    p = [1.999966138140631]
+    #first fixed factor here
+    theta = [0.056389969498335794]
+
+    krig = Kriging(knownParams, knownValues)
+    krig2 = PyKriging(knownParams.reshape((len(knownParams), 1)), knownValues)
+    krig2.train()
+
+    krig.update_param(theta, p)
 
     #NegLnLike = calc_likelihood(px, py, theta, p)
-    NegLnLike = krig1.calc_likelihood()
+    NegLnLike = krig.calc_likelihood()
     print('negLnLike = ' + str(NegLnLike))
 
-    #thetas = np.linspace(0.01, 10, 1000+1)
-    thetas = np.logspace(-2, 3, num=500)
+    thetas = np.logspace(-5, 9, num=500)
     ps = np.linspace(1., 2., 100)
     likely = np.zeros((len(ps), len(thetas)))
     for it in range(0, len(thetas)):
         for ip in range(0, len(ps)):
-            krig1.update_param([thetas[it]], [ps[ip]])
-            likely[ip][it] = krig1.calc_likelihood()
+            krig.update_param([thetas[it]], [ps[ip]])
+            likely[ip][it] = krig.calc_likelihood()
+    if False:
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.set_xscale('log')
+        pcol = ax.pcolor(thetas, ps, likely, cmap='YlOrRd_r')
+        fig.colorbar(pcol)
+        ax.plot(krig._theta[0], krig._p[0], 'rx')
+        ax.set_xlabel('$\theta$')
+        ax.set_ylabel('p')
 
-    krig1.optimize()
+    krig.optimize()
     #krig1.update_param(krig1._theta, krig1._p)
 
-    minLike = krig1.calc_likelihood()
+    minLike = krig.calc_likelihood()
     print('minLike = '+str(minLike))
-    print('@theta = ' + str(krig1._theta[0]))
-    print('@p = ' + str(krig1._p[0]))
+    print('@theta = ' + str(krig._theta[0]))
+    print('@p = ' + str(krig._p[0]))
 
     plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=False, pgf=PGF)
     plt0.ax.semilogx(thetas, likely[-1])
-    plt0.ax.semilogx(krig1._theta[0], minLike, 'rx', markersize=10, label='Minimum')
+    plt0.ax.semilogx(krig._theta[0], minLike, 'rx', markersize=10, label='Minimum')
     plt0.finalize(width=6, height=3.5, legendLoc='upper right', legendNcol=1)
     plt0.save('../dataOut/plot/krigingR2likelihood.pdf')
     #plt0.show()
 
-    #fig, ax = plt.subplots()
-    #ax.set_xscale('log')
-    #pcol = ax.pcolor(thetas, ps, likely, cmap='viridis_r')
-    #fig.colorbar(pcol)
-    #ax.plot(krig1._theta[0], krig1._p[0], 'rx')
-    #ax.set_xlabel('$\theta$')
-    #ax.set_ylabel('p')
-    #plt.show()
+    ###### validate
+    vali = Validation()
+    vali_r = vali.run_full_analysis(fx.reshape((len(fx), 1)), fy,
+                                    knownParams.reshape((len(knownParams), 1)), knownValues,
+                                    valiParams, valiValues,
+                                    krig.predict, Kriging)
+    print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
+    print('rmse: {:f}'.format(vali_r.rmse))
+    print('mae: {:f}'.format(vali_r.mae))
+    print('rae: {:s}'.format(str(vali_r.rae)))
+    print('press: {:f}'.format(vali_r.press))
 
-    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=PGF)
-
+    plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=False, pgf=PGF)
     plt1.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
-    plt1.ax.plot(px, py, 'ro', label=r'St\"utzstellen', markersize=10)
+    plt1.ax.plot(knownParams, knownValues, 'ro', label=r'St\"utzstellen', markersize=10)
 
-    krigY = list(map(krig1.predict, fx.reshape((len(fx), 1))))
-    plt1.ax.plot(fx, krigY, 'b-', label=r'$\widehat{f}_{krig}$ mit $\theta = '+'{0:.3f}'.format(krig1._theta[0])+'$, $p = '+'{0:.1f}'.format(krig1._p[0])+'$')
+    krigY = list(map(krig.predict, fx.reshape((len(fx), 1))))
+    plt1.ax.plot(fx, krigY, 'b--', label=r'$\widehat{f}_{krig}$ mit $\theta = ' +'{0:.3f}'.format(krig._theta[0]) + '$, $p = ' + '{0:.1f}'.format(krig._p[0]) + '$')
+
+    krig2Y = list(map(krig2.predict, fx.reshape((len(fx), 1))))
+    plt1.ax.plot(fx, krig2Y, '--', color='green', label=r'$\widehat{f}_{PyKrig}$')
 
     # scipy minimize
-    res = minimize(krig1.predict, [3.], method='SLSQP', bounds=[(px[0], px[-1])])
-    plt1.ax.plot([res.x], [krig1.predict(res.x)], 'co', label=r'Minimum SLSQP')
+    res = minimize(krig.predict, [3.], method='SLSQP', bounds=[(knownParams[0], knownParams[-1])])
+    plt1.ax.plot([res.x], [krig.predict(res.x)], 'co', label=r'Minimum SLSQP')
 
-    res = optimize.differential_evolution(krig1.predict, [(px[0], px[-1])])
-    plt1.ax.plot([res.x], [krig1.predict(res.x)], 'go', label=r'Minimum, diff. evo.')
+    res = optimize.differential_evolution(krig.predict, [(knownParams[0], knownParams[-1])])
+    plt1.ax.plot([res.x], [krig.predict(res.x)], 'go', label=r'Minimum, diff. evo.')
 
     plt1.finalize(width=6, height=4, legendLoc='upper left', legendNcol=1)
     plt1.save('../dataOut/plot/krigingR2.pdf')

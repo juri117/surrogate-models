@@ -15,7 +15,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
-from pyKriging.krige import kriging
+from pyKriging.krige import kriging as PyKriging
 
 import numpy as np
 from scipy import optimize
@@ -32,6 +32,7 @@ from myLibs.Halton import Halton
 from myLibs.interface.OptiLatinHyper import OptiLatinHyper
 from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
+from myLibs.Validation import ValidationResults
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.utils.defines import *
 
@@ -81,23 +82,22 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             i_shell_n = i
             break
 
-
-    newRib = []
-    newShell = []
-    newStress = np.zeros((i_shell_n-i_shell_0+1, i_rib_n-i_rib_0+1))
+    new_rib = []
+    new_shell = []
+    new_stress = np.zeros((i_shell_n-i_shell_0+1, i_rib_n-i_rib_0+1))
     #newWeight = np.zeros((i_shell_n-i_shell_0, i_rib_n-i_rib_0))
     for r in range(0, i_rib_n-i_rib_0+1):
-        newRib.append(ribs[i_rib_0+r])
+        new_rib.append(ribs[i_rib_0+r])
         for s in range(0, i_shell_n-i_shell_0+1):
-            newStress[s][r] = stress[i_shell_0+s][i_rib_0+r]
+            new_stress[s][r] = stress[i_shell_0+s][i_rib_0+r]
             #newWeight[s][r] = weight[i_shell_0 + s][i_rib_0 + r]
 
     for s in range(0, i_shell_n-i_shell_0+1):
-        newShell.append(shell[i_shell_0+s])
+        new_shell.append(shell[i_shell_0+s])
 
-    ribs = newRib
-    shell = newShell
-    stress = newStress
+    ribs = new_rib
+    shell = new_shell
+    stress = new_stress
     #weight = newWeight
 
     ##################################################
@@ -120,9 +120,9 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # make the ribs be int
     for i in range(0, len(sample_points)):
         sample_points[i][0] = int(round(sample_points[i][0]))
-    known_params = np.array(sample_points).T
-    known_rib = known_params[0, :]
-    known_shell = known_params[1, :]
+    known_params = np.array(sample_points)
+    known_rib = known_params[:, 0]
+    known_shell = known_params[:, 1]
 
     print('sample plan using {:d} known values'.format(len(known_rib)))
 
@@ -134,7 +134,11 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # build surrogate model and fit it
 
+    # will be needed later for Validation
+    update_params = None
+
     if surro_type == SURRO_KRIGING:
+        surro_class = Kriging
         surro = Kriging(known_params, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
@@ -150,31 +154,29 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             print('@p1 = ' + str(surro.get_p()[0]))
             print('@p2 = ' + str(surro.get_p()[1]))
     elif surro_type == SURRO_RBF:
+        surro_class = RBF
         surro = RBF(known_params, known_stress)
         a = -.06 #.078
         surro.update_param(a, 'multi-quadratic')
+        update_params = [a, 'multi-quadratic']
         if show_plots:
             print('coeff1 = ' + str(surro.get_coeff()[0]))
             print('coeff2 = ' + str(surro.get_coeff()[1]))
     elif surro_type == SURRO_POLYNOM:
+        surro_class = Polynomial
         surro = Polynomial(known_params, known_stress)
         o = 3
         surro.update_param(o)
         surro.generate_formula()
+        update_params = [o]
     elif surro_type == SURRO_PYKRIGING:
-        surro = kriging(known_params.T, known_stress)
+        surro_class = PyKriging
+        surro = PyKriging(known_params, known_stress)
         surro.train()
     else:
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
         return results
-
-    ##################################################
-    # validate
-
-    vali = Validation()
-    results.deviation = vali.calc_deviation(ribs, shell, stress, surro.predict)
-
 
     ##################################################
     # optimize
@@ -201,7 +203,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         opti_shell.append(root)
         opti_stress.append(surro.predict([used_ribs[i], root]))
         weight = WingConstruction.calc_weight_stat(wing_length,
-                                                   chord_length,
+                                                   chord_length * 0.4,
                                                    chord_height,
                                                    used_ribs[i],
                                                    root,
@@ -248,6 +250,31 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     results.optimumWeights = opti_weights[best_i]
 
     ##################################################
+    # validate
+
+    # validate points 0.002, 0.0033
+    valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028], [results.optimumRib, results.optimumShell]])
+    valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
+    # valiValues = np.array(list(map(f_2D, valiParams)))
+    # valiParams = valiParams.reshape((len(valiParams), 1))
+
+    p_x, p_y = np.meshgrid(ribs, shell)
+    params = np.array([p_x.flatten(), p_y.flatten()]).T
+    values = stress.flatten()
+
+    vali = Validation()
+    vali_r = vali.run_full_analysis(params, values,
+                                    known_params, known_stress,
+                                    valiParams, valiValues,
+                                    surro.predict, surro_class, update_params=update_params)
+    results.valiResults = vali_r
+    print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
+    print('rmse: {:f}'.format(vali_r.rmse))
+    print('mae: {:f}'.format(vali_r.mae))
+    print('rae: {:s}'.format(str(vali_r.rae)))
+    print('press: {:f}'.format(vali_r.press))
+
+    ##################################################
     # plot it
 
     if show_plots:
@@ -291,7 +318,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
         plot3d.ax.set_ylim3d(np.min(np.array(shell))*1000.,np.max(np.array(shell))*1000.)
 
-        plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.0), tighten_layout=True)
+        plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.25), tighten_layout=True)
         plot3d.ax.view_init(18, 40)
         plot3d.save(Constants().PLOT_PATH + 'wingSurro.pdf')
         plot3d.show()
@@ -302,12 +329,17 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 class SurroResults:
 
     def __init__(self):
-        self.deviation = 0.
         self.optimumRib = 0.
         self.optimumShell = 0.
         self.optimumWeights = 0.
         self.runtime = 0.
         self.errorStr = '-'
+        self.valiResults = ValidationResults()
+        #self.deviation = 0.
+        #self.rmse = 0.
+        #self.mae = 0.
+        #self.rae = 0.
+        #self.press = 0.
 
 
 if __name__ == '__main__':

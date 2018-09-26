@@ -55,7 +55,7 @@ class PlotHelper:
     def finalize(self, width=6, height=4, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True):
         if self.ax != None:
             if bbox_to_anchor is not None:
-                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=(0.5, -0.25))
+                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=bbox_to_anchor)
             else:
                 legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
         if self.fig is not None:
@@ -69,9 +69,9 @@ class PlotHelper:
 
     def save(self, file_path):
         import matplotlib.pyplot as plt
-        plt.savefig(file_path)
+        plt.savefig(file_path, transparent=True)
         if self._use_pgf and '.pdf' in file_path:
-            plt.savefig(file_path.replace('pdf', 'pgf'))
+            plt.savefig(file_path.replace('pdf', 'pgf'), transparent=True)
 
     def show(self):
         import matplotlib.pyplot as plt

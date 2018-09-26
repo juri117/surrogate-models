@@ -33,9 +33,9 @@ class Kriging:
         self._knownIn = np.array(known_in)
         self._knownVal = np.array(known_val)
         if len(self._knownIn.shape) == 1:
-            self._knownIn = self._knownIn.reshape((1,self._knownIn.shape[0]))
-        self._k = self._knownIn.shape[0]
-        self._n = self._knownIn.shape[1]
+            self._knownIn = self._knownIn.reshape((self._knownIn.shape[0], 1))
+        self._k = self._knownIn.shape[1]
+        self._n = self._knownIn.shape[0]
         #else:
         #    self._k = 1
         #    self._n = self._knownIn.shape[0]
@@ -45,8 +45,10 @@ class Kriging:
         self._corMat = None
         self._coreMatInv = None
         self._mu = None
-
         self._matU = None
+
+    def train(self):
+        self.optimize()
 
     def update_param(self, theta, p):
         self._theta = np.array(theta)
@@ -59,13 +61,13 @@ class Kriging:
     #calcs the correlation matrix
     def _calc_cormat(self):
         corMat = np.zeros((self._n, self._n))
-        for row in range(0, self._n):
-            for column in range(row, self._n):
+        for i in range(0, self._n):
+            for j in range(i, self._n):
                 sum = 0.
                 for ik in range(0, self._k):
-                    sum += self._theta[ik] * (abs(self._knownIn[ik][row] - self._knownIn[ik][column]) ** self._p[ik])
-                corMat[row][column] = math.exp(-sum)
-                corMat[column][row] = corMat[row][column]
+                    sum += self._theta[ik] * (abs(self._knownIn[i][ik] - self._knownIn[j][ik]) ** self._p[ik])
+                corMat[i][j] = math.exp(-sum)
+                corMat[j][i] = corMat[i][j]
         try:
             self._coreMatInv = np.linalg.inv(corMat)
             self._corMat = corMat
@@ -107,7 +109,7 @@ class Kriging:
     def _calc_likelihood_opti_theta_only(self, params, *args):
         self.update_param(params, args[0])
         NegLnLike = self.calc_likelihood()
-        print(str(NegLnLike))
+        #print(str(NegLnLike))
         return NegLnLike
 
     def _calc_likelihood_opti(self, params, *args):
@@ -139,7 +141,7 @@ class Kriging:
         res = minimize(self._calc_likelihood_opti_theta_only, x0, args=self._p, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
         self._theta = res.x
 
-    def optimize(self, init_guess=None):
+    def optimize(self, init_guess=None, opti_algo='my'):
         if init_guess is None:
             init_guess = []
             for t in self._theta:
@@ -158,32 +160,32 @@ class Kriging:
 
         # random: not good enough... space is too big, cand find anything
         #res = optimize.differential_evolution(self._calc_likelihood_opti, bnds, maxiter=int(1e8))
-
-        # basinhopping:
-        bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
-        step = BasinHoppingStep()
-        #L-BFGS-B
-        minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e6}, tol=1e-4)
-
-        '''
         timer = TimeTrack('optiTimer')
-        timer.tic()
-        resB = basinhopping(self._calc_likelihood_opti,
-                           init_guess,
-                           minimizer_kwargs=minimizer_kwargs,
-                           accept_test=bounds,
-                           take_step=step,
-                           niter=1000,
-                           niter_success=100)
-        timer.toc()
-        print('basin min: {:f}'.format(resB.fun))
-        print('@: ' + str(resB.x[0:self._k])+str(resB.x[self._k:]))
-        '''
-        skipper = LikeliOptimizer(debug=True)
-        #timer.tic()
-        res = skipper.find(self._calc_likelihood_opti_exp, self._k)
-        #timer.toc()
 
+        if 'basin' in opti_algo:
+            # basinhopping:
+            bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
+            step = BasinHoppingStep()
+            #L-BFGS-B
+            minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e3}, tol=1e-4)
+            timer.tic()
+            res = basinhopping(self._calc_likelihood_opti,
+                               init_guess,
+                               minimizer_kwargs=minimizer_kwargs,
+                               accept_test=bounds,
+                               take_step=step,
+                               niter=1000,
+                               niter_success=100)
+            timer.toc()
+            #print('basin min: {:f}'.format(resB.fun))
+            #print('@: ' + str(resB.x[0:self._k])+str(resB.x[self._k:]))
+        elif 'my' in opti_algo:
+            skipper = LikeliOptimizer(debug=True)
+            timer.tic()
+            res = skipper.find(self._calc_likelihood_opti_exp, self._k)
+            timer.toc()
+        else:
+            raise Exception('ERROR: unknown uptimizer selected')
         exps = res.x[0:self._k]
         thetas = []
         for e in exps:
@@ -199,7 +201,7 @@ class Kriging:
         for i in range(0, self._n):
             sum = 0.
             for ik in range(0, self._k):
-                sum += self._theta[ik] * (abs(self._knownIn[ik][i] - x_pred[ik]) ** self._p[ik])
+                sum += self._theta[ik] * (abs(self._knownIn[i][ik] - x_pred[ik]) ** self._p[ik])
             psi[i] = math.exp(-sum)
         fx = self._mu + np.transpose(psi) @ self._coreMatInv @ (self._knownVal - one * self._mu)
         return fx

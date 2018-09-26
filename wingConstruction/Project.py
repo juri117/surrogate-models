@@ -19,6 +19,7 @@ from wingConstruction.utils.Constants import Constants
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.fem.Calculix import Calculix
 from wingConstruction.fem.Abaqus import Abaqus
+from wingConstruction.utils.defines import *
 
 
 class Project:
@@ -63,7 +64,6 @@ class Project:
         self.elementSize = 0.25
         self.elemType = 'qu4'
         self.shellThickness = 0.01
-        self.density = 2810  # kg/m^3
 
     def _get_geo(self):
         if self.geo is None:
@@ -148,7 +148,7 @@ class Project:
         return load_sum
 
     def calc_wight(self):
-        return self._get_geo().calc_weight(self.density)
+        return self._get_geo().calc_weight(density)
 
     def collect_results(self):
         l = self.validate_load('loadTop.frc')

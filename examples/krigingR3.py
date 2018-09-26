@@ -32,9 +32,7 @@ if __name__ == '__main__':
     pxEdge = [0., 2., 4., 6., 8., 10.]
     pyEdge = [0., 2., 4., 6., 8., 10.]
     px, py, knownValues = generate_sample_data(f_3D, pxEdge, pyEdge)
-    knownParams = []
-    knownParams.append(px)
-    knownParams.append(py)
+    knownParams = np.array([px, py]).T
 
     scat1 = plt1.ax.scatter(px, py, knownValues, c='r', marker='o', s=10, label=r'St\"utzstellen')
 
