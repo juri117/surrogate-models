@@ -34,6 +34,8 @@ RIB_FACTOR = 1e-6
 WEIGHT_FAC = 1e-2
 STRESS_FAC = 1e-7
 
+WEIGHT_PANALTY_FAC = 10.
+
 class WingStructure(ExplicitComponent):
 
     def setup(self):
@@ -61,7 +63,12 @@ class WingStructure(ExplicitComponent):
         pro = self.runner.new_project_r_t(ribs, shell)
         pro = self.runner.run_project(pro)
         outputs['stress'] = pro.resultsCalcu.stressMisesMax * STRESS_FAC
-        outputs['weight'] = pro.calc_wight() * WEIGHT_FAC
+
+        weight_panalty = (inputs['ribs'][0] % 1)
+        if weight_panalty >= 0.5:
+            weight_panalty = 1. - weight_panalty
+
+        outputs['weight'] = (pro.calc_wight() * weight_panalty * WEIGHT_PANALTY_FAC) * WEIGHT_FAC
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
