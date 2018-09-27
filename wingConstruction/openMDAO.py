@@ -68,7 +68,7 @@ class WingStructure(ExplicitComponent):
         if weight_panalty >= 0.5:
             weight_panalty = 1. - weight_panalty
 
-        outputs['weight'] = (pro.calc_wight() * weight_panalty * WEIGHT_PANALTY_FAC) * WEIGHT_FAC
+        outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
@@ -94,7 +94,7 @@ def run_open_mdao():
 
     #indeps = prob.model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
     indeps = IndepVarComp()
-    indeps.add_output('ribs', ((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
+    indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
     indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
