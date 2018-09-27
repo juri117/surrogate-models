@@ -39,8 +39,8 @@ from pyKriging.krige import kriging as PyKriging
 #import matplotlib.pyplot as plt
 
 from myLibs.Kriging import Kriging
-from utils.samples import *
-from utils.PlotHelper import PlotHelper
+from myUtils.samples import *
+from myUtils.PlotHelper import PlotHelper
 
 
 if __name__ == '__main__':

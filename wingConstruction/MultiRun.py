@@ -12,11 +12,11 @@ __status__ = "Development"
 
 import numpy as np
 from datetime import datetime
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.Project import Project
-from utils.TimeTrack import TimeTrack
-from utils.PlotHelper import PlotHelper
-from wingConstruction.utils.defines import *
+from myUtils.TimeTrack import TimeTrack
+from myUtils.PlotHelper import PlotHelper
+from wingConstruction.wingUtils.defines import *
 
 from mpl_toolkits.mplot3d import axes3d
 
@@ -28,7 +28,7 @@ from scipy import interpolate
 
 # USED_CORES = 1
 # if not USE_ABAQUS:
-USED_CORES = Constants().config.getint('meta', 'used_cores')
+USED_CORES = Constants().config.getint('meta', 'used_cores', fallback=1)
 
 
 

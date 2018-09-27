@@ -10,7 +10,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 
 
 class WingConstruction:

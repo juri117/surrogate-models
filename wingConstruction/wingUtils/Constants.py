@@ -14,7 +14,7 @@ import os.path
 import sys
 import configparser
 
-from wingConstruction.utils.Singleton import Singleton
+from wingConstruction.wingUtils.Singleton import Singleton
 
 # this is needed for python 2, 3 compatibility
 def with_metaclass(mcls):
@@ -32,11 +32,12 @@ class Constants(object):
 
     # tolerance for float comparison
     FLOAT_TOLERANCE = 0.00000001
-    INPUT_DIR = '../dataIn'
+    INPUT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/../../dataIn'
 
     def __init__(self):
         #print('init Constants...')
         self.config = configparser.ConfigParser()
+        print(os.path.abspath(self.INPUT_DIR+'/setup.ini'))
         self.config.read(self.INPUT_DIR+'/setup.ini')
 
         ### PATHS

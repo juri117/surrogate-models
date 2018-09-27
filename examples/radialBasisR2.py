@@ -4,8 +4,8 @@ import numpy as np
 from myLibs.RBF import RBF
 from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
-from utils.PlotHelper import PlotHelper
-from utils.samples import *
+from myUtils.PlotHelper import PlotHelper
+from myUtils.samples import *
 
 if __name__ == '__main__':
     plt1 = PlotHelper(['Eingang', 'Ausgang'], fancy=False, pgf=False)

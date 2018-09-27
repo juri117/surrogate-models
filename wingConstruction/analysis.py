@@ -13,11 +13,11 @@ __status__ = "Development"
 from datetime import datetime
 import numpy as np
 
-from wingConstruction.utils.defines import *
+from wingConstruction.wingUtils.defines import *
 from wingConstruction.surrogateV2 import surrogate_analysis
 from wingConstruction.surrogateV2 import SurroResults
-from wingConstruction.utils.Constants import Constants
-from utils.PlotHelper import PlotHelper
+from wingConstruction.wingUtils.Constants import Constants
+from myUtils.PlotHelper import PlotHelper
 
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM

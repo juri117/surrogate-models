@@ -19,6 +19,8 @@ dataOut*
 **/*.aux
 **/*.log
 **/*.lot
+**/*.html
+**/*.htm
 Aero/OpenVSP
 openMDAO
 **/*.ini

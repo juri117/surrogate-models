@@ -11,8 +11,8 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-from utils.PlotHelper import PlotHelper
-from utils.TimeTrack import TimeTrack
+from myUtils.PlotHelper import PlotHelper
+from myUtils.TimeTrack import TimeTrack
 from myLibs.LikeliOptimizer import LikeliOptimizer
 
 import numpy as np

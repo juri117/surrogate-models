@@ -20,10 +20,10 @@ from pyKriging.krige import kriging as PyKriging
 import numpy as np
 from scipy import optimize
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.MultiRun import MultiRun
-from utils.TimeTrack import TimeTrack
-from utils.PlotHelper import PlotHelper
+from myUtils.TimeTrack import TimeTrack
+from myUtils.PlotHelper import PlotHelper
 from myLibs.Kriging import Kriging
 from myLibs.RBF import RBF
 from myLibs.Polynomial import Polynomial
@@ -34,7 +34,7 @@ from myLibs.StructuredSample import StructuredSample
 from myLibs.Validation import Validation
 from myLibs.Validation import ValidationResults
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
-from wingConstruction.utils.defines import *
+from wingConstruction.wingUtils.defines import *
 
 
 

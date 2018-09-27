@@ -2,9 +2,9 @@
 import numpy as np
 
 from myLibs.RBF import RBF
-from utils.PlotHelper import PlotHelper
-from utils.TimeTrack import TimeTrack
-from utils.samples import *
+from myUtils.PlotHelper import PlotHelper
+from myUtils.TimeTrack import TimeTrack
+from myUtils.samples import *
 
 if __name__ == '__main__':
     t1 = TimeTrack('OverAllTimer')

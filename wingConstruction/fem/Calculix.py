@@ -13,7 +13,7 @@ __status__ = "Development"
 import subprocess
 import os
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 
 ##############################################
 # set up variables

@@ -13,9 +13,9 @@ __status__ = "Development"
 import numpy as np
 
 from myLibs.Kriging import Kriging
-from utils.PlotHelper import PlotHelper
-from utils.TimeTrack import TimeTrack
-from utils.samples import *
+from myUtils.PlotHelper import PlotHelper
+from myUtils.TimeTrack import TimeTrack
+from myUtils.samples import *
 
 
 if __name__ == '__main__':

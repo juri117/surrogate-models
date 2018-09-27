@@ -15,7 +15,7 @@ __status__ = "Development"
 import numpy as np
 import math
 import sys
-from utils.PlotHelper import PlotHelper
+from myUtils.PlotHelper import PlotHelper
 
 
 class LatinHyperCube:

@@ -2,8 +2,8 @@
 import numpy as np
 
 from myLibs.Polynomial import Polynomial
-from utils.PlotHelper import PlotHelper
-from utils.samples import *
+from myUtils.PlotHelper import PlotHelper
+from myUtils.samples import *
 from myLibs.Validation import Validation
 from myLibs.Validation import ValidationResults
 from myLibs.LatinHyperCube import LatinHyperCube

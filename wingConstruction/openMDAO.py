@@ -21,9 +21,9 @@ from openmdao.api import Problem, ScipyOptimizeDriver, IndepVarComp, ExplicitCom
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.MultiRun import MultiRun
-from wingConstruction.utils.defines import *
+from wingConstruction.wingUtils.defines import *
 
 LOG_FILE_PATH = Constants().WORKING_DIR + '/om_iterations_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
 

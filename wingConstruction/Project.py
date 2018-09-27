@@ -15,11 +15,11 @@ from shutil import copyfile
 from shutil import rmtree
 import numpy as np
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.fem.WingConstructionV4 import WingConstruction
 from wingConstruction.fem.Calculix import Calculix
 from wingConstruction.fem.Abaqus import Abaqus
-from wingConstruction.utils.defines import *
+from wingConstruction.wingUtils.defines import *
 
 
 class Project:

@@ -16,7 +16,7 @@ import numpy as np
 from ast import literal_eval
 import math
 import sys
-from utils.PlotHelper import PlotHelper
+from myUtils.PlotHelper import PlotHelper
 
 
 class DoE:
@@ -98,7 +98,7 @@ class DoERun:
 
 if __name__ == '__main__':
     input_names = ['ribs', 'shell']
-    from wingConstruction.utils.defines import *
+    from wingConstruction.wingUtils.defines import *
     ranges = [range_rib, range_shell]
     from wingConstruction.MultiRun import MultiRun
     runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, force_recalc=False, project_name_prefix='DoE')

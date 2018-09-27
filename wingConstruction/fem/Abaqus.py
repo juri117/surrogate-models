@@ -14,7 +14,7 @@ import subprocess
 import os
 from shutil import copyfile
 
-from wingConstruction.utils.Constants import Constants
+from wingConstruction.wingUtils.Constants import Constants
 
 ##############################################
 # set up variables

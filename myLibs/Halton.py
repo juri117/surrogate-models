@@ -16,7 +16,7 @@ import numpy as np
 from ast import literal_eval
 import math
 import sys
-from utils.PlotHelper import PlotHelper
+from myUtils.PlotHelper import PlotHelper
 
 
 class Halton:
