@@ -51,7 +51,7 @@ class WingStructure(ExplicitComponent):
         self.add_output('stress', val=1.)
         self.add_output('weight', val=1.)
 
-        #self.declare_partials('*', '*', method='fd')
+        self.declare_partials('*', '*', method='fd')
         self.executionCounter = 0
 
     def compute(self, inputs, outputs):
@@ -82,13 +82,12 @@ def write_to_log(out_str):
 
 
 def run_open_mdao():
-    write_to_log('iter,time,floatRibs,intRibs,shell,stress,weight')
 
     model = Group()
 
     #indeps = prob.model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
     indeps = IndepVarComp()
-    indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
+    indeps.add_output('ribs', ((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
     indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
@@ -110,10 +109,10 @@ def run_open_mdao():
 
     # setup the optimization
     prob.driver = ScipyOptimizeDriver()
-    prob.driver.options['optimizer'] = 'COBYLA' #'SLSQP'
-    prob.driver.options['tol'] = 1e-3
-    #prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 10000
+    prob.driver.options['optimizer'] = 'SLSQP'
+    prob.driver.options['tol'] = 1e-6
+    prob.driver.opt_settings = {'eps': 1e-6}
+    prob.driver.options['maxiter'] = 100000
     prob.driver.options['disp'] = True
 
     prob.setup()
