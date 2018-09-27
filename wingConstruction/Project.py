@@ -144,7 +144,6 @@ class Project:
                     load_sum += load
             except ValueError:
                 print('invalid line in Load file')
-        print('sum of Loads in ' + load_file_name + ': ' + str(load_sum))
         return load_sum
 
     def calc_wight(self):
