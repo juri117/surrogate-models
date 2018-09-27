@@ -51,7 +51,7 @@ class WingStructure(ExplicitComponent):
         self.add_output('stress', val=1.)
         self.add_output('weight', val=1.)
 
-        self.declare_partials('*', '*', method='fd')
+        #self.declare_partials('*', '*', method='fd')
         self.executionCounter = 0
 
     def compute(self, inputs, outputs):
@@ -97,7 +97,7 @@ def run_open_mdao():
     model.connect('des_vars.shell', 'wing.shell')
 
     # design variables, limits and constraints
-    #model.add_design_var('des_vars.ribs', lower=range_rib[0]*RIB_FACTOR, upper=range_rib[1]*RIB_FACTOR)
+    model.add_design_var('des_vars.ribs', lower=range_rib[0]*RIB_FACTOR, upper=range_rib[1]*RIB_FACTOR)
     model.add_design_var('des_vars.shell', lower=range_shell[0]*SHELL_FACTOR, upper=range_shell[1]*SHELL_FACTOR)
 
     # objective
@@ -110,10 +110,10 @@ def run_open_mdao():
 
     # setup the optimization
     prob.driver = ScipyOptimizeDriver()
-    prob.driver.options['optimizer'] = 'SLSQP'
-    prob.driver.options['tol'] = 1e-6
-    prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 100000
+    prob.driver.options['optimizer'] = 'COBYLA' #'SLSQP'
+    prob.driver.options['tol'] = 1e-3
+    #prob.driver.opt_settings = {'eps': 1e-6}
+    prob.driver.options['maxiter'] = 10000
     prob.driver.options['disp'] = True
 
     prob.setup()
