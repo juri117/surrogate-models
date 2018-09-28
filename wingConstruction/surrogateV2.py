@@ -244,6 +244,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     print('ribs: {:f}'.format(opti_ribs[best_i]))
     print('shell: {:f}'.format(opti_shell[best_i]))
     print('weight: {:f}'.format(opti_weights[best_i]))
+    print('stress: {:f}'.format(max_shear_strength))
 
     results.optimumRib = opti_ribs[best_i]
     results.optimumShell = opti_shell[best_i]

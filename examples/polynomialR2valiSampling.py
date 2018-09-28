@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     #polyPlot.ax.plot(knownParams, knownValues, 'ro', label=r'St\"utzstellen', markersize=10)
 
-    polyPlot.ax.scatter(valiParams, valiValues, facecolors='none', edgecolors='r', label=r'Vali.-Ppunkte', s=100)
+    polyPlot.ax.scatter(valiParams, valiValues, facecolors='none', edgecolors='r', label=r'Vali.-Punkte', s=100)
 
     polyPlot.finalize(width=3.9, height=4, legendLoc='upper center', legendNcol=2, bbox_to_anchor=(0.5, -0.35))
     polyPlot.ax.set_ylim([2, 10])
