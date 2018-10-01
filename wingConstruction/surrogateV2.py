@@ -346,4 +346,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=False, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)

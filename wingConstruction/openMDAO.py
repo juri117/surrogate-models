@@ -38,12 +38,14 @@ STRESS_FAC = 1e-9
 
 WEIGHT_PANALTY_FAC = 10.
 
+USE_ABA = True
+
 class WingStructure(ExplicitComponent):
 
     def setup(self):
         ######################
         ### needed Objects ###
-        self.runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
+        self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
 
         #####################
         ### openMDAO init ###
@@ -74,14 +76,21 @@ class WingStructure(ExplicitComponent):
 
         pro0 = self.runner.new_project_r_t(rib0, shell)
         pro0 = self.runner.run_project(pro0)
+        res0 = pro0.resultsCalcu
         pro1 = self.runner.new_project_r_t(rib1, shell)
         pro1 = self.runner.run_project(pro1)
+        res1 = pro1.resultsCalcu
+
+        if USE_ABA:
+            res0 = pro0.resultsAba
+            res1 = pro1.resultsAba
+
         if rib1 - rib0 < 0.000000001:
-            stress = pro0.resultsCalcu.stressMisesMax * STRESS_FAC
+            stress = res0.stressMisesMax * STRESS_FAC
             weight = pro0.calc_wight() * WEIGHT_FAC
         else:
-            stress = (pro0.resultsCalcu.stressMisesMax + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
-                      * ((pro1.resultsCalcu.stressMisesMax - pro0.resultsCalcu.stressMisesMax) / (rib1 - rib0)))\
+            stress = (res0.stressMisesMax + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
+                      * ((res1.stressMisesMax - res0.stressMisesMax) / (rib1 - rib0)))\
                         * STRESS_FAC
             weight = (pro0.calc_wight() + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
                       * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0)))\
@@ -158,7 +167,7 @@ def run_open_mdao():
 
     prob.driver =  ScipyOptimizeDriver()
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
-    prob.driver.options['tol'] = 1e-6
+    prob.driver.options['tol'] = 1e-3
     prob.driver.opt_settings = {'eps': 1e-6}
     prob.driver.options['maxiter'] = 100
     prob.driver.options['disp'] = True
