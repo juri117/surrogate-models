@@ -14,11 +14,12 @@ import sys
 import os
 from datetime import datetime
 import numpy as np
+import math
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyoptsparse')
-from openmdao.api import Problem, ScipyOptimizeDriver, IndepVarComp, pyOptSparseDriver, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
+from openmdao.api import Problem, ExecComp, ScipyOptimizeDriver, IndepVarComp, pyOptSparseDriver, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
@@ -30,10 +31,10 @@ LOG_FILE_PATH = Constants().WORKING_DIR + '/om_iterations_' + datetime.now().str
 
 PROJECT_NAME_PREFIX = 'iter'
 
-SHELL_FACTOR = 1e2
-RIB_FACTOR = 1e-1
-WEIGHT_FAC = 1e-2
-STRESS_FAC = 1e-7
+SHELL_FACTOR = 1 #1e-2
+RIB_FACTOR = 1 #1e-6
+WEIGHT_FAC = 3e-4
+STRESS_FAC = 5e-9
 
 WEIGHT_PANALTY_FAC = 10.
 
@@ -51,29 +52,54 @@ class WingStructure(ExplicitComponent):
         self.add_input('shell', val=((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR, desc='thickness of the shell')
 
         ### OUTPUTS
-        self.add_output('stress', val=1.)
-        self.add_output('weight', val=1.)
+        self.add_output('stress', val=1e8)#, ref=1e8)
+        self.add_output('weight', val=100.)#, ref=100)
 
         self.declare_partials('*', '*', method='fd')
         self.executionCounter = 0
 
     def compute(self, inputs, outputs):
+        ribTop = int(math.ceil(inputs['ribs'][0] / RIB_FACTOR))
+        ribBot = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
         ribs = int(round(inputs['ribs'][0] / RIB_FACTOR))
+
         shell = inputs['shell'][0] / SHELL_FACTOR
         self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
-        pro = self.runner.new_project_r_t(ribs, shell)
-        pro = self.runner.run_project(pro)
-        outputs['stress'] = pro.resultsCalcu.stressMisesMax * STRESS_FAC
 
-        weight_panalty = (inputs['ribs'][0] % 1)
-        if weight_panalty >= 0.5:
-            weight_panalty = 1. - weight_panalty
+        #pro = self.runner.new_project_r_t(ribs, shell)
+        #pro = self.runner.run_project(pro)
+        #stress = pro.resultsCalcu.stressMisesMax * STRESS_FAC
+        #weight = pro.calc_wight() * WEIGHT_FAC
 
-        outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
+        proT = self.runner.new_project_r_t(ribTop, shell)
+        proT = self.runner.run_project(proT)
+        proB = self.runner.new_project_r_t(ribBot, shell)
+        proB = self.runner.run_project(proB)
+        if ribTop - ribBot < 0.000000001:
+            stress = proT.resultsCalcu.stressMisesMax * STRESS_FAC
+            weight = proT.calc_wight() * WEIGHT_FAC
+        else:
+            stress = (proB.resultsCalcu.stressMisesMax + (inputs['ribs'][0] - ribBot)
+                        * ((proT.resultsCalcu.stressMisesMax - proB.resultsCalcu.stressMisesMax)/(ribTop - ribBot)))\
+                        * STRESS_FAC
+            weight = (proB.calc_wight() + (inputs['ribs'][0] - ribBot)
+                        * ((proT.calc_wight() - proB.calc_wight()) / (ribTop - ribBot)))\
+                        * WEIGHT_FAC
+
+        outputs['stress'] = stress
+        outputs['weight'] = weight
+
+        #weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
+        #if weight_panalty >= 0.5:
+        #    weight_panalty = 1. - weight_panalty
+        #weight_panalty = 0.
+
+        #outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
+
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
-                     + str(ribs) + ','
+                     + str() + ','
                      + str(inputs['shell'] / SHELL_FACTOR) + ','
                      + str(outputs['stress'] / STRESS_FAC) + ','
                      + str(outputs['weight'] / WEIGHT_FAC))
@@ -112,6 +138,8 @@ def run_open_mdao():
 
     # constraint
     model.add_constraint('wing.stress', lower=0., upper=max_shear_strength * STRESS_FAC)
+    #model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
+    #model.add_constraint('con_cmp1.con1', upper=0.1)
 
     prob = Problem(model)
 
@@ -128,13 +156,14 @@ def run_open_mdao():
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
     prob.driver.options['tol'] = 1e-6
     prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 100000
+    prob.driver.options['maxiter'] = 1000
     prob.driver.options['disp'] = True
 
 
     prob.setup()
     prob.set_solver_print(level=0)
     #prob.model.approx_totals()
+    prob.setup(check=True, mode='fwd')
     prob.run_driver()
 
 
