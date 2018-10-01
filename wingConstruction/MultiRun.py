@@ -281,7 +281,10 @@ class MultiRun:
         for i in range(0, len(ribs)):
             pro = self.new_project_r_t(int(ribs[i]), shells[i])
             projects.append(pro)
-        projects = self.pool_run(projects)
+        if len(projects) > 1:
+            projects = self.pool_run(projects)
+        else:
+            projects = [self.run_project(projects[0])]
         for i in range(0, len(projects)):
             if projects[i].ribs == ribs[i] and projects[i].shellThickness == shells[i]:
                 if use_abaqus:

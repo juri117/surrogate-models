@@ -19,7 +19,7 @@ import math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyoptsparse')
-from openmdao.api import Problem, ExecComp, ScipyOptimizeDriver, IndepVarComp, pyOptSparseDriver, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
+from openmdao.api import Problem, ExecComp, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
@@ -126,7 +126,7 @@ def run_open_mdao():
 
     model.add_subsystem('des_vars', indeps)
     model.add_subsystem('wing', WingStructure())
-    model.connect('des_vars.ribs', 'wing.ribs')
+    model.connect('des_vars.ribs', ['wing.ribs', 'con_cmp1.ribs'])
     model.connect('des_vars.shell', 'wing.shell')
 
     # design variables, limits and constraints
@@ -138,8 +138,8 @@ def run_open_mdao():
 
     # constraint
     model.add_constraint('wing.stress', lower=0., upper=max_shear_strength * STRESS_FAC)
-    #model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
-    #model.add_constraint('con_cmp1.con1', upper=0.1)
+    model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
+    model.add_constraint('con_cmp1.con1', upper=0.1)
 
     prob = Problem(model)
 
