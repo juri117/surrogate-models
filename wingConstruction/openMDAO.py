@@ -32,9 +32,9 @@ LOG_FILE_PATH = Constants().WORKING_DIR + '/om_iterations_' + datetime.now().str
 PROJECT_NAME_PREFIX = 'iter'
 
 SHELL_FACTOR = 1 #1e-2
-RIB_FACTOR = 1 #1e-6
-WEIGHT_FAC = 3e-4
-STRESS_FAC = 5e-9
+RIB_FACTOR = 1e-6
+WEIGHT_FAC = 1e-4
+STRESS_FAC = 1e-9
 
 WEIGHT_PANALTY_FAC = 10.
 
@@ -99,12 +99,12 @@ class WingStructure(ExplicitComponent):
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
-                     + str() + ','
+                     + str(ribs) + ','
                      + str(inputs['shell'] / SHELL_FACTOR) + ','
                      + str(outputs['stress'] / STRESS_FAC) + ','
                      + str(outputs['weight'] / WEIGHT_FAC))
         self.executionCounter += 1
-        print('{:f}({:d}), {:f} -> {:f}, {:f}'.format(inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
+        print('#{:d}: {:f}({:d}), {:f} -> {:f}, {:f}'.format(self.executionCounter, inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
 def write_to_log(out_str):
@@ -121,8 +121,11 @@ def run_open_mdao():
 
     #indeps = prob.model.add_subsystem('indeps', IndepVarComp(), promotes=['*'])
     indeps = IndepVarComp()
-    indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
-    indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
+    #indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
+    #indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
+
+    indeps.add_output('ribs', 10 * RIB_FACTOR)
+    indeps.add_output('shell', 0.002562 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
     model.add_subsystem('wing', WingStructure())
