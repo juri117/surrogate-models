@@ -32,7 +32,8 @@ class Constants(object):
 
     # tolerance for float comparison
     FLOAT_TOLERANCE = 0.00000001
-    INPUT_DIR = os.path.dirname(os.path.abspath(__file__)) + '/../../dataIn'
+    PROJECT_ROOT_DIR = os.path.abspath(os.path.dirname(os.path.abspath(__file__)) + '/../../')
+    INPUT_DIR = PROJECT_ROOT_DIR + '/dataIn'
 
     def __init__(self):
         #print('init Constants...')
@@ -41,7 +42,7 @@ class Constants(object):
         self.config.read(self.INPUT_DIR+'/setup.ini')
 
         ### PATHS
-        self.WORKING_DIR = os.path.abspath(self.config['meta']['working_dir'])
+        self.WORKING_DIR = self.PROJECT_ROOT_DIR + '/' + self.config['meta']['working_dir']
         if not os.path.isdir(self.WORKING_DIR):
             os.mkdir(self.WORKING_DIR)
 

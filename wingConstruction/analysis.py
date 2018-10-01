@@ -33,7 +33,7 @@ def run_analysis():
     output_f = open(Constants().WORKING_DIR + '/'
                     + output_file_name,
                     'w')
-    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,optRib,optShell,optWight,runtime,errorStr\n')
+    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,rmse,mae,press,optRib,optShell,optWight,runtime,errorStr\n')
 
     for surro_m in surro_methods:
         for sample_m in sample_methods:
@@ -57,7 +57,10 @@ def run_analysis():
                                + '{:d}'.format(sample_points) + ','
                                + SURRO_NAMES[surro_m] + ','
                                + '{:d}'.format(surro_m) + ','
-                               + '{:f}'.format(res.deviation) + ','
+                               + '{:f}'.format(res.valiResults.deviation) + ','
+                               + '{:f}'.format(res.valiResults.rmse) + ','
+                               + '{:f}'.format(res.valiResults.mae) + ','
+                               + '{:f}'.format(res.valiResults.press) + ','
                                + '{:f}'.format(res.optimumRib) + ','
                                + '{:f}'.format(res.optimumShell) + ','
                                + '{:f}'.format(res.optimumWeights) + ','
