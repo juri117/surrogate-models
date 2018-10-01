@@ -59,8 +59,9 @@ class WingStructure(ExplicitComponent):
         self.executionCounter = 0
 
     def compute(self, inputs, outputs):
-        ribTop = int(math.ceil(inputs['ribs'][0] / RIB_FACTOR))
-        ribBot = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
+        rib0 = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
+        rib1 = int(math.ceil(inputs['ribs'][0] / RIB_FACTOR))
+
         ribs = int(round(inputs['ribs'][0] / RIB_FACTOR))
 
         shell = inputs['shell'][0] / SHELL_FACTOR
@@ -71,19 +72,19 @@ class WingStructure(ExplicitComponent):
         #stress = pro.resultsCalcu.stressMisesMax * STRESS_FAC
         #weight = pro.calc_wight() * WEIGHT_FAC
 
-        proT = self.runner.new_project_r_t(ribTop, shell)
-        proT = self.runner.run_project(proT)
-        proB = self.runner.new_project_r_t(ribBot, shell)
-        proB = self.runner.run_project(proB)
-        if ribTop - ribBot < 0.000000001:
-            stress = proT.resultsCalcu.stressMisesMax * STRESS_FAC
-            weight = proT.calc_wight() * WEIGHT_FAC
+        pro0 = self.runner.new_project_r_t(rib0, shell)
+        pro0 = self.runner.run_project(pro0)
+        pro1 = self.runner.new_project_r_t(rib1, shell)
+        pro1 = self.runner.run_project(pro1)
+        if rib1 - rib0 < 0.000000001:
+            stress = pro0.resultsCalcu.stressMisesMax * STRESS_FAC
+            weight = pro0.calc_wight() * WEIGHT_FAC
         else:
-            stress = (proB.resultsCalcu.stressMisesMax + (inputs['ribs'][0] - ribBot)
-                        * ((proT.resultsCalcu.stressMisesMax - proB.resultsCalcu.stressMisesMax)/(ribTop - ribBot)))\
+            stress = (pro0.resultsCalcu.stressMisesMax + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
+                      * ((pro1.resultsCalcu.stressMisesMax - pro0.resultsCalcu.stressMisesMax) / (rib1 - rib0)))\
                         * STRESS_FAC
-            weight = (proB.calc_wight() + (inputs['ribs'][0] - ribBot)
-                        * ((proT.calc_wight() - proB.calc_wight()) / (ribTop - ribBot)))\
+            weight = (pro0.calc_wight() + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
+                      * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0)))\
                         * WEIGHT_FAC
 
         outputs['stress'] = stress
@@ -104,7 +105,7 @@ class WingStructure(ExplicitComponent):
                      + str(outputs['stress'] / STRESS_FAC) + ','
                      + str(outputs['weight'] / WEIGHT_FAC))
         self.executionCounter += 1
-        print('#{:d}: {:f}({:d}), {:f} -> {:f}, {:f}'.format(self.executionCounter, inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
+        print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
 def write_to_log(out_str):
@@ -159,13 +160,13 @@ def run_open_mdao():
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
     prob.driver.options['tol'] = 1e-6
     prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 1000
+    prob.driver.options['maxiter'] = 100
     prob.driver.options['disp'] = True
 
 
     prob.setup()
     prob.set_solver_print(level=0)
-    #prob.model.approx_totals()
+    prob.model.approx_totals()
     prob.setup(check=True, mode='fwd')
     prob.run_driver()
 
