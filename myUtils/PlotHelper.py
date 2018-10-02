@@ -34,9 +34,9 @@ class PlotHelper:
                 self.ax = self.fig.gca(projection='3d')
             else:
                 self.ax = ax
-            self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=17)
-            self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=17)
-            self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=17)
+            self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=8)
+            self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=8)
+            self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=8)
             rc('xtick', labelsize=self.FONT_SIZE)
             rc('ytick', labelsize=self.FONT_SIZE)
             #rc('ztick', labelsize=self.FONT_SIZE)

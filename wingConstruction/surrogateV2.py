@@ -15,7 +15,6 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
-from pyKriging.krige import kriging as PyKriging
 
 import numpy as np
 from scipy import optimize
@@ -170,6 +169,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro.generate_formula()
         update_params = [o]
     elif surro_type == SURRO_PYKRIGING:
+        from pyKriging.krige import kriging as PyKriging
         surro_class = PyKriging
         surro = PyKriging(known_params, known_stress)
         surro.train()
@@ -284,7 +284,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         opti_shell = np.array(opti_shell)
         known_shell = np.array(known_shell)
 
-        plot3d = PlotHelper(['ribs', 'shell thickness in mm', 'mises stress'], fancy=False, font_size=16, pgf=pgf)
+        plot3d = PlotHelper(['Rippen', 'Blechdicke in mm', 'Mises in Pa'], fancy=False, pgf=pgf)
 
         #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
@@ -314,14 +314,15 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. stress line')
         # plot optimal point
         plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
-        plot3d.ax.locator_params(nbins=7, axis='y')
+        plot3d.ax.locator_params(nbins=7, axis='x')
+        plot3d.ax.locator_params(nbins=5, axis='y')
 
         plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
         plot3d.ax.set_ylim3d(np.min(np.array(shell))*1000.,np.max(np.array(shell))*1000.)
 
-        plot3d.finalize(height=7, width=9, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.25), tighten_layout=True)
-        plot3d.ax.view_init(18, 40)
-        plot3d.save(Constants().PLOT_PATH + 'wingSurro.pdf')
+        plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.29), tighten_layout=True)
+        plot3d.ax.view_init(18, 60)
+        plot3d.save(Constants().PLOT_PATH + 'wingSurro_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
         plot3d.show()
     results.runtime = timer.toc()
     return results
@@ -346,4 +347,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=True, show_plots=True)

@@ -27,11 +27,10 @@ from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.MultiRun import MultiRun
 from wingConstruction.wingUtils.defines import *
 
-LOG_FILE_PATH = Constants().WORKING_DIR + '/om_iterations_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
+PROJECT_NAME_PREFIX = 'iterSLSQP'
 
-PROJECT_NAME_PREFIX = 'iter'
-
-SHELL_FACTOR = 1 #1e-2
+LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
+SHELL_FACTOR = 1e-2
 RIB_FACTOR = 1e-6
 WEIGHT_FAC = 1e-4
 STRESS_FAC = 1e-9
@@ -126,6 +125,7 @@ def write_to_log(out_str):
 
 
 def run_open_mdao():
+    write_to_log('iter,ribs(float),ribs,shell,stress,weight')
 
     model = Group()
 
@@ -168,8 +168,9 @@ def run_open_mdao():
     prob.driver =  ScipyOptimizeDriver()
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
     prob.driver.options['tol'] = 1e-3
-    prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 100
+    #prob.driver.options['ftol'] = 1e-3
+    #prob.driver.opt_settings = {'eps': 1e-6}
+    prob.driver.options['maxiter'] = 20
     prob.driver.options['disp'] = True
 
 
