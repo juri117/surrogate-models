@@ -233,6 +233,9 @@ class Abaqus():
 
     # calls the fem solver (all input files must be present in the working directory)
     def solve_model(self):
+        if os.path.isfile(self._workingDir + '/abaqusJob.lck'):
+            print('WARNING: Abaqus Lockfile was still there... I will remove it for you!')
+            os.remove(self._workingDir + '/abaqusJob.lck')
         # print('--- start ccx output ---------------------------------------')
         print('run fem solver abaqus('+self._workingDir+')')
         # this is a fix to make abaqus run on win server

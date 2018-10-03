@@ -26,6 +26,7 @@ from openmdao.core.indepvarcomp import IndepVarComp
 from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.MultiRun import MultiRun
 from wingConstruction.wingUtils.defines import *
+from myUtils.PlotHelper import PlotHelper
 
 PROJECT_NAME_PREFIX = 'iterSLSQP'
 
@@ -125,7 +126,7 @@ def write_to_log(out_str):
 
 
 def run_open_mdao():
-    write_to_log('iter,ribs(float),ribs,shell,stress,weight')
+    write_to_log('iter,time,ribs(float),ribs,shell,stress,weight')
 
     model = Group()
 
@@ -167,7 +168,7 @@ def run_open_mdao():
 
     prob.driver =  ScipyOptimizeDriver()
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
-    prob.driver.options['tol'] = 1e-3
+    prob.driver.options['tol'] = 0.01
     #prob.driver.options['ftol'] = 1e-3
     #prob.driver.opt_settings = {'eps': 1e-6}
     prob.driver.options['maxiter'] = 20
@@ -202,5 +203,20 @@ def run_open_mdao():
     print('execution counts wing: ' + str(prob.model.wing.executionCounter))
 
 
+def plot_iter(file_path=None):
+    if file_path == None:
+        file_path = LOG_FILE_PATH
+    data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
+    iter = data[:, 0]
+    ribs = data[:, 2]
+    shell = data[:, 4]
+    iter_plot = PlotHelper(['Iteration', 'Rippen'], fancy=False, pgf=False)
+    iter_plot.ax.plot(iter, ribs, label='Rippen')
+    iter_plot.ax.plot(iter, shell, label='Shell')
+    iter_plot.finalize()
+    iter_plot.show()
+
 if __name__ == '__main__':
     run_open_mdao()
+    plot_iter()
+    #plot_iter(file_path=Constants().WORKING_DIR + '/' + 'iterSLSQP2018-10-03_10_25_35.csv')
