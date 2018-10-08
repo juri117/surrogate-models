@@ -34,9 +34,9 @@ LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.n
 SHELL_FACTOR = 1e-2
 RIB_FACTOR = 1e-6
 WEIGHT_FAC = 1e-4
-STRESS_FAC = 1e-9
+STRESS_FAC = 1e-8
 
-WEIGHT_PANALTY_FAC = 10.
+#WEIGHT_PANALTY_FAC = 10.
 
 USE_ABA = True
 
@@ -135,8 +135,8 @@ def run_open_mdao():
     #indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
     #indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
-    indeps.add_output('ribs', 10 * RIB_FACTOR)
-    indeps.add_output('shell', 0.002562 * SHELL_FACTOR)
+    indeps.add_output('ribs', 14 * RIB_FACTOR)
+    indeps.add_output('shell', 0.003 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
     model.add_subsystem('wing', WingStructure())
@@ -151,7 +151,7 @@ def run_open_mdao():
     model.add_objective('wing.weight', scaler=1)
 
     # constraint
-    model.add_constraint('wing.stress', lower=0., upper=max_shear_strength * STRESS_FAC)
+    model.add_constraint('wing.stress', upper=max_shear_strength * STRESS_FAC)
     model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
     model.add_constraint('con_cmp1.con1', upper=0.1)
 
@@ -168,30 +168,17 @@ def run_open_mdao():
 
     prob.driver =  ScipyOptimizeDriver()
     prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
-    prob.driver.options['tol'] = 0.01
+    prob.driver.options['tol'] = 0.015
     #prob.driver.options['ftol'] = 1e-3
     #prob.driver.opt_settings = {'eps': 1e-6}
     prob.driver.options['maxiter'] = 20
     prob.driver.options['disp'] = True
-
 
     prob.setup()
     prob.set_solver_print(level=0)
     prob.model.approx_totals()
     prob.setup(check=True, mode='fwd')
     prob.run_driver()
-
-
-
-    '''
-    # setup recorder
-    recorder = SqliteRecorder(Constants().WORKING_DIR + '/openMdaoLog.sql')
-    prob.driver.add_recorder(recorder)
-    prob.driver.recording_options['record_desvars'] = True
-    prob.driver.recording_options['record_responses'] = True
-    prob.driver.recording_options['record_objectives'] = True
-    prob.driver.recording_options['record_constraints'] = True
-    '''
 
     print('done')
     print('ribs: ' + str(prob['wing.ribs'] / RIB_FACTOR))
@@ -210,13 +197,35 @@ def plot_iter(file_path=None):
     iter = data[:, 0]
     ribs = data[:, 2]
     shell = data[:, 4]
-    iter_plot = PlotHelper(['Iteration', 'Rippen'], fancy=False, pgf=False)
-    iter_plot.ax.plot(iter, ribs, label='Rippen')
-    iter_plot.ax.plot(iter, shell, label='Shell')
-    iter_plot.finalize()
+    stress = data[:, 5]
+    weight = data[:, 6]
+    iter_plot = PlotHelper([], fancy=False, pgf=False)
+    ax1 = iter_plot.fig.add_subplot(211)
+    ax2 = iter_plot.fig.add_subplot(212)
+    # param plot
+    iter_param = PlotHelper(['', 'Rippen'], fancy=False, ax=ax1, pgf=False)
+    iter_param.ax.plot(iter, ribs, color='teal')
+    iter_param.ax.yaxis.label.set_color('teal')
+    ax_shell = iter_param.ax.twinx()
+    ax_shell.set_ylabel('Shell')
+    ax_shell.yaxis.label.set_color('orange')
+    ax_shell.plot(iter, shell, color='orange')
+    iter_param.finalize(width=6, height=2.5, show_legend=False)
+    # results plot
+    iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=False, ax=ax2, pgf=False)
+    iter_res.ax.plot(iter, stress, color='tomato')
+    iter_res.ax.plot([min(iter), max(iter)], [max_shear_strength, max_shear_strength], '--', color='tomato', label='max. Spannung')
+    iter_res.ax.yaxis.label.set_color('tomato')
+    ax_weight = iter_res.ax.twinx()
+    ax_weight.set_ylabel('Gewicht in kg')
+    ax_weight.yaxis.label.set_color('royalblue')
+    ax_weight.plot(iter, weight, color='royalblue')
+    iter_res.finalize(width=6, height=2.5, legendLoc='lower center', show_legend=True)
+
+    iter_plot.save('../dataOut/plot/openMDAOconv.pdf')
     iter_plot.show()
 
 if __name__ == '__main__':
     run_open_mdao()
     plot_iter()
-    #plot_iter(file_path=Constants().WORKING_DIR + '/' + 'iterSLSQP2018-10-03_10_25_35.csv')
+    #plot_iter(file_path=Constants().WORKING_DIR + '/' + 'iterSLSQP_2018-10-03_10_48_20_aba.csv')

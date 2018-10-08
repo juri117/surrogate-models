@@ -115,6 +115,7 @@ class Kriging:
     def _calc_likelihood_opti(self, params, *args):
         self.update_param(params[0:self._k], params[self._k:])
         NegLnLike = self.calc_likelihood()
+        print(params)
         #print(str(NegLnLike))
         return NegLnLike
 
@@ -127,6 +128,7 @@ class Kriging:
             thetas.append(10.**e)
         self.update_param(thetas, params[self._k:])
         NegLnLike = self.calc_likelihood()
+        print(params)
         #print(str(NegLnLike))
         return NegLnLike
 
@@ -223,7 +225,7 @@ class Kriging:
         self._theta = opt_theta
         self.update_param(self._theta, self._p)
         # plot it
-        plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{2}$'], fancy=False, font_size=18, ax=ax, pgf=pgf)
+        plt_theta = PlotHelper([r'$\theta_{1}$', r'$\theta_{2}$'], fancy=False, ax=ax, pgf=pgf)
         plt_theta.ax.set_xscale('log')
         plt_theta.ax.set_yscale('log')
         pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
@@ -252,7 +254,7 @@ class Kriging:
         self._p = opt_p
         self.update_param(self._theta, self._p)
         # plot it
-        plt_P = PlotHelper([r'$p_{1}$', r'$p_{2}$'], fancy=False, font_size=18, ax=ax, pgf=pgf)
+        plt_P = PlotHelper([r'$p_{1}$', r'$p_{2}$'], fancy=False, ax=ax, pgf=pgf)
         pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
         #cbar = plt_P.fig.colorbar(pcol)
         #cbar.set_label('neg. log. likelihood')
@@ -283,6 +285,10 @@ class Kriging:
 
         pcol1 = self.plot_p_likelihood_R2(ax=ax1, pgf=pgf)
         pcol2 = self.plot_theta_likelihood_R2(ax=ax2, pgf=pgf)
+        like_min = min(min(pcol1._A), min(pcol2._A))
+        like_max = max(max(pcol1._A), max(pcol2._A))
+        pcol1.set_clim(like_min, like_max)
+        pcol2.set_clim(like_min, like_max)
 
         pltLike.fig.set_size_inches(6, 9)
         plt.tight_layout()

@@ -20,7 +20,7 @@ import os
 from myLibs.Validation import Validation
 from myLibs.StructuredSample import StructuredSample
 
-PGF = True
+PGF = False
 
 if PGF:
     import matplotlib
@@ -92,7 +92,7 @@ if __name__ == '__main__':
         ax.set_xlabel('$\theta$')
         ax.set_ylabel('p')
 
-    krig.optimize()
+    krig.optimize(opti_algo='basin')
     #krig1.update_param(krig1._theta, krig1._p)
 
     minLike = krig.calc_likelihood()

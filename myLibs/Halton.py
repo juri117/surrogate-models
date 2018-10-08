@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
     pltHalton.fig.set_size_inches(5, 2.5)
     plt.tight_layout()
-    pltHalton.save('../dataOut/halton.pdf')
+    pltHalton.save('../dataOut/plot/halton.pdf')
     pltHalton.show()
 
     #samples = hal.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])

@@ -15,6 +15,7 @@ import numpy as np
 import math
 import sys
 
+from myUtils.PlotHelper import PlotHelper
 
 class Validation:
 
@@ -101,6 +102,18 @@ class Validation:
         res.rae = self.calc_rae(vali_x, vali_fx, surro_func)
         res.press = self.calc_press(known_x, known_fx, surro_func, surro_class, update_params=update_params)
         return res
+
+    def plot_derivation2d(self, xs, ys, vals, surro_func):
+        deri_plot = PlotHelper(['param1', 'param2'], fancy=False, pgf=False)
+        dev = np.zeros(vals.shape)
+        for xi in range(0, len(xs)):
+            for yi in range(0, len(ys)):
+                devi = (abs(vals[yi][xi] - surro_func([xs[xi], ys[yi]])) / np.array(vals).mean()) *100.
+                dev[yi][xi] = devi
+        pcol = deri_plot.ax.pcolor(xs, ys, dev, cmap='YlOrRd')
+        pcol.set_clim(0, 5.)
+        cbar = deri_plot.fig.colorbar(pcol)
+        deri_plot.finalize(width=6, height=5, legendLoc=4, show_legend=False)
 
 
 class ValidationResults():

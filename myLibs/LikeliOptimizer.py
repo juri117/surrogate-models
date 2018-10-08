@@ -14,6 +14,8 @@ __status__ = "Development"
 from scipy.optimize import minimize
 import numpy as np
 
+from myUtils.PlotHelper import PlotHelper
+
 class LikeliOptimizer:
 
     def __init__(self, debug=False):
@@ -34,8 +36,7 @@ class LikeliOptimizer:
             bnds.append((1., 2.))
             #bnds.append((max(1., guess[dimensions+i] * 0.5), min(2., guess[dimensions+i] * 1.5)))
 
-        minima_res = minimize(func, guess, method='SLSQP', tol=1e-8,
-                       options=opt, bounds=bnds)
+        minima_res = minimize(func, guess, method='SLSQP', tol=1e-8, options=opt, bounds=bnds)
         if minima_res.nit >= self.maxIter:
             print('WARNING: max iter was used (LikeliOptimizer.py)')
         return minima_res
@@ -47,10 +48,8 @@ class LikeliOptimizer:
         #thetas = np.logspace(-5, 9, num=theta_sections)
         thetas = np.linspace(-5, 9, num=theta_sections)
         p_param_i = np.zeros((dimensions))
-        t_param_i = np.zeros((dimensions))
-
+        #t_param_i = np.zeros((dimensions))
         params = []
-
         for ip in range(len(ps)**dimensions):
             #if p_param_i[ip] >= len(ps)-1:
             #    p_param_i[ip] = 0
@@ -80,7 +79,6 @@ class LikeliOptimizer:
             # increment p
             p_param_i = self.increase_i(p_param_i, len(ps))
         return minima_param
-
 
     def increase_i(self, i_list, max_len):
         for i in range(0, len(i_list)):

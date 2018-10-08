@@ -99,13 +99,13 @@ if __name__ == '__main__':
     #import matplotlib.pyplot as plt
     sam = LatinHyperCube()
 
-    import matplotlib.pyplot as plt
-    samples = sam.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
-    for i in range(0, 14):
-        plt.plot([samples[i][0]], [samples[i][1]], 'bo')
-    plt.show()
+    #import matplotlib.pyplot as plt
+    #samples = sam.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
+    #for i in range(0, 14):
+    #    plt.plot([samples[i][0]], [samples[i][1]], 'bo')
+    #plt.show()
 
-    pltHalton = PlotHelper([], fancy=True, pgf=False)
+    pltHalton = PlotHelper([], fancy=True, pgf=True)
     import matplotlib.pyplot as plt
 
     ax1 = pltHalton.fig.add_subplot(121)
@@ -114,12 +114,12 @@ if __name__ == '__main__':
     sample_mat_full = sam.enhanced_latin_hypercube(16)
     xy_full = sam.bool_mat_to_list(sample_mat_full)
     plotXY_full = np.array(xy_full).T.tolist()
-    ax1.plot(plotXY_full[0], plotXY_full[1], 'bo', markersize=4)
+    ax1.plot(plotXY_full[0], plotXY_full[1], 'bo', markersize=5)
 
     deleteX = [0, 15, 4, 1]
     deleteY = [0, 15, 1, 4]
     for i in range(0, len(deleteX)):
-        ax1.plot([deleteX[i]], [deleteY[i]], 'rx', mew=2, ms=10)
+        #ax1.plot([deleteX[i]], [deleteY[i]], 'rx', mew=2, ms=10)
         ax1.plot([-1, 16], [deleteY[i], deleteY[i]], 'r-', linewidth=2)
         ax1.plot([deleteX[i], deleteX[i]], [-1, 16], 'r-', linewidth=2)
 
@@ -137,7 +137,7 @@ if __name__ == '__main__':
     xy = sam.bool_mat_to_list(sample_mat)
     plotXY = np.array(xy).T.tolist()
 
-    ax2.plot(plotXY[0], plotXY[1], 'bo', markersize=4)
+    ax2.plot(plotXY[0], plotXY[1], 'bo', markersize=5)
     ax2.set_xticks(range(0,12), minor=False)
     ax2.set_yticks(range(0,12), minor=False)
     ax2.xaxis.set_ticklabels([])
@@ -149,5 +149,5 @@ if __name__ == '__main__':
     #plt.show()
     pltHalton.fig.set_size_inches(5, 2.5)
     plt.tight_layout()
-    pltHalton.save('../dataOut/latinHyper.pdf')
+    pltHalton.save('../dataOut/plot/latinHyper.pdf')
     pltHalton.show()

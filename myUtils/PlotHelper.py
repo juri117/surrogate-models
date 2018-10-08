@@ -52,8 +52,9 @@ class PlotHelper:
             rc('text', usetex=True)
         rc('font', **self.font)
 
-    def finalize(self, width=6, height=4, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True):
-        if self.ax != None:
+    def finalize(self, width=6, height=4, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True, show_legend=True):
+        legend = None
+        if self.ax != None and show_legend:
             if bbox_to_anchor is not None:
                 legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=bbox_to_anchor)
             else:
