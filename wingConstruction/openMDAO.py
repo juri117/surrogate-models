@@ -75,10 +75,10 @@ class WingStructure(ExplicitComponent):
         #weight = pro.calc_wight() * WEIGHT_FAC
 
         pro0 = self.runner.new_project_r_t(rib0, shell)
-        pro0 = self.runner.run_project(pro0)
+        pro0 = self.runner.run_project(pro0, used_cpus=1)
         res0 = pro0.resultsCalcu
         pro1 = self.runner.new_project_r_t(rib1, shell)
-        pro1 = self.runner.run_project(pro1)
+        pro1 = self.runner.run_project(pro1, used_cpus=1)
         res1 = pro1.resultsCalcu
 
         if USE_ABA:

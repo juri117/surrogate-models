@@ -98,10 +98,10 @@ class Project:
             self.aba = Abaqus(self.workingDir)
         self.aba.calculix_to_abaqus(self.shellThickness)
 
-    def solve_abaqus(self):
+    def solve_abaqus(self, used_cpus=1):
         if self.aba is None:
             self.aba = Abaqus(self.workingDir)
-        self.aba.solve_model()
+        self.aba.solve_model(used_cpus)
         if self.aba.errorFlag:
             self.errorFlag = True
 

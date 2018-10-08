@@ -232,7 +232,7 @@ class Abaqus():
     # fem calls
 
     # calls the fem solver (all input files must be present in the working directory)
-    def solve_model(self):
+    def solve_model(self, used_cpus=1):
         if os.path.isfile(self._workingDir + '/abaqusJob.lck'):
             print('WARNING: Abaqus Lockfile was still there... I will remove it for you!')
             os.remove(self._workingDir + '/abaqusJob.lck')
@@ -243,7 +243,7 @@ class Abaqus():
             os.environ.pop('PYTHONIOENCODING')
         except KeyError:
             pass
-        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(1), 'int', 'ask=off'], cwd=self._workingDir,
+        p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'job=abaqusJob', 'cpus={:d}'.format(used_cpus), 'int', 'ask=off'], cwd=self._workingDir,
                              stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         out, err = p.communicate()
         out = out.decode('UTF-8')

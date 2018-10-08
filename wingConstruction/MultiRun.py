@@ -50,9 +50,9 @@ class MultiRun:
     :param input, a list of the inputs [ribCount, shellThinckness]
     :return only the stress as float
     '''
-    def calc_stress(self, input):
+    def calc_stress(self, input, used_cpus=1):
         pro = self.new_project_r_t(input[0], input[1])
-        pro = self.run_project(pro)
+        pro = self.run_project(pro, used_cpus)
         if self.use_calculix:
             return pro.resultsCalcu.stressMisesMax
         elif self.use_abaqus:
@@ -89,7 +89,7 @@ class MultiRun:
         pro.stringerHeight = 0.
         return pro
 
-    def run_project(self, pro):
+    def run_project(self, pro, used_cpus=1):
         if not pro.preexisting or self.force_recalc:
             pro.generate_geometry(nonlinear=self.non_linear)
             if self.use_calculix:
@@ -102,7 +102,7 @@ class MultiRun:
                         pro.post_process(template='wing_post_simple')
             if self.use_abaqus:
                 pro.generate_geometry_abaqus()
-                pro.solve_abaqus()
+                pro.solve_abaqus(used_cpus)
                 if not pro.errorFlag:
                     pro.post_process_abaqus()
             pro.save_results()
