@@ -113,20 +113,28 @@ def run_open_mdao():
     prob.model.connect('indeps.shell', 'wing.shell')
 
     '''
+    pyOptSparseDriver
+    ['ALPSO', 'CONMIN', 'FSQP', 'IPOPT', 'NLPQLP', 'NSGA2', 'PSQP', 'SLSQP', 'SNOPT', 'NLPY_AUGLAG', 'NOMAD']
     ALPSO - Augmented Lagrangian Particle Swarm Optimizer
+    
+    ScipyOptimizeDriver
+    ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
     
     '''
 
-    prob.driver = pyOptSparseDriver()
-    prob.driver.options['optimizer'] = 'ALPSO'
+    #prob.driver = pyOptSparseDriver()
+    prob.driver = ScipyOptimizeDriver()
+    prob.driver.options['optimizer'] = 'L-BFGS-B'
     #prob.driver.options['tol'] = 1e-6
     #prob.driver.options['maxiter'] = 100000
-    #prob.driver.options['tol'] = 1e-9
+    prob.driver.options['tol'] = 1e-9
     #prob.driver.options['disp'] = True
     prob.model.add_design_var('indeps.ribs', lower=5, upper=30)
     prob.model.add_design_var('indeps.shell', lower=0.006, upper=0.03)
     prob.model.add_objective('wing.weight', scaler=100)
-    prob.model.add_constraint('wing.stress', upper=5.72e8 / 1.5, scaler=1e8)
+    prob.model.add_constraint('wing.stress', upper=5.72e8 / 1.5)
+    #prob.model.add_constraint('indeps.ribs', lower=5, upper=30)
+    #prob.model.add_constraint('indeps.shell', lower=0.006, upper=0.03)
 
     prob.setup()
     prob.run_driver()

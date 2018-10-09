@@ -275,7 +275,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     print('rae: {:s}'.format(str(vali_r.rae)))
     print('press: {:f}'.format(vali_r.press))
 
-    vali.plot_derivation2d(ribs, shell, stress, surro.predict)
+    if show_plots:
+        vali.plot_derivation2d(ribs, shell, stress, surro.predict)
 
     ##################################################
     # plot it
@@ -328,7 +329,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.show()
 
     results.runtime = timer.toc()
-    return results
+    return results, surro
 
 
 class SurroResults:

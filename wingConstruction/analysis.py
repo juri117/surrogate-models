@@ -41,7 +41,7 @@ def run_analysis():
                 print('##################################################################################')
                 print('next run: surro: {:s}, sample: {:s}, points: {:d}'.format(SURRO_NAMES[surro_m], SAMPLE_NAMES[sample_m], sample_points))
                 try:
-                    res = surrogate_analysis(sample_m,
+                    res, _ = surrogate_analysis(sample_m,
                                              sample_points,
                                              surro_m,
                                              use_abaqus=use_abaqus,

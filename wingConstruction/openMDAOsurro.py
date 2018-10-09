@@ -27,13 +27,14 @@ from wingConstruction.wingUtils.Constants import Constants
 from wingConstruction.MultiRun import MultiRun
 from wingConstruction.wingUtils.defines import *
 from myUtils.PlotHelper import PlotHelper
+from wingConstruction.surrogateV2 import surrogate_analysis
 
 PROJECT_NAME_PREFIX = 'iterSLSQP'
 
 LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
-SHELL_FACTOR = 1e-2
-RIB_FACTOR = 1e-6
-WEIGHT_FAC = 1e-4
+SHELL_FACTOR = 1#1e-2
+RIB_FACTOR = 1#1e-6
+WEIGHT_FAC = 1e-3
 STRESS_FAC = 1e-8
 
 #WEIGHT_PANALTY_FAC = 10.
@@ -46,6 +47,8 @@ class WingStructure(ExplicitComponent):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
+        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=USE_ABA, pgf=False, show_plots=False)
+
 
         #####################
         ### openMDAO init ###
@@ -57,17 +60,17 @@ class WingStructure(ExplicitComponent):
         self.add_output('stress', val=1e8)#, ref=1e8)
         self.add_output('weight', val=100.)#, ref=100)
 
-        self.declare_partials('*', '*', method='fd')
+        self.declare_partials('*', '*', method='exact')
         self.executionCounter = 0
 
     def compute(self, inputs, outputs):
         rib0 = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
         rib1 = int(math.ceil(inputs['ribs'][0] / RIB_FACTOR))
 
-        ribs = int(round(inputs['ribs'][0] / RIB_FACTOR))
+        ribs = round(inputs['ribs'][0] / RIB_FACTOR)
 
         shell = inputs['shell'][0] / SHELL_FACTOR
-        self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
+        #self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
 
         #pro = self.runner.new_project_r_t(ribs, shell)
         #pro = self.runner.run_project(pro)
@@ -75,33 +78,23 @@ class WingStructure(ExplicitComponent):
         #weight = pro.calc_wight() * WEIGHT_FAC
 
         pro0 = self.runner.new_project_r_t(rib0, shell)
-        pro0 = self.runner.run_project(pro0, used_cpus=1)
-        res0 = pro0.resultsCalcu
         pro1 = self.runner.new_project_r_t(rib1, shell)
-        pro1 = self.runner.run_project(pro1, used_cpus=1)
-        res1 = pro1.resultsCalcu
-
-        if USE_ABA:
-            res0 = pro0.resultsAba
-            res1 = pro1.resultsAba
 
         if rib1 - rib0 < 0.000000001:
-            stress = res0.stressMisesMax * STRESS_FAC
             weight = pro0.calc_wight() * WEIGHT_FAC
         else:
-            stress = (res0.stressMisesMax + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
-                      * ((res1.stressMisesMax - res0.stressMisesMax) / (rib1 - rib0)))\
-                        * STRESS_FAC
             weight = (pro0.calc_wight() + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
-                      * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0)))\
-                        * WEIGHT_FAC
+                  * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0))) \
+                  * WEIGHT_FAC
 
-        weight_penalty = 0.
-        if stress > max_shear_strength * STRESS_FAC:
-            weight_penalty = (stress - (max_shear_strength * STRESS_FAC)) * 100
+        stress = self.surro.predict([ribs, shell]) * STRESS_FAC
+
+        #weight_penalty = 0.
+        #if stress > max_shear_strength * STRESS_FAC:
+        #    weight_penalty = (stress - (max_shear_strength * STRESS_FAC)) * 100
 
         outputs['stress'] = stress
-        outputs['weight'] = weight + (weight_penalty * WEIGHT_FAC)
+        outputs['weight'] = weight #+ (weight_penalty * WEIGHT_FAC)
 
         #weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
         #if weight_panalty >= 0.5:
@@ -113,12 +106,12 @@ class WingStructure(ExplicitComponent):
         write_to_log(str(self.executionCounter) + ','
                      + datetime.now().strftime('%H:%M:%S') + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
-                     + str(ribs) + ','
+                     + str(int(round(ribs))) + ','
                      + str(inputs['shell'] / SHELL_FACTOR) + ','
                      + str(outputs['stress'] / STRESS_FAC) + ','
                      + str(outputs['weight'] / WEIGHT_FAC))
         self.executionCounter += 1
-        print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
+        print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], int(round(ribs)), inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
 def write_to_log(out_str):
@@ -140,7 +133,7 @@ def run_open_mdao():
     #indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
     indeps.add_output('ribs', 20 * RIB_FACTOR)
-    indeps.add_output('shell', 0.003 * SHELL_FACTOR)
+    indeps.add_output('shell', 0.0025 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
     model.add_subsystem('wing', WingStructure())
@@ -171,13 +164,15 @@ def run_open_mdao():
 
 
     prob.driver =  ScipyOptimizeDriver()
-    prob.driver.options['optimizer'] = 'L-BFGS-B'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
-    prob.driver.options['tol'] = 1e-8
+    prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
+    prob.driver.options['tol'] = 1e-9
 
     #prob.driver.options['ftol'] = 1e-3
     #prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 20
+    prob.driver.options['maxiter'] = 50
     prob.driver.options['disp'] = True
+    #prob.driver.options['ftol'] = 1e-3
+
 
     prob.setup()
     prob.set_solver_print(level=0)
@@ -200,10 +195,14 @@ def plot_iter(file_path=None):
         file_path = LOG_FILE_PATH
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     iter = data[:, 0]
+    time = data[:, 1]
     ribs = data[:, 2]
     shell = data[:, 4]
     stress = data[:, 5]
     weight = data[:, 6]
+    #print some info:
+    print('number of iterations: {:d}'.format(int(iter[-1])))
+    print('total time: {:f}'.format(time[-1] - time[0]))
     iter_plot = PlotHelper([], fancy=False, pgf=False)
     ax1 = iter_plot.fig.add_subplot(211)
     ax2 = iter_plot.fig.add_subplot(212)
@@ -215,6 +214,8 @@ def plot_iter(file_path=None):
     ax_shell.set_ylabel('Shell')
     ax_shell.yaxis.label.set_color('orange')
     ax_shell.plot(iter, shell, color='orange')
+    iter_param.ax.set_ylim(range_rib)
+    ax_shell.set_ylim(range_shell)
     iter_param.finalize(width=6, height=2.5, show_legend=False)
     # results plot
     iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=False, ax=ax2, pgf=False)
