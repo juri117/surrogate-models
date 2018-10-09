@@ -42,7 +42,7 @@ STRESS_FAC = 1e-8
 
 USE_ABA = True
 
-PGF = False
+PGF = True
 
 class WingStructureSurro(ExplicitComponent):
 
@@ -167,12 +167,14 @@ def run_open_mdao():
     if USE_PYOPTSPARSE:
         prob.driver = pyOptSparseDriver()
         prob.driver.options['optimizer'] = OPTIMIZER
+        prob.driver.opt_settings['SwarmSize'] = 6
     else:
         prob.driver =  ScipyOptimizeDriver()
         prob.driver.options['optimizer'] = OPTIMIZER  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
         prob.driver.options['tol'] = TOL
         prob.driver.options['disp'] = True
         prob.driver.options['maxiter'] = 100
+        prob.driver.opt_settings['etol'] = 100
 
     prob.setup()
     prob.set_solver_print(level=0)
@@ -203,11 +205,11 @@ def plot_iter(file_path=None):
     #print some info:
     print('number of iterations: {:d}'.format(int(iter[-1])))
     print('total time: {:f}'.format(time[-1] - time[0]))
-    iter_plot = PlotHelper([], fancy=False, pgf=PGF)
+    iter_plot = PlotHelper([], fancy=True, pgf=PGF)
     ax1 = iter_plot.fig.add_subplot(211)
     ax2 = iter_plot.fig.add_subplot(212)
     # param plot
-    iter_param = PlotHelper(['', 'Rippen'], fancy=False, ax=ax1, pgf=PGF)
+    iter_param = PlotHelper(['', 'Rippen'], fancy=True, ax=ax1, pgf=PGF)
     iter_param.ax.plot(iter, ribs, color='teal')
     iter_param.ax.yaxis.label.set_color('teal')
     ax_shell = iter_param.ax.twinx()
@@ -218,7 +220,7 @@ def plot_iter(file_path=None):
     ax_shell.set_ylim(range_shell)
     iter_param.finalize(width=6, height=2.5, show_legend=False)
     # results plot
-    iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=False, ax=ax2, pgf=PGF)
+    iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=True, ax=ax2, pgf=PGF)
     iter_res.ax.plot(iter, stress, color='tomato')
     iter_res.ax.plot([min(iter), max(iter)], [max_shear_strength, max_shear_strength], '--', color='tomato', label='max. Spannung')
     iter_res.ax.yaxis.label.set_color('tomato')
@@ -228,7 +230,7 @@ def plot_iter(file_path=None):
     ax_weight.plot(iter, weight, color='royalblue')
     iter_res.finalize(width=6, height=2.5, legendLoc='upper right', show_legend=True)
 
-    iter_plot.save('../dataOut/plot/openMDAOconv.pdf')
+    iter_plot.save('../dataOut/plot/openMDAOconv_ALPSO.pdf')
     iter_plot.show()
 
 if __name__ == '__main__':
@@ -242,15 +244,14 @@ if __name__ == '__main__':
     OPTIMIZER = 'SLSQP'
 
     #02
-    '''
-    SHELL_FACTOR = 1  # 1e-2
-    RIB_FACTOR = 1e-6  # 1e-6
-    WEIGHT_FAC = 1e-3
-    STRESS_FAC = 1e-8
-    TOL = 1e-3
-    USE_PYOPTSPARSE = True
-    OPTIMIZER = 'ALPSO'
-    '''
+    if True:
+        SHELL_FACTOR = 1  # 1e-2
+        RIB_FACTOR = 1e-6  # 1e-6
+        WEIGHT_FAC = 1e-3
+        STRESS_FAC = 1e-8
+        TOL = 1e-3
+        USE_PYOPTSPARSE = True
+        OPTIMIZER = 'ALPSO'
 
     run_open_mdao()
     plot_iter()
