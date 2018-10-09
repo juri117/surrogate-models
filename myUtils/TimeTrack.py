@@ -15,3 +15,6 @@ class TimeTrack:
         self._stop = timer()
         print(self._name + ': ' + str(self._stop - self._start) + ' s')
         return self._stop - self._start
+
+    def get_time(self):
+        return timer() - self._start

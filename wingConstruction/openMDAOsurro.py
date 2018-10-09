@@ -19,7 +19,7 @@ import math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyoptsparse')
-from openmdao.api import Problem, ExecComp, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
+from openmdao.api import Problem, pyOptSparseDriver, ExecComp, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
@@ -28,6 +28,7 @@ from wingConstruction.MultiRun import MultiRun
 from wingConstruction.wingUtils.defines import *
 from myUtils.PlotHelper import PlotHelper
 from wingConstruction.surrogateV2 import surrogate_analysis
+from myUtils.TimeTrack import TimeTrack
 
 PROJECT_NAME_PREFIX = 'iterSLSQP'
 
@@ -41,7 +42,9 @@ STRESS_FAC = 1e-8
 
 USE_ABA = True
 
-class WingStructure(ExplicitComponent):
+PGF = False
+
+class WingStructureSurro(ExplicitComponent):
 
     def setup(self):
         ######################
@@ -60,8 +63,9 @@ class WingStructure(ExplicitComponent):
         self.add_output('stress', val=1e8)#, ref=1e8)
         self.add_output('weight', val=100.)#, ref=100)
 
-        self.declare_partials('*', '*', method='exact')
+        self.declare_partials('*', '*', method='fd')
         self.executionCounter = 0
+        self.timer = TimeTrack()
 
     def compute(self, inputs, outputs):
         rib0 = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
@@ -103,8 +107,8 @@ class WingStructure(ExplicitComponent):
 
         #outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
 
-        write_to_log(str(self.executionCounter) + ','
-                     + datetime.now().strftime('%H:%M:%S') + ','
+        write_mdao_log(str(self.executionCounter) + ','
+                     + str(self.timer.get_time()) + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
                      + str(int(round(ribs))) + ','
                      + str(inputs['shell'] / SHELL_FACTOR) + ','
@@ -114,7 +118,9 @@ class WingStructure(ExplicitComponent):
         print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], int(round(ribs)), inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
-def write_to_log(out_str):
+
+
+def write_mdao_log(out_str):
     out_str = out_str.replace('[', '')
     out_str = out_str.replace(']', '')
     output_f = open(LOG_FILE_PATH, 'a') #'a' so we append the file
@@ -123,7 +129,7 @@ def write_to_log(out_str):
 
 
 def run_open_mdao():
-    write_to_log('iter,time,ribs(float),ribs,shell,stress,weight')
+    write_mdao_log('iter,time,ribs(float),ribs,shell,stress,weight')
 
     model = Group()
 
@@ -136,7 +142,7 @@ def run_open_mdao():
     indeps.add_output('shell', 0.0025 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
-    model.add_subsystem('wing', WingStructure())
+    model.add_subsystem('wing', WingStructureSurro())
     model.connect('des_vars.ribs', ['wing.ribs', 'con_cmp1.ribs'])
     model.connect('des_vars.shell', 'wing.shell')
 
@@ -152,27 +158,21 @@ def run_open_mdao():
     model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
     model.add_constraint('con_cmp1.con1', upper=0.1)
 
+    #model.add_constraint('des_vars.ribs', lower=8*RIB_FACTOR, upper=30*RIB_FACTOR)
+    #model.add_constraint('des_vars.shell', lower=0.006*SHELL_FACTOR, upper=0.03*SHELL_FACTOR)
+
     prob = Problem(model)
 
     # setup the optimization
-    #prob.driver = pyOptSparseDriver() #ScipyOptimizeDriver()
-    #prob.driver.options['optimizer'] = 'SLSQP' #'SLSQP'
-    #prob.driver.options['tol'] = 1e-6
-    #prob.driver.opt_settings = {'eps': 1e-6}
-    #prob.driver.options['maxiter'] = 100000
-    #prob.driver.options['disp'] = True
-
-
-    prob.driver =  ScipyOptimizeDriver()
-    prob.driver.options['optimizer'] = 'SLSQP'  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
-    prob.driver.options['tol'] = 1e-9
-
-    #prob.driver.options['ftol'] = 1e-3
-    #prob.driver.opt_settings = {'eps': 1e-6}
-    prob.driver.options['maxiter'] = 50
-    prob.driver.options['disp'] = True
-    #prob.driver.options['ftol'] = 1e-3
-
+    if USE_PYOPTSPARSE:
+        prob.driver = pyOptSparseDriver()
+        prob.driver.options['optimizer'] = OPTIMIZER
+    else:
+        prob.driver =  ScipyOptimizeDriver()
+        prob.driver.options['optimizer'] = OPTIMIZER  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
+        prob.driver.options['tol'] = TOL
+        prob.driver.options['disp'] = True
+        prob.driver.options['maxiter'] = 100
 
     prob.setup()
     prob.set_solver_print(level=0)
@@ -203,11 +203,11 @@ def plot_iter(file_path=None):
     #print some info:
     print('number of iterations: {:d}'.format(int(iter[-1])))
     print('total time: {:f}'.format(time[-1] - time[0]))
-    iter_plot = PlotHelper([], fancy=False, pgf=False)
+    iter_plot = PlotHelper([], fancy=False, pgf=PGF)
     ax1 = iter_plot.fig.add_subplot(211)
     ax2 = iter_plot.fig.add_subplot(212)
     # param plot
-    iter_param = PlotHelper(['', 'Rippen'], fancy=False, ax=ax1, pgf=False)
+    iter_param = PlotHelper(['', 'Rippen'], fancy=False, ax=ax1, pgf=PGF)
     iter_param.ax.plot(iter, ribs, color='teal')
     iter_param.ax.yaxis.label.set_color('teal')
     ax_shell = iter_param.ax.twinx()
@@ -218,7 +218,7 @@ def plot_iter(file_path=None):
     ax_shell.set_ylim(range_shell)
     iter_param.finalize(width=6, height=2.5, show_legend=False)
     # results plot
-    iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=False, ax=ax2, pgf=False)
+    iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=False, ax=ax2, pgf=PGF)
     iter_res.ax.plot(iter, stress, color='tomato')
     iter_res.ax.plot([min(iter), max(iter)], [max_shear_strength, max_shear_strength], '--', color='tomato', label='max. Spannung')
     iter_res.ax.yaxis.label.set_color('tomato')
@@ -226,12 +226,31 @@ def plot_iter(file_path=None):
     ax_weight.set_ylabel('Gewicht in kg')
     ax_weight.yaxis.label.set_color('royalblue')
     ax_weight.plot(iter, weight, color='royalblue')
-    iter_res.finalize(width=6, height=2.5, legendLoc='lower center', show_legend=True)
+    iter_res.finalize(width=6, height=2.5, legendLoc='upper right', show_legend=True)
 
     iter_plot.save('../dataOut/plot/openMDAOconv.pdf')
     iter_plot.show()
 
 if __name__ == '__main__':
+    #01
+    SHELL_FACTOR = 1  # 1e-2
+    RIB_FACTOR = 1e-6  # 1e-6
+    WEIGHT_FAC = 1e-3
+    STRESS_FAC = 1e-8
+    TOL = 1e-3
+    USE_PYOPTSPARSE = False
+    OPTIMIZER = 'SLSQP'
+
+    #02
+    '''
+    SHELL_FACTOR = 1  # 1e-2
+    RIB_FACTOR = 1e-6  # 1e-6
+    WEIGHT_FAC = 1e-3
+    STRESS_FAC = 1e-8
+    TOL = 1e-3
+    USE_PYOPTSPARSE = True
+    OPTIMIZER = 'ALPSO'
+    '''
+
     run_open_mdao()
     plot_iter()
-    #plot_iter(file_path=Constants().WORKING_DIR + '/' + 'iterSLSQP_2018-10-03_10_48_20_aba.csv')
