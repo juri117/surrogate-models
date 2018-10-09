@@ -20,7 +20,7 @@ from wingConstruction.wingUtils.defines import *
 
 t = TimeTrack()
 t.tic()
-projectName = 'testFullForceRef'#_r07_s002'
+projectName = 'testSolver'#_r07_s002'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4
