@@ -42,7 +42,7 @@ STRESS_FAC = 1e-8
 
 USE_ABA = True
 
-PGF = True
+PGF = False
 
 class WingStructureSurro(ExplicitComponent):
 
@@ -50,7 +50,7 @@ class WingStructureSurro(ExplicitComponent):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
-        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=USE_ABA, pgf=False, show_plots=False)
+        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=USE_ABA, pgf=False, show_plots=False)
 
 
         #####################
@@ -168,6 +168,7 @@ def run_open_mdao():
         prob.driver = pyOptSparseDriver()
         prob.driver.options['optimizer'] = OPTIMIZER
         prob.driver.opt_settings['SwarmSize'] = 6
+        prob.driver.opt_settings['stopIters'] = 5
     else:
         prob.driver =  ScipyOptimizeDriver()
         prob.driver.options['optimizer'] = OPTIMIZER  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
@@ -244,6 +245,7 @@ if __name__ == '__main__':
     OPTIMIZER = 'SLSQP'
 
     #02
+    '''
     if True:
         SHELL_FACTOR = 1  # 1e-2
         RIB_FACTOR = 1e-6  # 1e-6
@@ -252,6 +254,7 @@ if __name__ == '__main__':
         TOL = 1e-3
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
+    '''
 
     run_open_mdao()
     plot_iter()
