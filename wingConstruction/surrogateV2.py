@@ -47,7 +47,7 @@ performs full surrogate analysis and comparison to real FEM-Model
 :param show_plots weather plots will be displayed at runtime
 :return SurroResults with all the results
 '''
-def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False):
+def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False, run_validation=True):
     timer = TimeTrack('surrogateAnalysis')
     timer.tic()
     results = SurroResults()
@@ -253,30 +253,30 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # validate
 
-    # validate points 0.002, 0.0033
-    valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028], [results.optimumRib, results.optimumShell]])
-    valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
-    # valiValues = np.array(list(map(f_2D, valiParams)))
-    # valiParams = valiParams.reshape((len(valiParams), 1))
+    if run_validation:
+        valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028], [results.optimumRib, results.optimumShell]])
+        valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
+        # valiValues = np.array(list(map(f_2D, valiParams)))
+        # valiParams = valiParams.reshape((len(valiParams), 1))
 
-    p_x, p_y = np.meshgrid(ribs, shell)
-    params = np.array([p_x.flatten(), p_y.flatten()]).T
-    values = stress.flatten()
+        p_x, p_y = np.meshgrid(ribs, shell)
+        params = np.array([p_x.flatten(), p_y.flatten()]).T
+        values = stress.flatten()
 
-    vali = Validation()
-    vali_r = vali.run_full_analysis(params, values,
-                                    known_params, known_stress,
-                                    valiParams, valiValues,
-                                    surro.predict, surro_class, update_params=update_params)
-    results.valiResults = vali_r
-    print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
-    print('rmse: {:f}'.format(vali_r.rmse))
-    print('mae: {:f}'.format(vali_r.mae))
-    print('rae: {:s}'.format(str(vali_r.rae)))
-    print('press: {:f}'.format(vali_r.press))
+        vali = Validation()
+        vali_r = vali.run_full_analysis(params, values,
+                                        known_params, known_stress,
+                                        valiParams, valiValues,
+                                        surro.predict, surro_class, update_params=update_params)
+        results.valiResults = vali_r
+        print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
+        print('rmse: {:f}'.format(vali_r.rmse))
+        print('mae: {:f}'.format(vali_r.mae))
+        print('rae: {:s}'.format(str(vali_r.rae)))
+        print('press: {:f}'.format(vali_r.press))
 
-    if show_plots:
-        vali.plot_derivation2d(ribs, shell, stress, surro.predict)
+        if show_plots:
+            vali.plot_derivation2d(ribs, shell, stress, surro.predict)
 
     ##################################################
     # plot it

@@ -44,13 +44,15 @@ USE_ABA = True
 
 PGF = False
 
+WEIGHT_PANALTY_FAC = 0
+
 class WingStructureSurro(ExplicitComponent):
 
     def setup(self):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
-        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=USE_ABA, pgf=False, show_plots=False)
+        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=USE_ABA, pgf=False, show_plots=False, run_validation=False)
 
 
         #####################
@@ -98,14 +100,13 @@ class WingStructureSurro(ExplicitComponent):
         #    weight_penalty = (stress - (max_shear_strength * STRESS_FAC)) * 100
 
         outputs['stress'] = stress
-        outputs['weight'] = weight #+ (weight_penalty * WEIGHT_FAC)
+        outputs['weight'] = weight
 
-        #weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
-        #if weight_panalty >= 0.5:
-        #    weight_panalty = 1. - weight_panalty
-        #weight_panalty = 0.
-
-        #outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
+        if WEIGHT_PANALTY_FAC > 0:
+            weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
+            if weight_panalty >= 0.5:
+                weight_panalty = 1. - weight_panalty
+            outputs['weight'] = weight + ((weight_panalty * WEIGHT_PANALTY_FAC) * WEIGHT_FAC)
 
         write_mdao_log(str(self.executionCounter) + ','
                      + str(self.timer.get_time()) + ','
@@ -156,7 +157,7 @@ def run_open_mdao():
     # constraint
     model.add_constraint('wing.stress', upper=max_shear_strength * STRESS_FAC)
     model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
-    model.add_constraint('con_cmp1.con1', upper=0.1)
+    model.add_constraint('con_cmp1.con1', upper=0.0001)
 
     #model.add_constraint('des_vars.ribs', lower=8*RIB_FACTOR, upper=30*RIB_FACTOR)
     #model.add_constraint('des_vars.shell', lower=0.006*SHELL_FACTOR, upper=0.03*SHELL_FACTOR)
@@ -175,7 +176,7 @@ def run_open_mdao():
         prob.driver.options['tol'] = TOL
         prob.driver.options['disp'] = True
         prob.driver.options['maxiter'] = 100
-        prob.driver.opt_settings['etol'] = 100
+        #prob.driver.opt_settings['etol'] = 100
 
     prob.setup()
     prob.set_solver_print(level=0)
@@ -236,16 +237,17 @@ def plot_iter(file_path=None):
 
 if __name__ == '__main__':
     #01
-    SHELL_FACTOR = 1  # 1e-2
+    SHELL_FACTOR = 1 #e-2  # 1e-2
     RIB_FACTOR = 1e-6  # 1e-6
     WEIGHT_FAC = 1e-3
     STRESS_FAC = 1e-8
-    TOL = 1e-3
+    TOL = 1e-9
     USE_PYOPTSPARSE = False
     OPTIMIZER = 'SLSQP'
+    WEIGHT_PANALTY_FAC = 0
 
     #02
-    '''
+
     if True:
         SHELL_FACTOR = 1  # 1e-2
         RIB_FACTOR = 1e-6  # 1e-6
@@ -254,7 +256,8 @@ if __name__ == '__main__':
         TOL = 1e-3
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
-    '''
+        WEIGHT_PANALTY_FAC = 10
+
 
     run_open_mdao()
     plot_iter()

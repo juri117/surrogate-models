@@ -29,17 +29,19 @@ from wingConstruction.wingUtils.defines import *
 from myUtils.PlotHelper import PlotHelper
 from myUtils.TimeTrack import TimeTrack
 
-PROJECT_NAME_PREFIX = 'iterSLSQP'
+PROJECT_NAME_PREFIX = 'iterSLSQP_FEM'
 
 LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
 SHELL_FACTOR = 1e-2
 RIB_FACTOR = 1e-6
-WEIGHT_FAC = 1e-4
+WEIGHT_FAC = 1e-3
 STRESS_FAC = 1e-8
 
-#WEIGHT_PANALTY_FAC = 10.
+WEIGHT_PANALTY_FAC = 0
 
 USE_ABA = True
+
+PGF = False
 
 class WingStructure(ExplicitComponent):
 
@@ -105,12 +107,11 @@ class WingStructure(ExplicitComponent):
         outputs['stress'] = stress
         outputs['weight'] = weight + (weight_penalty * WEIGHT_FAC)
 
-        #weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
-        #if weight_panalty >= 0.5:
-        #    weight_panalty = 1. - weight_panalty
-        #weight_panalty = 0.
-
-        #outputs['weight'] = (pro.calc_wight() + (weight_panalty * WEIGHT_PANALTY_FAC)) * WEIGHT_FAC
+        if WEIGHT_PANALTY_FAC > 0:
+            weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
+            if weight_panalty >= 0.5:
+                weight_panalty = 1. - weight_panalty
+            outputs['weight'] = weight + ((weight_panalty * WEIGHT_PANALTY_FAC) * WEIGHT_FAC)
 
         write_mdao_log(str(self.executionCounter) + ','
                      + str(self.timer.get_time()) + ','
@@ -177,7 +178,7 @@ def run_open_mdao():
         prob.driver.options['optimizer'] = OPTIMIZER  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
         prob.driver.options['tol'] = TOL
         prob.driver.options['disp'] = True
-        prob.driver.options['maxiter'] = 100
+        prob.driver.options['maxiter'] = 10
         prob.driver.opt_settings['etol'] = 100
 
     prob.setup()
@@ -239,13 +240,14 @@ def plot_iter(file_path=None):
 
 if __name__ == '__main__':
     #01
-    SHELL_FACTOR = 1  # 1e-2
+    SHELL_FACTOR = 1e-2  # 1e-2
     RIB_FACTOR = 1e-6  # 1e-6
     WEIGHT_FAC = 1e-3
     STRESS_FAC = 1e-8
-    TOL = 1e-3
+    TOL = 1e-2
     USE_PYOPTSPARSE = False
     OPTIMIZER = 'SLSQP'
+    WEIGHT_PANALTY_FAC = 0
 
     #02
     '''
@@ -257,6 +259,7 @@ if __name__ == '__main__':
         TOL = 1e-3
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
+        WEIGHT_PANALTY_FAC = 10
     '''
 
     run_open_mdao()
