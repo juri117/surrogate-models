@@ -41,7 +41,7 @@ WEIGHT_PANALTY_FAC = 0
 
 USE_ABA = True
 
-PGF = False
+PGF = True
 
 class WingStructure(ExplicitComponent):
 
@@ -100,12 +100,8 @@ class WingStructure(ExplicitComponent):
                       * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0)))\
                         * WEIGHT_FAC
 
-        weight_penalty = 0.
-        if stress > max_shear_strength * STRESS_FAC:
-            weight_penalty = (stress - (max_shear_strength * STRESS_FAC)) * 100
-
         outputs['stress'] = stress
-        outputs['weight'] = weight + (weight_penalty * WEIGHT_FAC)
+        outputs['weight'] = weight
 
         if WEIGHT_PANALTY_FAC > 0:
             weight_panalty = ((inputs['ribs'][0] / RIB_FACTOR) % 1)
@@ -259,8 +255,10 @@ if __name__ == '__main__':
         TOL = 1e-3
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
-        WEIGHT_PANALTY_FAC = 10
+        WEIGHT_PANALTY_FAC = 50
     '''
 
-    run_open_mdao()
-    plot_iter()
+    #run_open_mdao()
+    #plot_iter()
+
+    plot_iter(Constants().WORKING_DIR + '/' + 'iterALPSO_FEM2018-10-10_13_47_44_V001.csv')
