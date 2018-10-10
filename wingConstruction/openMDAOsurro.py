@@ -139,8 +139,8 @@ def run_open_mdao():
     #indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
     #indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
-    indeps.add_output('ribs', 20 * RIB_FACTOR)
-    indeps.add_output('shell', 0.0025 * SHELL_FACTOR)
+    indeps.add_output('ribs', 16 * RIB_FACTOR)
+    indeps.add_output('shell', 0.003 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
     model.add_subsystem('wing', WingStructureSurro())
@@ -220,7 +220,7 @@ def plot_iter(file_path=None):
     ax_shell.plot(iter, shell, color='orange')
     iter_param.ax.set_ylim(range_rib)
     ax_shell.set_ylim(range_shell)
-    iter_param.finalize(width=6, height=2.5, show_legend=False)
+    iter_param.finalize(show_legend=False)
     # results plot
     iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=True, ax=ax2, pgf=PGF)
     iter_res.ax.plot(iter, stress, color='tomato')
@@ -230,8 +230,8 @@ def plot_iter(file_path=None):
     ax_weight.set_ylabel('Gewicht in kg')
     ax_weight.yaxis.label.set_color('royalblue')
     ax_weight.plot(iter, weight, color='royalblue')
-    iter_res.finalize(width=6, height=2.5, legendLoc='upper right', show_legend=True)
-
+    iter_res.finalize(legendLoc='upper right', show_legend=True)
+    iter_plot.finalize(width=6, height=3.5)
     iter_plot.save('../dataOut/plot/openMDAOconv_ALPSO.pdf')
     iter_plot.show()
 
@@ -247,17 +247,15 @@ if __name__ == '__main__':
     WEIGHT_PANALTY_FAC = 0
 
     #02
-
     if True:
-        SHELL_FACTOR = 1  # 1e-2
+        SHELL_FACTOR = 1
         RIB_FACTOR = 1e-6  # 1e-6
         WEIGHT_FAC = 1e-3
         STRESS_FAC = 1e-8
-        TOL = 1e-3
+        TOL = 1e-2
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
         WEIGHT_PANALTY_FAC = 10
-
 
     run_open_mdao()
     plot_iter()

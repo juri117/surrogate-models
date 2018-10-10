@@ -223,7 +223,7 @@ def plot_iter(file_path=None):
     ax_shell.plot(iter, shell, color='orange')
     iter_param.ax.set_ylim(range_rib)
     ax_shell.set_ylim(range_shell)
-    iter_param.finalize(width=6, height=2.5, show_legend=False)
+    iter_param.finalize(show_legend=False)
     # results plot
     iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=True, ax=ax2, pgf=PGF)
     iter_res.ax.plot(iter, stress, color='tomato')
@@ -233,8 +233,8 @@ def plot_iter(file_path=None):
     ax_weight.set_ylabel('Gewicht in kg')
     ax_weight.yaxis.label.set_color('royalblue')
     ax_weight.plot(iter, weight, color='royalblue')
-    iter_res.finalize(width=6, height=2.5, legendLoc='upper right', show_legend=True)
-
+    iter_res.finalize(legendLoc='upper right', show_legend=True)
+    iter_plot.finalize(width=6, height=3.5)
     iter_plot.save('../dataOut/plot/openMDAOconv_ALPSO.pdf')
     iter_plot.show()
 
