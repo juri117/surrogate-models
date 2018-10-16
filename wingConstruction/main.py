@@ -13,9 +13,9 @@ __status__ = "Development"
 import numpy as np
 import sys
 from datetime import datetime
-from wingConstruction.wingUtils.Constants import Constants
-from wingConstruction.Project import Project
-from myUtils.TimeTrack import TimeTrack
+from wingConstruction.wingUtils.constants import Constants
+from wingConstruction.project import Project
+from myutils.time_track import TimeTrack
 from wingConstruction.wingUtils.defines import *
 
 t = TimeTrack()

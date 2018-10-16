@@ -9,7 +9,7 @@ lib
 */.idea
 **/.DS_Store
 trash
-dataOut*
+data_out
 **/BAK*
 **/*.pyc
 **/*.lof

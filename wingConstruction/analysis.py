@@ -14,10 +14,10 @@ from datetime import datetime
 import numpy as np
 
 from wingConstruction.wingUtils.defines import *
-from wingConstruction.surrogateV2 import surrogate_analysis
-from wingConstruction.surrogateV2 import SurroResults
-from wingConstruction.wingUtils.Constants import Constants
-from myUtils.PlotHelper import PlotHelper
+from wingConstruction.surrogate_v2 import surrogate_analysis
+from wingConstruction.surrogate_v2 import SurroResults
+from wingConstruction.wingUtils.constants import Constants
+from myutils.plot_helper import PlotHelper
 
 def run_analysis():
     surro_methods = [SURRO_POLYNOM, SURRO_KRIGING]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM

@@ -33,7 +33,7 @@ density = 2810 #kg/m^3
 #shear_strength = 3.31e8 / safety_fac
 
 #range_rib = (5, 18) #calcu
-range_rib = (5, 22) #range_rib = (8, 24) #aba
+range_rib = (5, 25) #range_rib = (8, 24) #aba
 range_shell = (0.002, 0.0033)
 
 #######################################################
