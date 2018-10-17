@@ -281,14 +281,34 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('press: {:f}'.format(vali_r.press))
 
         if show_plots:
-            vali.plot_derivation2d(ribs, shell, stress, surro.predict)
+            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=False, pgf=False)
+            dev = np.zeros(stress.shape)
+            for xi in range(0, len(ribs)):
+                for yi in range(0, len(shell)):
+                    devi = (abs(stress[yi][xi] - surro.predict([ribs[xi], shell[yi]])) / np.array(stress).mean()) * 100.
+                    dev[yi][xi] = devi
+            pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd')
+            pcol.set_clim(0, 5.)
+            cbar = deri_plot.fig.colorbar(pcol)
+            deri_plot.ax.plot(known_rib, known_shell * 1000, 'bo', label='sampling points')
+            deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
+                           markersize=12, markeredgewidth=5, label='global optimum')
+            deri_plot.ax.invert_yaxis()
+            deri_plot.finalize(width=6, height=5, legendLoc='lower right', show_legend=True)
+
+            #vali.plot_derivation2d(ribs, shell, stress, surro.predict, sample_x=known_rib, sample_y = known_shell, opti_x=[opti_ribs[best_i]], opti_y=[opti_shell[best_i]*1000.])
 
     ##################################################
     # plot it
 
+    # convert all to np arrays
+    shell = np.array(shell)
+    opti_shell = np.array(opti_shell)
+    known_shell = np.array(known_shell)
+
     if show_plots and False:
         plot3dw = PlotHelper(['Rippen', 'Blechdicke in mm', 'Gewicht in kg'], fancy=False, pgf=pgf)
-        plotX, plotY = np.meshgrid(ribs, shell)
+        plotX, plotY = np.meshgrid(ribs, shell*1000)
         surf = plot3dw.ax.plot_wireframe(plotX,
                                          plotY,
                                         weights,
@@ -298,14 +318,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
                                         ccount=20,
                                         linewidths=1,
                                         alpha=0.5)
-        plot3dw.finalize(show_legend=False)
+        samplePoints = plot3dw.ax.plot(known_rib, known_shell * 1000., 'bo', label='sampling points')
+        plot3dw.finalize(show_legend=True)
 
     if show_plots:
-        # convert all to np arrays
-        shell = np.array(shell)
-        opti_shell = np.array(opti_shell)
-        known_shell = np.array(known_shell)
-
         plot3d = PlotHelper(['Rippen', 'Blechdicke in mm', 'Mises in Pa'], fancy=False, pgf=pgf)
 
         #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
@@ -315,7 +331,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
         for i in range(0,len(ribs)):
             if i == 0:
-                plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='fem data')
+                plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='FEM Daten')
             else:
                 plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
 
@@ -330,20 +346,21 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         ribs_sample = np.linspace(range_rib[0], range_rib[1], 200)
         shell_sample = np.linspace(range_shell[0], range_shell[1], 200)
         krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
-        samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='sampling points')
+        samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='Stützstellen')
 
         # plot limit load line
-        plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. stress line')
+        plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. Mises Stress')
         # plot optimal point
-        plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='global optimum')
+        plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='glob. Optimum')
         plot3d.ax.locator_params(nbins=7, axis='x')
         plot3d.ax.locator_params(nbins=5, axis='y')
 
         plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
         plot3d.ax.set_ylim3d(np.min(np.array(shell))*1000.,np.max(np.array(shell))*1000.)
 
-        plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.29), tighten_layout=True)
-        plot3d.ax.view_init(18, 60)
+        plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.33), tighten_layout=True)
+        plot3d.ax.view_init(18, 105)
+        plot3d.ax.invert_xaxis()
         plot3d.save(Constants().PLOT_PATH + 'wingSurro_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
         plot3d.show()
 
@@ -370,4 +387,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_STRUCTURE, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)

@@ -103,7 +103,8 @@ class Validation:
         res.press = self.calc_press(known_x, known_fx, surro_func, surro_class, update_params=update_params)
         return res
 
-    def plot_derivation2d(self, xs, ys, vals, surro_func):
+    '''
+    def plot_derivation2d(self, xs, ys, vals, surro_func, sample_x=None, sample_y=None, opti_x=None, opti_y=None):
         deri_plot = PlotHelper(['param1', 'param2'], fancy=False, pgf=False)
         dev = np.zeros(vals.shape)
         for xi in range(0, len(xs)):
@@ -113,7 +114,12 @@ class Validation:
         pcol = deri_plot.ax.pcolor(xs, ys, dev, cmap='YlOrRd')
         pcol.set_clim(0, 5.)
         cbar = deri_plot.fig.colorbar(pcol)
-        deri_plot.finalize(width=6, height=5, legendLoc=4, show_legend=False)
+        show_legend = False
+        if sample_x.all() != None and sample_y.all() != None:
+            deri_plot.ax.plot(sample_x, sample_y, 'bo', label='sampling points')
+            show_legend = True
+        deri_plot.finalize(width=6, height=5, legendLoc='upper right', show_legend=show_legend)
+    '''
 
 
 class ValidationResults():
