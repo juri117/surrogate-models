@@ -294,7 +294,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
                            markersize=12, markeredgewidth=5, label='global optimum')
             deri_plot.ax.invert_yaxis()
-            deri_plot.finalize(width=6, height=5, legendLoc='lower right', show_legend=True)
+            deri_plot.finalize(width=6, height=3.8, legendLoc='lower right', show_legend=True)
 
             #vali.plot_derivation2d(ribs, shell, stress, surro.predict, sample_x=known_rib, sample_y = known_shell, opti_x=[opti_ribs[best_i]], opti_y=[opti_shell[best_i]*1000.])
 
@@ -345,7 +345,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         # plot surrogate model as wireframe
         ribs_sample = np.linspace(range_rib[0], range_rib[1], 200)
         shell_sample = np.linspace(range_shell[0], range_shell[1], 200)
-        krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{krig}$', color='b', scale=[1., 1000., 1.])
+        surro_short_name = SURRO_NAMES[surro_type][:3]
+        if len(SURRO_NAMES[surro_type]) > 3:
+            surro_short_name += '.'
+        krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{'+surro_short_name+'}$', color='b', scale=[1., 1000., 1.])
         samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='Stützstellen')
 
         # plot limit load line
@@ -387,4 +390,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=True, show_plots=True)
