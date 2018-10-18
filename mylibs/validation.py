@@ -17,6 +17,7 @@ import sys
 
 from myutils.plot_helper import PlotHelper
 
+
 class Validation:
 
     def __init__(self):
@@ -92,7 +93,7 @@ class Validation:
                 return 0.
             res2 = sur.predict(known_x[i])
             sum += (res - res2)**2.
-        return sum / len(known_x)
+        return math.sqrt(sum / len(known_x))
 
     def run_full_analysis(self, params, values, known_x, known_fx, vali_x, vali_fx, surro_func, surro_class, update_params=None):
         res = ValidationResults()

@@ -262,7 +262,17 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # validate
 
     if run_validation:
-        valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
+        center_r = (range_rib[1] + range_rib[0]) * 0.5
+        center_s = (range_shell[1] + range_shell[0]) * 0.5
+        d_r = (range_rib[1] - range_rib[0]) / 2.
+        d_s = (range_shell[1] - range_shell[0]) / 2.
+
+        valiParams = np.array([[center_r, center_s],
+                               [center_r - int(round(d_r / 4.)), center_s - (d_s / 4.)],
+                               [center_r - int(round(d_r / 3.)), center_s + (d_s / 3.)],
+                               [center_r + int(round(d_r / 2.7)), center_s + (d_s / 2.7)],
+                               [center_r + int(round(d_r / 2.2)), center_s - (d_s / 2.2)]])
+        #valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
         valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
         # valiValues = np.array(list(map(f_2D, valiParams)))
         # valiParams = valiParams.reshape((len(valiParams), 1))
@@ -290,14 +300,16 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
                 for yi in range(0, len(shell)):
                     devi = (abs(stress[yi][xi] - surro.predict([ribs[xi], shell[yi]])) / np.array(stress).mean()) * 100.
                     dev[yi][xi] = devi
-            pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd')
+            pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd', alpha=0.7)
             pcol.set_clim(0, 5.)
             cbar = deri_plot.fig.colorbar(pcol)
-            deri_plot.ax.plot(known_rib, known_shell * 1000, 'bo', label='sampling points')
+            deri_plot.ax.plot(known_rib, known_shell * 1000, 'bo', label='Stützstellen')
+            deri_plot.ax.plot(valiParams[:,0], valiParams[:,1] * 1000, 'o-', color='fuchsia', label='Vali.-Punkte')
             deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
-                           markersize=12, markeredgewidth=5, label='global optimum')
+                           markersize=12, markeredgewidth=5, label='glob. Optimum')
             deri_plot.ax.invert_yaxis()
-            deri_plot.finalize(width=6, height=3.8, legendLoc='lower right', show_legend=True)
+            deri_plot.finalize(width=6, height=4., legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.38), tighten_layout=True)
+            deri_plot.save(Constants().PLOT_PATH + 'wingSurro_deri_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
 
             #vali.plot_derivation2d(ribs, shell, stress, surro.predict, sample_x=known_rib, sample_y = known_shell, opti_x=[opti_ribs[best_i]], opti_y=[opti_shell[best_i]*1000.])
 
@@ -393,4 +405,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)
