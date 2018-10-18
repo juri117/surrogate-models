@@ -26,6 +26,7 @@ from myutils.plot_helper import PlotHelper
 from mylibs.kriging import Kriging
 from mylibs.rbf import RBF
 from mylibs.polynomial import Polynomial
+from mylibs.interface.rbf_scipy import RBFscipy
 from mylibs.latin_hyper_cube import LatinHyperCube
 from mylibs.halton import Halton
 from mylibs.interface.opti_latin_hyper import OptiLatinHyper
@@ -178,6 +179,12 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro_class = PyKriging
         surro = PyKriging(known_params, known_stress)
         surro.train()
+    elif surro_type == SURRO_RBF_SCIPY:
+        surro_class = RBFscipy
+        surro = RBFscipy(known_params, known_stress)
+        a = .8
+        surro.update_param(a, 'multiquadric')  # 'multi-quadratic')
+        update_params = [a, 'multiquadric']
     else:
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
@@ -402,5 +409,5 @@ class SurroResults:
 
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
-    # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_HALTON, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, show_plots=True)
+    # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
+    surrogate_analysis(SAMPLE_STRUCTURE, 20, SURRO_RBF_SCIPY, use_abaqus=True, pgf=False, show_plots=True)
