@@ -179,9 +179,9 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     elif surro_type == SURRO_RBF:
         surro_class = RBF
         surro = RBF(known_params_s, known_stress)
-        a = -.06 #.078
-        surro.update_param(a, 'lin')# 'multi-quadratic')
-        update_params = [a, 'lin']# ''multi-quadratic']
+        a = .78
+        surro.update_param(a, 'multi-quadratic')# 'multi-quadratic')
+        update_params = [a, 'multi-quadratic']# ''multi-quadratic']
         if show_plots:
             print('coeff1 = ' + str(surro.get_coeff()[0]))
             print('coeff2 = ' + str(surro.get_coeff()[1]))
@@ -411,6 +411,11 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.33), tighten_layout=True)
         plot3d.ax.view_init(18, 105)
         plot3d.ax.invert_xaxis()
+        #plot3d.ax.zaxis.offsetText.set_visible(True)
+        #offset_z = plot3d.ax.zaxis.get_major_formatter().get_offset()
+        offset_z = '1e8'
+        plot3d.ax.set_zlabel('Mises in Pa x '+offset_z, fontdict=plot3d.font, labelpad=plot3d.labelpad)
+        plot3d.ax.zaxis.offsetText.set_visible(False)
         plot3d.save(Constants().PLOT_PATH + 'wingSurro_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
         plot3d.show()
 
@@ -427,14 +432,9 @@ class SurroResults:
         self.runtime = 0.
         self.errorStr = '-'
         self.valiResults = ValidationResults()
-        #self.deviation = 0.
-        #self.rmse = 0.
-        #self.mae = 0.
-        #self.rae = 0.
-        #self.press = 0.
 
 
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF_SCIPY, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF, use_abaqus=True, pgf=False, show_plots=True, scale_it=True)

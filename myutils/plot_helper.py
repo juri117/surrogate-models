@@ -18,6 +18,7 @@ class PlotHelper:
         self.fig = None
         self.FONT_SIZE = font_size
         self.font = {'family': 'sans-serif', 'size': self.FONT_SIZE}
+        self.labelpad = 8
         if len(axis_labels) == 2:
             if ax is None:
                 self.fig, self.ax = plt.subplots()
@@ -34,9 +35,9 @@ class PlotHelper:
                 self.ax = self.fig.gca(projection='3d')
             else:
                 self.ax = ax
-            self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=8)
-            self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=8)
-            self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=8)
+            self.ax.set_xlabel(axis_labels[0], fontdict=self.font, labelpad=self.labelpad)
+            self.ax.set_ylabel(axis_labels[1], fontdict=self.font, labelpad=self.labelpad)
+            self.ax.set_zlabel(axis_labels[2], fontdict=self.font, labelpad=self.labelpad)
             rc('xtick', labelsize=self.FONT_SIZE)
             rc('ytick', labelsize=self.FONT_SIZE)
             #rc('ztick', labelsize=self.FONT_SIZE)

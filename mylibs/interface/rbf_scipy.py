@@ -26,7 +26,7 @@ import numpy as np
 
 class RBFscipy:
 
-    def __init__(self, known_in, known_val, scaled=False):
+    def __init__(self, known_in, known_val):
         self._known_in = np.array(known_in.copy())
         self._known_val = np.array(known_val.copy())
         self._k = self._known_in.shape[1]
@@ -36,20 +36,6 @@ class RBFscipy:
         self._f = None
         self._offsets = np.zeros((self._k))
         self._scalers = np.zeros((self._k))
-        if scaled:
-            self.calc_scaling()
-
-    def calc_scaling(self):
-        offs = []
-        scals = []
-        for i in range(0, self._k):
-            off = min(self._known_in[:,i])
-            scal = max(self._known_in[:,i]) - min(self._known_in[:,i])
-            offs.append(off)
-            scals.append(scal)
-            self._known_in[:,i] = (self._known_in[:,i] - off) / scal
-        self._offsets = offs
-        self._scalers = scals
 
     def train(self):
         pass
@@ -68,8 +54,6 @@ class RBFscipy:
             self._f = Rbf(self._known_in[:,0], self._known_in[:,1], self._known_in[:,2], self._known_val, function=self._rbf, epsilon=self._rbf_const)
 
     def predict(self, x_pred):
-        #for i in range(0, self._k):
-        #    x_pred[i] = (x_pred[i] - self._offsets[i]) / self._scalers[i]
         if self._k == 1:
             return self._f(x_pred[0])
         elif self._k == 2:
