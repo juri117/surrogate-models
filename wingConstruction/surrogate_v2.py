@@ -48,7 +48,7 @@ performs full surrogate analysis and comparison to real FEM-Model
 :param show_plots weather plots will be displayed at runtime
 :return SurroResults with all the results
 '''
-def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False, run_validation=True):
+def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False, run_validation=True, scale_it=True):
     timer = TimeTrack('surrogateAnalysis')
     timer.tic()
     results = SurroResults()
@@ -95,10 +95,23 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     for s in range(0, i_shell_n-i_shell_0+1):
         new_shell.append(shell[i_shell_0+s])
 
-    ribs = new_rib
-    shell = new_shell
+    ribs = np.array(new_rib)
+    shell = np.array(new_shell)
     stress = new_stress
     weights = newWeight
+
+    #calc offset and factors for scaling the inputs (some surrogates like scaled inputs -> RBF)
+    offset_rib = 0
+    offset_shell = 0
+    scale_rib = 1
+    scale_shell = 1
+    if scale_it:
+        offset_rib = range_rib[0]
+        offset_shell = range_shell[0]
+        scale_rib = range_rib[1] - range_rib[0]
+        scale_shell = range_shell[1] - range_shell[0]
+    ribs_s = (ribs - offset_rib) / scale_rib
+    shell_s = (shell - offset_shell) / scale_shell
 
     ##################################################
     # sample plan
@@ -126,15 +139,15 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     for i in range(0, len(sample_points)):
         sample_points[i][0] = int(round(sample_points[i][0]))
     known_params = np.array(sample_points)
-    known_rib = known_params[:, 0]
-    known_shell = known_params[:, 1]
+    #known_rib = known_params[:, 0]
+    #known_shell = known_params[:, 1]
 
-    print('sample plan using {:d} known values'.format(len(known_rib)))
+    print('sample plan using {:d} known values'.format(len(known_params[:, 0])))
 
     ##################################################
     # FEM calculation, collecting results
 
-    known_stress = multi.run_sample_points(known_rib, known_shell, use_abaqus=use_abaqus)
+    known_stress = multi.run_sample_points(known_params[:, 0], known_params[:, 1], use_abaqus=use_abaqus)
 
     ##################################################
     # build surrogate model and fit it
@@ -142,9 +155,14 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # will be needed later for Validation
     update_params = None
 
+    # scale the inputs if needed
+    known_params_s = np.zeros(known_params.shape)
+    known_params_s[:, 0] = (known_params[:, 0] - offset_rib) / scale_rib
+    known_params_s[:, 1] = (known_params[:, 1] - offset_shell) / scale_shell
+
     if surro_type == SURRO_KRIGING:
         surro_class = Kriging
-        surro = Kriging(known_params, known_stress)
+        surro = Kriging(known_params_s, known_stress)
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         print('starting Likelihood optimization')
@@ -160,7 +178,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             print('@p2 = ' + str(surro.get_p()[1]))
     elif surro_type == SURRO_RBF:
         surro_class = RBF
-        surro = RBF(known_params, known_stress)
+        surro = RBF(known_params_s, known_stress)
         a = -.06 #.078
         surro.update_param(a, 'lin')# 'multi-quadratic')
         update_params = [a, 'lin']# ''multi-quadratic']
@@ -169,7 +187,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             print('coeff2 = ' + str(surro.get_coeff()[1]))
     elif surro_type == SURRO_POLYNOM:
         surro_class = Polynomial
-        surro = Polynomial(known_params, known_stress)
+        surro = Polynomial(known_params_s, known_stress)
         o = 3
         surro.update_param(o)
         surro.generate_formula()
@@ -177,14 +195,14 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     elif surro_type == SURRO_PYKRIGING:
         from pyKriging.krige import kriging as PyKriging
         surro_class = PyKriging
-        surro = PyKriging(known_params, known_stress)
+        surro = PyKriging(known_params_s, known_stress)
         surro.train()
     elif surro_type == SURRO_RBF_SCIPY:
         surro_class = RBFscipy
-        surro = RBFscipy(known_params, known_stress)
+        surro = RBFscipy(known_params_s, known_stress)
         a = .8
-        surro.update_param(a, 'multiquadric')  # 'multi-quadratic')
-        update_params = [a, 'multiquadric']
+        surro.update_param(a, 'linear')  # 'multi-quadratic')
+        update_params = [a, 'linear']
     else:
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
@@ -194,8 +212,6 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # optimize
 
     def shell_predict(shell_thick, surro_inst, rib_num):
-        #krig_inst = args[0]
-        #rib_num = args[1]
         stress_val = surro_inst.predict([rib_num, shell_thick])
         return stress_val - max_shear_strength
 
@@ -203,27 +219,29 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     opti_shell = []
     opti_stress = []
     opti_weights = []
-    used_ribs = list(range(range_rib[0], range_rib[1]+1))#list(range(int(min(known_rib)), int(max(known_rib))))
-    for i in range(0, len(used_ribs)):
+    used_ribs = np.array(range(range_rib[0], range_rib[1]+1))
+    used_ribs_s = (used_ribs - offset_rib) / scale_rib
+    for i in range(0, len(used_ribs_s)):
         # SLSQP: proplem; find local min not glob. depending on init-vals
-        init_guess = (min(known_shell) + max(known_shell))/2
-        bnds = [(min(known_shell), max(known_shell))]
+        init_guess = (min(known_params_s[:, 0]) + max(known_params_s[:, 1]))/2
+        #bnds = [(min(known_shell), max(known_shell))]
         #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
         #opti_shell.append(res.x[0])
         try:
-            root = optimize.newton(shell_predict, init_guess, args=[surro, used_ribs[i]])
-        except:
-            root = 0
-        opti_ribs.append(used_ribs[i])
-        opti_shell.append(root)
-        opti_stress.append(surro.predict([used_ribs[i], root]))
-        weight = WingConstruction.calc_weight_stat(wing_length,
-                                                   chord_length * 0.4,
-                                                   chord_height,
-                                                   used_ribs[i],
-                                                   root,
-                                                   density)
-        opti_weights.append(weight)
+            root_s = optimize.newton(shell_predict, init_guess, args=[surro, used_ribs_s[i]])
+            root = (root_s * scale_shell) + offset_shell
+            opti_ribs.append(used_ribs[i])
+            opti_shell.append(root)
+            opti_stress.append(surro.predict([used_ribs_s[i], root_s]))
+            weight = WingConstruction.calc_weight_stat(wing_length,
+                                                       chord_length * 0.4,
+                                                       chord_height,
+                                                       used_ribs[i],
+                                                       root,
+                                                       density)
+            opti_weights.append(weight)
+        except Exception as e:
+            print(e)
         """
         plt.clf()
         sll = np.linspace(min(shell), max(shell), 500)
@@ -274,24 +292,31 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         d_r = (range_rib[1] - range_rib[0]) / 2.
         d_s = (range_shell[1] - range_shell[0]) / 2.
 
-        valiParams = np.array([[center_r, center_s],
+        vali_params = np.array([[center_r, center_s],
                                [center_r - int(round(d_r / 4.)), center_s - (d_s / 4.)],
                                [center_r - int(round(d_r / 3.)), center_s + (d_s / 3.)],
                                [center_r + int(round(d_r / 2.7)), center_s + (d_s / 2.7)],
                                [center_r + int(round(d_r / 2.2)), center_s - (d_s / 2.2)]])
+        vali_params_s = np.zeros(vali_params.shape)
+        vali_params_s[:, 0] = (vali_params[:, 0] - offset_rib) / scale_rib
+        vali_params_s[:, 1] = (vali_params[:, 1] - offset_shell) / scale_shell
+
         #valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
-        valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
+        valiValues = multi.run_sample_points(vali_params.T[0], vali_params.T[1], use_abaqus=use_abaqus)
         # valiValues = np.array(list(map(f_2D, valiParams)))
         # valiParams = valiParams.reshape((len(valiParams), 1))
 
         p_x, p_y = np.meshgrid(ribs, shell)
         params = np.array([p_x.flatten(), p_y.flatten()]).T
+        params_s = np.zeros(params.shape)
+        params_s[:, 0] = (params[:, 0] - offset_rib) / scale_rib
+        params_s[:, 1] = (params[:, 1] - offset_shell) / scale_shell
         values = stress.flatten()
 
         vali = Validation()
-        vali_r = vali.run_full_analysis(params, values,
-                                        known_params, known_stress,
-                                        valiParams, valiValues,
+        vali_r = vali.run_full_analysis(params_s, values,
+                                        known_params_s, known_stress,
+                                        vali_params_s, valiValues,
                                         surro.predict, surro_class, update_params=update_params)
         results.valiResults = vali_r
         print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
@@ -305,13 +330,13 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             dev = np.zeros(stress.shape)
             for xi in range(0, len(ribs)):
                 for yi in range(0, len(shell)):
-                    devi = (abs(stress[yi][xi] - surro.predict([ribs[xi], shell[yi]])) / np.array(stress).mean()) * 100.
+                    devi = (abs(stress[yi][xi] - surro.predict([ribs_s[xi], shell_s[yi]])) / np.array(stress).mean()) * 100.
                     dev[yi][xi] = devi
             pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd', alpha=0.7)
             pcol.set_clim(0, 5.)
             cbar = deri_plot.fig.colorbar(pcol)
-            deri_plot.ax.plot(known_rib, known_shell * 1000, 'bo', label='Stützstellen')
-            deri_plot.ax.plot(valiParams[:,0], valiParams[:,1] * 1000, 'o', color='fuchsia', label='Vali.-Punkte')
+            deri_plot.ax.plot(known_params[:, 0], known_params[:, 1] * 1000, 'bo', label='Stützstellen')
+            deri_plot.ax.plot(vali_params[:,0], vali_params[:,1] * 1000, 'o', color='fuchsia', label='Vali.-Punkte')
             deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
                            markersize=12, markeredgewidth=5, label='glob. Optimum')
             deri_plot.ax.invert_yaxis()
@@ -324,7 +349,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # convert all to np arrays
     shell = np.array(shell)
     opti_shell = np.array(opti_shell)
-    known_shell = np.array(known_shell)
+    #known_shell = np.array(known_shell)
 
     if show_plots and False:
         plot3dw = PlotHelper(['Rippen', 'Blechdicke in mm', 'Gewicht in kg'], fancy=False, pgf=pgf)
@@ -338,7 +363,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
                                         ccount=20,
                                         linewidths=1,
                                         alpha=0.5)
-        samplePoints = plot3dw.ax.plot(known_rib, known_shell * 1000., 'bo', label='sampling points')
+        samplePoints = plot3dw.ax.plot(known_params[:, 0], known_params[:, 1] * 1000., 'bo', label='sampling points')
         plot3dw.finalize(show_legend=True)
 
     if show_plots:
@@ -363,13 +388,15 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         #plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
         # plot surrogate model as wireframe
-        ribs_sample = np.linspace(range_rib[0], range_rib[1], 200)
-        shell_sample = np.linspace(range_shell[0], range_shell[1], 200)
+        ribs_sample = np.linspace(0., 1., 200) #np.linspace(min(ribs_s), max(ribs_s), 200)
+        shell_sample = np.linspace(0., 1., 200)
         surro_short_name = SURRO_NAMES[surro_type][:3]
         if len(SURRO_NAMES[surro_type]) > 3:
             surro_short_name += '.'
-        krigPlot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{'+surro_short_name+'}$', color='b', scale=[1., 1000., 1.])
-        samplePoints = plot3d.ax.plot(known_rib, known_shell*1000., known_stress, 'bo', label='Stützstellen')
+        surro_plot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{'+surro_short_name+'}$', color='b',
+                                             scale=[scale_rib, scale_shell*1000., 1.],
+                                             offset=[offset_rib, offset_shell*1000, 0.])
+        samplePoints = plot3d.ax.plot(known_params[:, 0], known_params[:, 1]*1000., known_stress, 'bo', label='Stützstellen')
 
         # plot limit load line
         plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. Mises Stress')
@@ -410,4 +437,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    surrogate_analysis(SAMPLE_STRUCTURE, 20, SURRO_RBF_SCIPY, use_abaqus=True, pgf=False, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF_SCIPY, use_abaqus=True, pgf=False, show_plots=True)

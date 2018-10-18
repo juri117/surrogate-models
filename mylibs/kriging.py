@@ -38,7 +38,7 @@ class Kriging:
         self._n = self._knownIn.shape[0]
         #else:
         #    self._k = 1
-        #    self._n = self._knownIn.shape[0]
+        #    self._n = self._known_in.shape[0]
 
         self._theta = 1. * np.ones((self._k, 1)).flatten()
         self._p = 2. * np.ones((self._k, 1)).flatten()
