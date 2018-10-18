@@ -294,7 +294,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('press: {:f}'.format(vali_r.press))
 
         if show_plots:
-            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=False, pgf=False)
+            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=False, pgf=pgf)
             dev = np.zeros(stress.shape)
             for xi in range(0, len(ribs)):
                 for yi in range(0, len(shell)):
@@ -304,14 +304,12 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
             pcol.set_clim(0, 5.)
             cbar = deri_plot.fig.colorbar(pcol)
             deri_plot.ax.plot(known_rib, known_shell * 1000, 'bo', label='Stützstellen')
-            deri_plot.ax.plot(valiParams[:,0], valiParams[:,1] * 1000, 'o-', color='fuchsia', label='Vali.-Punkte')
+            deri_plot.ax.plot(valiParams[:,0], valiParams[:,1] * 1000, 'o', color='fuchsia', label='Vali.-Punkte')
             deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
                            markersize=12, markeredgewidth=5, label='glob. Optimum')
             deri_plot.ax.invert_yaxis()
-            deri_plot.finalize(width=6, height=4., legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.38), tighten_layout=True)
+            deri_plot.finalize(width=6., height=4., legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.38), tighten_layout=True)
             deri_plot.save(Constants().PLOT_PATH + 'wingSurro_deri_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
-
-            #vali.plot_derivation2d(ribs, shell, stress, surro.predict, sample_x=known_rib, sample_y = known_shell, opti_x=[opti_ribs[best_i]], opti_y=[opti_shell[best_i]*1000.])
 
     ##################################################
     # plot it

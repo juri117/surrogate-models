@@ -35,7 +35,7 @@ class LatinHyperCube:
     '''
 
     def bool_mat_to_list(self, mat):
-        _, n = mat.shape
+        n = mat.shape[0]
         k = len(mat.shape)
         samples = []
         i_s = np.zeros(k)
@@ -85,8 +85,8 @@ class LatinHyperCube:
     '''
     def enhanced_latin_hypercube(self, k, n):
         cube_size = n
-        if math.sqrt(cube_size) % 1 > 0.:
-            cube_size = (int(math.sqrt(cube_size)) + 1) ** 2
+        if n**(1./k) % 1 > 0.:
+            cube_size = (int(n**(1./k)) + 1) ** k
         samples = self.enhanced_latin_hypercube_k_pow_x(k, cube_size)
         dist_mat = samples.copy()
         center = (cube_size - 1) / 2
@@ -134,9 +134,10 @@ class LatinHyperCube:
     '''
     def enhanced_latin_hypercube_k_pow_x(self, k, n):
         edge_devision = n**(1./k)
-        if edge_devision % 1 > 0.000000001:
+        if edge_devision % 1 > 0.000000001 and edge_devision % 1 < 0.999999999:
             print('ERROR, n has to be x^k')
             sys.exit(0)
+        edge_devision = int(round(edge_devision))
         edge_devision = int(edge_devision)
         dimensions = ()
         for ik in range(0, k):
@@ -165,9 +166,9 @@ class LatinHyperCube:
         return edge_count
 
     def generate_sample_plan(self, point_count, dimension, bounds, base=None):
-        if dimension != 2:
-            print('LatinHyperCube does not support dimensions other than 2 yet!')
-            sys.exit(9061548)
+        #if dimension != 2:
+        #    print('LatinHyperCube does not support dimensions other than 2 yet!')
+        #    sys.exit(9061548)
         sample_mat = self.enhanced_latin_hypercube(dimension, point_count)
         #sample_mat = self.enhanced_latin_hypercube_rn(dimension, point_count)
         sample_indices = self.bool_mat_to_list(sample_mat)
@@ -185,7 +186,7 @@ if __name__ == '__main__':
     sam = LatinHyperCube()
 
     import matplotlib.pyplot as plt
-    samples = sam.generate_sample_plan(12, 2, [(5, 20), (0.01, 0.05)])
+    samples = sam.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05), (1, 5)])
     #samples = sam.enhanced_latin_hypercube_2_pow_x(16)
     for i in range(0, len(samples)):
         plt.plot([samples[i][0]], [samples[i][1]], 'bo')
