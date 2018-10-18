@@ -37,7 +37,7 @@ class RBFscipy:
         if self._k == 1:
             self._f = Rbf(self._known_in[:,0], self._knownVal, function=self._rbf, epsilon=self._rbfConst)
         elif self._k == 2:
-            self._f = Rbf(self._known_in[:,0], self._known_in[:,1], self._knownVal)#, function=self._rbf, epsilon=self._rbfConst)
+            self._f = Rbf(self._known_in[:,0], self._known_in[:,1], self._knownVal, function=self._rbf, epsilon=self._rbfConst)
         elif self._k == 3:
             self._f = Rbf(self._known_in[:,0], self._known_in[:,1], self._known_in[:,2], self._knownVal, function=self._rbf, epsilon=self._rbfConst)
 
