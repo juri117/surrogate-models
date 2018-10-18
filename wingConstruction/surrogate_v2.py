@@ -161,8 +161,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro_class = RBF
         surro = RBF(known_params, known_stress)
         a = -.06 #.078
-        surro.update_param(a, 'multi-quadratic')
-        update_params = [a, 'multi-quadratic']
+        surro.update_param(a, 'lin')# 'multi-quadratic')
+        update_params = [a, 'lin']# ''multi-quadratic']
         if show_plots:
             print('coeff1 = ' + str(surro.get_coeff()[0]))
             print('coeff2 = ' + str(surro.get_coeff()[1]))
@@ -203,7 +203,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         bnds = [(min(known_shell), max(known_shell))]
         #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
         #opti_shell.append(res.x[0])
-        root = optimize.newton(shell_predict, init_guess, args=[surro, used_ribs[i]])
+        try:
+            root = optimize.newton(shell_predict, init_guess, args=[surro, used_ribs[i]])
+        except:
+            root = 0
         opti_ribs.append(used_ribs[i])
         opti_shell.append(root)
         opti_stress.append(surro.predict([used_ribs[i], root]))
@@ -259,7 +262,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     # validate
 
     if run_validation:
-        valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028], [results.optimumRib, results.optimumShell]])
+        valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
         valiValues = multi.run_sample_points(valiParams.T[0], valiParams.T[1], use_abaqus=use_abaqus)
         # valiValues = np.array(list(map(f_2D, valiParams)))
         # valiParams = valiParams.reshape((len(valiParams), 1))
@@ -390,4 +393,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=True, show_plots=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF, use_abaqus=True, pgf=False, show_plots=True)

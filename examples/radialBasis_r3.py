@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     rbf = RBF(knownParams, pz)
     a = 0.17
-    rbf.update_param(a, 'gaus')
+    rbf.update_param(a, 'lin')
 
     plt1.plot_function_3d(rbf.predict, fx, fy, r'$\widehat{f}_{RBF}$', color='b')
     t1.toc()

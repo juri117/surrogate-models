@@ -26,7 +26,7 @@ class RBF:
         self._n = self._knownIn.shape[0]
         self._coeff = None
         self._rbfConst = 1.
-        self._rbf = gausRBF
+        self._rbf = gaus_rbf
 
     def train(self):
         pass
@@ -35,19 +35,19 @@ class RBF:
     def update_param(self, rbf_const, rbf_name):
         self._rbfConst = rbf_const
         if rbf_name == 'lin':
-            self._rbf = linRBF
+            self._rbf = lin_rbf
         elif rbf_name == 'cubic':
-            self._rbf = cubicRBF
+            self._rbf = cubic_rbf
         elif rbf_name == 'gaus':
-            self._rbf = gausRBF
+            self._rbf = gaus_rbf
         elif rbf_name == 'multi-quadratic':
-            self._rbf = multiQuadRBF
+            self._rbf = multi_quad_rbf
         elif rbf_name == 'inverse-multi-quadratic' or rbf_name == 'imq':
-            self._rbf = invMultiQuadRBF
+            self._rbf = inv_multi_quad_rbf
         else:
             print('WARNING: unknown rbf_name (' + rbf_name + '), I will just use gaus for you.')
             print('next time chose one of ["gaus", "multi-quadratic", "inverse-multi-quadratic"]')
-            self._rbf = gausRBF
+            self._rbf = gaus_rbf
         self._calc_coefficiants()
 
     def _calc_coefficiants(self):
@@ -78,17 +78,17 @@ class RBF:
             res += self._coeff[i] * self._rbf(self._rbfConst, radius)
         return res
 
-def linRBF(a, r):
+def lin_rbf(a, r):
     return r
 
-def cubicRBF(a, r):
+def cubic_rbf(a, r):
     return r**3
 
-def gausRBF(a, r):
+def gaus_rbf(a, r):
     return math.e**(-((a*r)**2))
 
-def multiQuadRBF(a, r):
+def multi_quad_rbf(a, r):
     return math.sqrt(1 + (a * r) ** 2)
 
-def invMultiQuadRBF(a, r):
+def inv_multi_quad_rbf(a, r):
     return (1+r**2)**(a/2)
