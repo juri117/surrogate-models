@@ -26,7 +26,7 @@ class LikeliOptimizer:
 
     def find(self, func, dimensions):
         opt={'disp': True, 'maxiter': self.maxIter}
-        guess = self.generate_grid(func, dimensions, 15, 5)
+        guess = self.generate_grid(func, dimensions, 8, 5)
 
         bnds = []
         for i in range(0, dimensions):

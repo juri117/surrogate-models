@@ -38,7 +38,7 @@ class NewtonOpt:
     def __init__(self):
         pass
 
-    def opti_it(self, rib_range=[16,17,18,19,20,21,22,23]):
+    def opti_it(self, rib_range=range(10, 23)):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
@@ -110,16 +110,14 @@ class NewtonOpt:
         if file_path == None:
             file_path = LOG_FILE_PATH
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
-        plot = PlotHelper(['Rippenanzahl', 'Blechdicke'], fancy=False, pgf=False)
+        plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=False, pgf=False)
         plot.ax.plot(data[:, 2], data[:, 5])
         plot.finalize(show_legend=False)
         plot.show()
 
 
-
-
 if __name__ == '__main__':
     nw = NewtonOpt()
-    nw.opti_it()
-    nw.plot_it()
-    #nw.plot_it('../data_out/newtonOpti2018-10-19_15_03_42.csv')
+    #nw.opti_it()
+    #nw.plot_it()
+    nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47.csv')

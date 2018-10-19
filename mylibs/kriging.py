@@ -115,8 +115,8 @@ class Kriging:
     def _calc_likelihood_opti(self, params, *args):
         self.update_param(params[0:self._k], params[self._k:])
         NegLnLike = self.calc_likelihood()
-        print(params)
-        #print(str(NegLnLike))
+        if self.records != None:
+            self.records.append(params)
         return NegLnLike
 
     def _calc_likelihood_opti_exp(self, params, *args):
@@ -128,8 +128,8 @@ class Kriging:
             thetas.append(10.**e)
         self.update_param(thetas, params[self._k:])
         NegLnLike = self.calc_likelihood()
-        print(params)
-        #print(str(NegLnLike))
+        if self.records != None:
+            self.records.append(params)
         return NegLnLike
 
     def optimize_theta_only(self):
@@ -143,7 +143,7 @@ class Kriging:
         res = minimize(self._calc_likelihood_opti_theta_only, x0, args=self._p, method='SLSQP', tol=1e-6, options=opt, bounds=bnds)
         self._theta = res.x
 
-    def optimize(self, init_guess=None, opti_algo='grid'):
+    def optimize(self, init_guess=None, opti_algo='grid', record_data=False):
         if init_guess is None:
             init_guess = []
             for t in self._theta:
@@ -153,7 +153,7 @@ class Kriging:
             #init_guess = [self._theta[0], self._theta[1], self._p[0], self._p[1]]
         bnds = []
         for i in range(0, self._k):
-            bnds.append((1e-5, 1e+10))
+            bnds.append((-5., +9.))
         for i in range(0, self._k):
             bnds.append((1., 2.))
 
@@ -164,14 +164,17 @@ class Kriging:
         #res = optimize.differential_evolution(self._calc_likelihood_opti, bnds, maxiter=int(1e8))
         timer = TimeTrack('optiTimer')
 
+        self.records = None
+        if record_data:
+            self.records = []
+
         if 'basin' in opti_algo:
             # basinhopping:
             bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
             step = BasinHoppingStep()
-            #L-BFGS-B
             minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e3}, tol=1e-4)
             timer.tic()
-            res = basinhopping(self._calc_likelihood_opti,
+            res = basinhopping(self._calc_likelihood_opti_exp,
                                init_guess,
                                minimizer_kwargs=minimizer_kwargs,
                                accept_test=bounds,
@@ -192,13 +195,14 @@ class Kriging:
         thetas = []
         for e in exps:
             thetas.append(10. ** e)
+        print('Kriging Likelihood optimization evaluations: {:d}'.format(len(self.records)))
         #print('MY min: {:f}'.format(res.fun))
         #print('@: ' + str(thetas)+str(res.x[self._k:]))
         #print('diff: {:f}'.format(res.fun - resB.fun))
         self.update_param(thetas, res.x[self._k:])
 
     def predict(self, x_pred):
-        print(str(x_pred))
+        #print(str(x_pred))
         one = np.ones((self._n, 1)).flatten()
         psi = np.ones((self._n, 1)).flatten()
         for i in range(0, self._n):
@@ -210,7 +214,7 @@ class Kriging:
         return fx
 
 
-    def plot_theta_likelihood_R2(self, ax=None, pgf=False):
+    def plot_theta_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
         if self._k != 2:
             print('ERROR: plot_theta_likelihood_R2 only works with exactly 2 inputs')
             return
@@ -230,8 +234,8 @@ class Kriging:
         plt_theta.ax.set_xscale('log')
         plt_theta.ax.set_yscale('log')
         pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
-        #cbar = plt_theta.fig.colorbar(pcol)
-        #cbar.set_label('neg. log. likelihood')
+        if len(opti_path) > 0:
+            plt_theta.ax.plot(10**opti_path[:, 0], 10**opti_path[:, 1], '+', color='white', markersize=6, linewidth=1, label='Optimierer Pfad')
         plt_theta.ax.plot(self._theta[0], self._theta[1], 'wo', label='minimum')
         legend = plt_theta.finalize(width=6, height=5, legendLoc=4)
         legend.get_frame().set_facecolor('#000000')
@@ -240,7 +244,7 @@ class Kriging:
         #plt_theta.show()
         return pcol
 
-    def plot_p_likelihood_R2(self, ax=None, pgf=False):
+    def plot_p_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
         if self._k != 2:
             print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
             return
@@ -257,35 +261,29 @@ class Kriging:
         # plot it
         plt_P = PlotHelper([r'$p_{1}$', r'$p_{2}$'], fancy=False, ax=ax, pgf=pgf)
         pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
-        #cbar = plt_P.fig.colorbar(pcol)
-        #cbar.set_label('neg. log. likelihood')
+        if len(opti_path) > 0:
+            plt_P.ax.plot(opti_path[:, 0], opti_path[:, 1], '+', color='white', markersize=6, label='Optimierer Pfad')
         plt_P.ax.plot(self._p[0], self._p[1], 'wo', label='minimum')
         legend = plt_P.finalize(width=6, height=5, legendLoc=4)
         legend.get_frame().set_facecolor('#000000')
         for text in legend.get_texts():
             text.set_color('#FFFFFF')
-        # plt_theta.show()
         return pcol
 
-    def plot_likelihoods(self, fancy=False, pgf=False):
-        '''
-        if pgf:
-            import matplotlib
-            matplotlib.use('pgf')
-            pgf_with_custom_preamble = {
-                'pgf.rcfonts': False
-            }
-            matplotlib.rcParams.update(pgf_with_custom_preamble)
-        import matplotlib.pyplot as plt
-        figLike = plt.figure(figsize=(6, 4))
-        '''
+    def plot_likelihoods(self, fancy=False, pgf=False, opti_path=[]):
+        path_p = []
+        path_theta = []
+        if len(opti_path) > 0:
+            path_theta = np.array([opti_path[:, 0], opti_path[:, 1]]).T
+            path_p = np.array([opti_path[:, 2], opti_path[:, 3]]).T
+
         pltLike = PlotHelper([], fancy=fancy, pgf=pgf)
         import matplotlib.pyplot as plt
         ax1 = pltLike.fig.add_subplot(211)
         ax2 = pltLike.fig.add_subplot(212)
 
-        pcol1 = self.plot_p_likelihood_R2(ax=ax1, pgf=pgf)
-        pcol2 = self.plot_theta_likelihood_R2(ax=ax2, pgf=pgf)
+        pcol1 = self.plot_p_likelihood_R2(ax=ax1, pgf=pgf, opti_path=path_p)
+        pcol2 = self.plot_theta_likelihood_R2(ax=ax2, pgf=pgf, opti_path=path_theta)
         like_min = min(min(pcol1._A), min(pcol2._A))
         like_max = max(max(pcol1._A), max(pcol2._A))
         pcol1.set_clim(like_min, like_max)
@@ -311,7 +309,7 @@ class Kriging:
 
 class BasinHoppingBounds(object):
 
-    def __init__(self, xmax=[1e+10, 1e+10, 2., 2.], xmin=[1e-5, 1e-5, 1., 1.]):
+    def __init__(self, xmax=[9., 9., 2., 2.], xmin=[-5., -5., 1., 1.]):
         self.xmax = np.array(xmax)
         self.xmin = np.array(xmin)
 

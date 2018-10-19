@@ -166,9 +166,16 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         print('starting Likelihood optimization')
-        surro.optimize()
+        surro.optimize(opti_algo='grid', record_data=True) # 'grid', 'basin'
+        #if show_plots:
+        #    opti_plot = PlotHelper(['p', 'p'])
+        #    rec = np.array(surro.records)
+        #    opti_plot.ax.plot(rec[:,2], rec[:,3], 'o', color='blue')
+        #    opti_plot.finalize(show_legend=False)
+        #    opti_plot.show()
+
         if show_plots:
-            pltLike = surro.plot_likelihoods(pgf=pgf)
+            pltLike = surro.plot_likelihoods(pgf=pgf, opti_path=np.array(surro.records))
             pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.pdf')
             minLike = surro.calc_likelihood()
             print('minLike = ' + str(minLike))
@@ -437,4 +444,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_RBF, use_abaqus=True, pgf=False, show_plots=True, scale_it=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=True, pgf=False, run_validation=False, show_plots=True, scale_it=True)
