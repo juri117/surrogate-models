@@ -98,9 +98,9 @@ class DoERun:
 
 if __name__ == '__main__':
     input_names = ['ribs', 'shell']
-    from wingConstruction.wingUtils.defines import *
+    from wingconstruction.wingutils.defines import *
     ranges = [range_rib, range_shell]
-    from wingConstruction.multi_run import MultiRun
+    from wingconstruction.multi_run import MultiRun
     runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, force_recalc=False, project_name_prefix='DoE')
     d = DoE(input_names, ranges, runner.calc_stress, level_count=3)
     d.corellation()

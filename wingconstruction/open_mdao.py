@@ -19,41 +19,36 @@ import math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyoptsparse')
-from openmdao.api import Problem, pyOptSparseDriver, ExecComp, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
+from openmdao.api import Problem, ExecComp, pyOptSparseDriver, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
-from wingConstruction.wingUtils.constants import Constants
-from wingConstruction.multi_run import MultiRun
-from wingConstruction.wingUtils.defines import *
+from wingconstruction.wingutils.constants import Constants
+from wingconstruction.multi_run import MultiRun
+from wingconstruction.wingutils.defines import *
 from myutils.plot_helper import PlotHelper
-from wingConstruction.surrogate_v2 import surrogate_analysis
 from myutils.time_track import TimeTrack
 
-PROJECT_NAME_PREFIX = 'iterSLSQP'
+PROJECT_NAME_PREFIX = 'iterSLSQP_FEM'
 
 LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
-SHELL_FACTOR = 1#1e-2
-RIB_FACTOR = 1#1e-6
+SHELL_FACTOR = 1e-2
+RIB_FACTOR = 1e-6
 WEIGHT_FAC = 1e-3
 STRESS_FAC = 1e-8
 
-#WEIGHT_PANALTY_FAC = 10.
+WEIGHT_PANALTY_FAC = 0
 
 USE_ABA = True
 
-PGF = False
+PGF = True
 
-WEIGHT_PANALTY_FAC = 0
-
-class WingStructureSurro(ExplicitComponent):
+class WingStructure(ExplicitComponent):
 
     def setup(self):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
-        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=USE_ABA, pgf=False, show_plots=False, run_validation=False)
-
 
         #####################
         ### openMDAO init ###
@@ -73,10 +68,10 @@ class WingStructureSurro(ExplicitComponent):
         rib0 = int(math.floor(inputs['ribs'][0] / RIB_FACTOR))
         rib1 = int(math.ceil(inputs['ribs'][0] / RIB_FACTOR))
 
-        ribs = round(inputs['ribs'][0] / RIB_FACTOR)
+        ribs = int(round(inputs['ribs'][0] / RIB_FACTOR))
 
         shell = inputs['shell'][0] / SHELL_FACTOR
-        #self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
+        self.runner.project_name_prefix = PROJECT_NAME_PREFIX + '_{:05d}'.format(self.executionCounter)
 
         #pro = self.runner.new_project_r_t(ribs, shell)
         #pro = self.runner.run_project(pro)
@@ -84,20 +79,26 @@ class WingStructureSurro(ExplicitComponent):
         #weight = pro.calc_wight() * WEIGHT_FAC
 
         pro0 = self.runner.new_project_r_t(rib0, shell)
+        pro0 = self.runner.run_project(pro0, used_cpus=1)
+        res0 = pro0.resultsCalcu
         pro1 = self.runner.new_project_r_t(rib1, shell)
+        pro1 = self.runner.run_project(pro1, used_cpus=1)
+        res1 = pro1.resultsCalcu
+
+        if USE_ABA:
+            res0 = pro0.resultsAba
+            res1 = pro1.resultsAba
 
         if rib1 - rib0 < 0.000000001:
+            stress = res0.stressMisesMax * STRESS_FAC
             weight = pro0.calc_wight() * WEIGHT_FAC
         else:
+            stress = (res0.stressMisesMax + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
+                      * ((res1.stressMisesMax - res0.stressMisesMax) / (rib1 - rib0)))\
+                        * STRESS_FAC
             weight = (pro0.calc_wight() + ((inputs['ribs'][0] / RIB_FACTOR) - rib0)
-                  * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0))) \
-                  * WEIGHT_FAC
-
-        stress = self.surro.predict([ribs, shell]) * STRESS_FAC
-
-        #weight_penalty = 0.
-        #if stress > max_shear_strength * STRESS_FAC:
-        #    weight_penalty = (stress - (max_shear_strength * STRESS_FAC)) * 100
+                      * ((pro1.calc_wight() - pro0.calc_wight()) / (rib1 - rib0)))\
+                        * WEIGHT_FAC
 
         outputs['stress'] = stress
         outputs['weight'] = weight
@@ -111,14 +112,12 @@ class WingStructureSurro(ExplicitComponent):
         write_mdao_log(str(self.executionCounter) + ','
                      + str(self.timer.get_time()) + ','
                      + str(inputs['ribs'] / RIB_FACTOR) + ','
-                     + str(int(round(ribs))) + ','
+                     + str(ribs) + ','
                      + str(inputs['shell'] / SHELL_FACTOR) + ','
                      + str(outputs['stress'] / STRESS_FAC) + ','
                      + str(outputs['weight'] / WEIGHT_FAC))
         self.executionCounter += 1
-        print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], int(round(ribs)), inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
-
-
+        print('#{:d}: {:0.10f}({:d}), {:0.10f} -> {:0.10f}, {:0.10f}'.format(self.executionCounter, inputs['ribs'][0], ribs, inputs['shell'][0], outputs['stress'][0], outputs['weight'][0]))
 
 
 def write_mdao_log(out_str):
@@ -139,11 +138,11 @@ def run_open_mdao():
     #indeps.add_output('ribs', int((range_rib[0] + range_rib[1]) / 2) * RIB_FACTOR)
     #indeps.add_output('shell', ((range_shell[0] + range_shell[1]) / 2)*SHELL_FACTOR)
 
-    indeps.add_output('ribs', 16 * RIB_FACTOR)
-    indeps.add_output('shell', 0.003 * SHELL_FACTOR)
+    indeps.add_output('ribs', 20 * RIB_FACTOR)
+    indeps.add_output('shell', 0.0025 * SHELL_FACTOR)
 
     model.add_subsystem('des_vars', indeps)
-    model.add_subsystem('wing', WingStructureSurro())
+    model.add_subsystem('wing', WingStructure())
     model.connect('des_vars.ribs', ['wing.ribs', 'con_cmp1.ribs'])
     model.connect('des_vars.shell', 'wing.shell')
 
@@ -157,7 +156,7 @@ def run_open_mdao():
     # constraint
     model.add_constraint('wing.stress', upper=max_shear_strength * STRESS_FAC)
     model.add_subsystem('con_cmp1', ExecComp('con1 = (ribs * '+str(RIB_FACTOR)+') - int(ribs[0] * '+str(RIB_FACTOR)+')'))
-    model.add_constraint('con_cmp1.con1', upper=0.0001)
+    model.add_constraint('con_cmp1.con1', upper=0.1)
 
     #model.add_constraint('des_vars.ribs', lower=8*RIB_FACTOR, upper=30*RIB_FACTOR)
     #model.add_constraint('des_vars.shell', lower=0.006*SHELL_FACTOR, upper=0.03*SHELL_FACTOR)
@@ -175,7 +174,7 @@ def run_open_mdao():
         prob.driver.options['optimizer'] = OPTIMIZER  # ['Nelder-Mead', 'Powell', 'CG', 'BFGS', 'Newton-CG', 'L-BFGS-B', 'TNC', 'COBYLA', 'SLSQP']
         prob.driver.options['tol'] = TOL
         prob.driver.options['disp'] = True
-        prob.driver.options['maxiter'] = 100
+        prob.driver.options['maxiter'] = 10
         #prob.driver.opt_settings['etol'] = 100
 
     prob.setup()
@@ -215,11 +214,11 @@ def plot_iter(file_path=None):
     iter_param.ax.plot(iter, ribs, color='teal')
     iter_param.ax.yaxis.label.set_color('teal')
     ax_shell = iter_param.ax.twinx()
-    ax_shell.set_ylabel('Shell')
+    ax_shell.set_ylabel('Blechdicke in mm')
     ax_shell.yaxis.label.set_color('orange')
-    ax_shell.plot(iter, shell, color='orange')
+    ax_shell.plot(iter, shell * 1000, color='orange')
     iter_param.ax.set_ylim(range_rib)
-    ax_shell.set_ylim(range_shell)
+    ax_shell.set_ylim(tuple(1000*x for x in range_shell))
     iter_param.finalize(show_legend=False)
     # results plot
     iter_res = PlotHelper(['Iteration', 'Mises in Pa'], fancy=True, ax=ax2, pgf=PGF)
@@ -237,25 +236,30 @@ def plot_iter(file_path=None):
 
 if __name__ == '__main__':
     #01
-    SHELL_FACTOR = 1 #e-2  # 1e-2
+    SHELL_FACTOR = 1e-2  # 1e-2
     RIB_FACTOR = 1e-6  # 1e-6
     WEIGHT_FAC = 1e-3
     STRESS_FAC = 1e-8
-    TOL = 1e-9
+    TOL = 1e-2
     USE_PYOPTSPARSE = False
     OPTIMIZER = 'SLSQP'
     WEIGHT_PANALTY_FAC = 0
 
     #02
+    '''
     if True:
-        SHELL_FACTOR = 1
+        SHELL_FACTOR = 1  # 1e-2
         RIB_FACTOR = 1e-6  # 1e-6
         WEIGHT_FAC = 1e-3
         STRESS_FAC = 1e-8
-        TOL = 1e-2
+        TOL = 1e-3
         USE_PYOPTSPARSE = True
         OPTIMIZER = 'ALPSO'
         WEIGHT_PANALTY_FAC = 10
+    '''
 
-    run_open_mdao()
-    plot_iter()
+    #run_open_mdao()
+    #plot_iter()
+
+    #plot_iter(Constants().WORKING_DIR + '/' + 'iterSLSQP_FEM2018-10-10_16_10_59_V001.csv')
+    plot_iter(Constants().WORKING_DIR + '/' + 'iterALPSO_FEM2018-10-10_13_47_44_V001.csv')

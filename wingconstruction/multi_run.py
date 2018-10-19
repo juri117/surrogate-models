@@ -12,11 +12,11 @@ __status__ = "Development"
 
 import numpy as np
 from datetime import datetime
-from wingConstruction.wingUtils.constants import Constants
-from wingConstruction.project import Project
+from wingconstruction.wingutils.constants import Constants
+from wingconstruction.project import Project
 from myutils.time_track import TimeTrack
 from myutils.plot_helper import PlotHelper
-from wingConstruction.wingUtils.defines import *
+from wingconstruction.wingutils.defines import *
 
 from mpl_toolkits.mplot3d import axes3d
 

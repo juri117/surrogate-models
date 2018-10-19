@@ -14,7 +14,7 @@ import os.path
 import sys
 import configparser
 
-from wingConstruction.wingUtils.singleton import Singleton
+from wingconstruction.wingutils.singleton import Singleton
 
 # this is needed for python 2, 3 compatibility
 def with_metaclass(mcls):

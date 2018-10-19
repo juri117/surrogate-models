@@ -19,8 +19,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred'
 import numpy as np
 from scipy import optimize
 
-from wingConstruction.wingUtils.constants import Constants
-from wingConstruction.multi_run import MultiRun
+from wingconstruction.wingutils.constants import Constants
+from wingconstruction.multi_run import MultiRun
 from myutils.time_track import TimeTrack
 from myutils.plot_helper import PlotHelper
 from mylibs.kriging import Kriging
@@ -33,8 +33,8 @@ from mylibs.interface.opti_latin_hyper import OptiLatinHyper
 from mylibs.structured_sample import StructuredSample
 from mylibs.validation import Validation
 from mylibs.validation import ValidationResults
-from wingConstruction.fem.wing_construction_v4 import WingConstruction
-from wingConstruction.wingUtils.defines import *
+from wingconstruction.fem.wing_construction_v4 import WingConstruction
+from wingconstruction.wingutils.defines import *
 
 
 

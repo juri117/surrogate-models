@@ -13,10 +13,10 @@ __status__ = "Development"
 from datetime import datetime
 import numpy as np
 
-from wingConstruction.wingUtils.defines import *
-from wingConstruction.surrogate_v2 import surrogate_analysis
-from wingConstruction.surrogate_v2 import SurroResults
-from wingConstruction.wingUtils.constants import Constants
+from wingconstruction.wingutils.defines import *
+from wingconstruction.surrogate_v2 import surrogate_analysis
+from wingconstruction.surrogate_v2 import SurroResults
+from wingconstruction.wingutils.constants import Constants
 from myutils.plot_helper import PlotHelper
 
 def run_analysis():

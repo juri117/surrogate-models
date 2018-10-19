@@ -23,9 +23,9 @@ from openmdao.api import pyOptSparseDriver, Problem, ExecComp, ScipyOptimizeDriv
 from openmdao.core.problem import Problem
 from openmdao.core.indepvarcomp import IndepVarComp
 
-from wingConstruction.wingUtils.constants import Constants
-from wingConstruction.multi_run import MultiRun
-from wingConstruction.wingUtils.defines import *
+from wingconstruction.wingutils.constants import Constants
+from wingconstruction.multi_run import MultiRun
+from wingconstruction.wingutils.defines import *
 from myutils.plot_helper import PlotHelper
 
 PROJECT_NAME_PREFIX = 'v2iterSLSQP'
