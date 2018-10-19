@@ -99,14 +99,27 @@ class NewtonOpt:
         weight = pro.calc_wight()
         return stress, weight
 
-    def write_newton_log(out_str):
+    def write_newton_log(self, out_str):
         out_str = out_str.replace('[', '')
         out_str = out_str.replace(']', '')
         output_f = open(LOG_FILE_PATH, 'a')  # 'a' so we append the file
         output_f.write(out_str + '\n')
         output_f.close()
 
+    def plot_it(self, file_path=None):
+        if file_path == None:
+            file_path = LOG_FILE_PATH
+        data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
+        plot = PlotHelper(['Rippenanzahl', 'Blechdicke'], fancy=False, pgf=False)
+        plot.ax.plot(data[:, 2], data[:, 5])
+        plot.finalize(show_legend=False)
+        plot.show()
+
+
+
 
 if __name__ == '__main__':
     nw = NewtonOpt()
     nw.opti_it()
+    nw.plot_it()
+    #nw.plot_it('../data_out/newtonOpti2018-10-19_15_03_42.csv')
