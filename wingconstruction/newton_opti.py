@@ -43,6 +43,7 @@ class NewtonOpt:
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
         self.executionCounter = 0
+        self.write_newton_log('iter,time,ribs,shell,stress,weight')
         self.timer = TimeTrack()
 
         opti_ribs = []
@@ -60,6 +61,12 @@ class NewtonOpt:
             opti_stress.append(stress)
             opti_weights.append(weight)
             print('execution count: {:d}'.format(self.executionCounter))
+            self.write_newton_log(str(self.executionCounter) + ','
+                           + str(self.timer.get_time()) + ','
+                           + str(r) + ','
+                           + str(root) + ','
+                           + str(stress) + ','
+                           + str(weight))
         print('DONE')
         print(opti_ribs)
         print(opti_shell)
@@ -91,6 +98,13 @@ class NewtonOpt:
         stress = res.stressMisesMax
         weight = pro.calc_wight()
         return stress, weight
+
+    def write_newton_log(out_str):
+        out_str = out_str.replace('[', '')
+        out_str = out_str.replace(']', '')
+        output_f = open(LOG_FILE_PATH, 'a')  # 'a' so we append the file
+        output_f.write(out_str + '\n')
+        output_f.close()
 
 
 if __name__ == '__main__':
