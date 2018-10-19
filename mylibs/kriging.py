@@ -220,7 +220,7 @@ class Kriging:
             return
 
         opt_theta = self._theta
-        thetas = np.logspace(-5, 9, num=100)
+        thetas = np.logspace(-5, 9, num=50)
         likely_thet = np.zeros((len(thetas), len(thetas)))
         for i1 in range(0, len(thetas)):
             for i2 in range(0, len(thetas)):
@@ -235,12 +235,12 @@ class Kriging:
         plt_theta.ax.set_yscale('log')
         pcol = plt_theta.ax.pcolor(thetas, thetas, likely_thet, cmap='YlOrRd_r')
         if len(opti_path) > 0:
-            plt_theta.ax.plot(10**opti_path[:, 0], 10**opti_path[:, 1], '+', color='white', markersize=6, linewidth=1, label='Optimierer Pfad')
-        plt_theta.ax.plot(self._theta[0], self._theta[1], 'wo', label='minimum')
-        legend = plt_theta.finalize(width=6, height=5, legendLoc=4)
-        legend.get_frame().set_facecolor('#000000')
-        for text in legend.get_texts():
-            text.set_color('#FFFFFF')
+            plt_theta.ax.plot(10**opti_path[:, 0], 10**opti_path[:, 1], '+', color='white', markeredgewidth=0.5, markersize=5, label='Optimierer-Pfad')
+        plt_theta.ax.plot(self._theta[0], self._theta[1], 'x', color='black', label='Minimum', markersize=8, markeredgewidth=1.5)
+        legend = plt_theta.finalize(width=6, height=5, legendLoc=4, show_legend=False)
+        #legend.get_frame().set_facecolor('#000000')
+        #for text in legend.get_texts():
+        #    text.set_color('#FFFFFF')
         #plt_theta.show()
         return pcol
 
@@ -249,7 +249,7 @@ class Kriging:
             print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
             return
         opt_p = self._p
-        ps = np.linspace(1., 2., num=100)
+        ps = np.linspace(1., 2., num=50)
         likely_p = np.zeros((len(ps), len(ps)))
         for i1 in range(0, len(ps)):
             for i2 in range(0, len(ps)):
@@ -259,15 +259,15 @@ class Kriging:
         self._p = opt_p
         self.update_param(self._theta, self._p)
         # plot it
-        plt_P = PlotHelper([r'$p_{1}$', r'$p_{2}$'], fancy=False, ax=ax, pgf=pgf)
+        plt_P = PlotHelper(['$p_{1}$', '$p_{2}$'], fancy=False, ax=ax, pgf=pgf)
         pcol = plt_P.ax.pcolor(ps, ps, likely_p, cmap='YlOrRd_r')
         if len(opti_path) > 0:
-            plt_P.ax.plot(opti_path[:, 0], opti_path[:, 1], '+', color='white', markersize=6, label='Optimierer Pfad')
-        plt_P.ax.plot(self._p[0], self._p[1], 'wo', label='minimum')
-        legend = plt_P.finalize(width=6, height=5, legendLoc=4)
-        legend.get_frame().set_facecolor('#000000')
-        for text in legend.get_texts():
-            text.set_color('#FFFFFF')
+            plt_P.ax.plot(opti_path[:, 0], opti_path[:, 1], '+', color='white', markeredgewidth=0.5, markersize=5, label='Optimierer-Pfad')
+        plt_P.ax.plot(self._p[0], self._p[1], 'x', color='k', label='Minimum', markersize=8, markeredgewidth=1.5)
+        legend = plt_P.finalize(width=6, height=5, legendLoc=4, show_legend=False)
+        #legend.get_frame().set_facecolor('#000000')
+        #for text in legend.get_texts():
+        #    text.set_color('#FFFFFF')
         return pcol
 
     def plot_likelihoods(self, fancy=False, pgf=False, opti_path=[]):
@@ -279,8 +279,10 @@ class Kriging:
 
         pltLike = PlotHelper([], fancy=fancy, pgf=pgf)
         import matplotlib.pyplot as plt
-        ax1 = pltLike.fig.add_subplot(211)
-        ax2 = pltLike.fig.add_subplot(212)
+        ax1 = pltLike.fig.add_subplot(121)
+        ax2 = pltLike.fig.add_subplot(122)
+        #ax1 = pltLike.fig.add_subplot(211)
+        #ax2 = pltLike.fig.add_subplot(212)
 
         pcol1 = self.plot_p_likelihood_R2(ax=ax1, pgf=pgf, opti_path=path_p)
         pcol2 = self.plot_theta_likelihood_R2(ax=ax2, pgf=pgf, opti_path=path_theta)
@@ -289,15 +291,24 @@ class Kriging:
         pcol1.set_clim(like_min, like_max)
         pcol2.set_clim(like_min, like_max)
 
-        pltLike.fig.set_size_inches(6, 9)
+        pltLike.fig.set_size_inches(6, 3)
+        #pltLike.fig.set_size_inches(6, 9)
         plt.tight_layout()
 
         # cbar = figLike.colorbar(pcol1)
-        pltLike.fig.subplots_adjust(right=0.75)
-        cbar_ax = pltLike.fig.add_axes([0.80, 0.15, 0.05, 0.78])
+        pltLike.fig.subplots_adjust(right=0.85)
+        pltLike.fig.subplots_adjust(bottom=0.3)
+        cbar_ax = pltLike.fig.add_axes([0.88, 0.15, 0.02, 0.78])
         pltLike.fig.colorbar(pcol2, cax=cbar_ax)
-        # cbar_ax.set_label('neg. log. likelihood')
-        pltLike.fig.text(0.93, 0.6, 'neg. log. likelihood', size=20, rotation=90.)
+        pltLike.fig.text(0.97, 0.7, 'neg. log. Likelihood', size=pltLike.FONT_SIZE, rotation=90.)
+
+
+        handles, labels = ax1.get_legend_handles_labels()
+        legend = pltLike.fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.01), ncol=2, fancybox=True)
+        legend.get_frame().set_facecolor('#A3A3A3')
+        for text in legend.get_texts():
+           text.set_color('#000000')
+
         return pltLike
 
     def get_p(self):

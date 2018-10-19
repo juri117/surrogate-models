@@ -49,8 +49,10 @@ class PlotHelper:
             raise ValueError('length of axis_labels should be 2(D) or 3(D)')
         if self.ax != None:
             self.ax.tick_params(labelsize=self.FONT_SIZE, length=6, width=2)
-        if fancy:
+        if fancy or pgf:
             rc('text', usetex=True)
+            import matplotlib as mpl
+            mpl.rcParams['text.latex.unicode'] = True
         rc('font', **self.font)
 
     def finalize(self, width=6, height=4, legendLoc=1, legendNcol=1, bbox_to_anchor=None, tighten_layout=True, show_legend=True):

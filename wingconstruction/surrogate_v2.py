@@ -36,7 +36,7 @@ from mylibs.validation import ValidationResults
 from wingconstruction.fem.wing_construction_v4 import WingConstruction
 from wingconstruction.wingutils.defines import *
 
-
+FANCY_PLOT = True
 
 '''
 performs full surrogate analysis and comparison to real FEM-Model
@@ -166,7 +166,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         print('starting Likelihood optimization')
-        surro.optimize(opti_algo='grid', record_data=True) # 'grid', 'basin'
+        opti_algo = 'basin' # 'grid', 'basin'
+        surro.optimize(opti_algo=opti_algo, record_data=True)
         #if show_plots:
         #    opti_plot = PlotHelper(['p', 'p'])
         #    rec = np.array(surro.records)
@@ -175,8 +176,9 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         #    opti_plot.show()
 
         if show_plots:
-            pltLike = surro.plot_likelihoods(pgf=pgf, opti_path=np.array(surro.records))
-            pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.pdf')
+            pltLike = surro.plot_likelihoods(fancy=FANCY_PLOT, pgf=pgf, opti_path=np.array(surro.records))
+            pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely' + opti_algo + '.pdf')
+            #pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.png')
             minLike = surro.calc_likelihood()
             print('minLike = ' + str(minLike))
             print('@theta1 = ' + str(surro.get_theta()[0]))
@@ -333,7 +335,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('press: {:f}'.format(vali_r.press))
 
         if show_plots:
-            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=False, pgf=pgf)
+            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=FANCY_PLOT, pgf=pgf)
             dev = np.zeros(stress.shape)
             for xi in range(0, len(ribs)):
                 for yi in range(0, len(shell)):
@@ -374,7 +376,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3dw.finalize(show_legend=True)
 
     if show_plots:
-        plot3d = PlotHelper(['Rippen', 'Blechdicke in mm', 'Mises in Pa'], fancy=False, pgf=pgf)
+        plot3d = PlotHelper([r'Rippen', r'Blechdicke in mm', r'Mises in Pa'], fancy=FANCY_PLOT, pgf=pgf)
 
         #realDat = plot3d.ax.plot_wireframe(rib_mat, shell_mat, stress, color='g', alpha=0.5, label='fem data')
 
@@ -383,7 +385,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
         for i in range(0,len(ribs)):
             if i == 0:
-                plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label='FEM Daten')
+                plot3d.ax.plot(np.ones((len(shell)))*ribs[i], shell*1000., stress[:,i], 'g-', lw=3., label=u'FEM Daten')
             else:
                 plot3d.ax.plot(np.ones((len(shell))) * ribs[i], shell*1000., stress[:, i], 'g-', lw=3.)
 
@@ -403,10 +405,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         surro_plot = plot3d.plot_function_3d(surro.predict, ribs_sample, shell_sample, r'$\widehat{f}_{'+surro_short_name+'}$', color='b',
                                              scale=[scale_rib, scale_shell*1000., 1.],
                                              offset=[offset_rib, offset_shell*1000, 0.])
-        samplePoints = plot3d.ax.plot(known_params[:, 0], known_params[:, 1]*1000., known_stress, 'bo', label='Stützstellen')
+        samplePoints = plot3d.ax.plot(known_params[:, 0], known_params[:, 1]*1000., known_stress, 'bo', label=u'Stützstellen')
 
         # plot limit load line
-        plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label='max. Mises Stress')
+        plot3d.ax.plot(opti_ribs, opti_shell*1000., opti_stress, 'k--', lw=3., label=u'max. Mises Stress')
         # plot optimal point
         plot3d.ax.plot([opti_ribs[best_i]], [opti_shell[best_i]*1000.], [opti_stress[best_i]], 'rx', markersize=12, markeredgewidth=5, label='glob. Optimum')
         plot3d.ax.locator_params(nbins=7, axis='x')
@@ -415,7 +417,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.ax.set_zlim3d(np.min(np.array(stress)), max_shear_strength*1.2)
         plot3d.ax.set_ylim3d(np.min(np.array(shell))*1000.,np.max(np.array(shell))*1000.)
 
-        plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.33), tighten_layout=True)
+        plot3d.finalize(height=4, width=6, legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.33))
         plot3d.ax.view_init(18, 105)
         plot3d.ax.invert_xaxis()
         #plot3d.ax.zaxis.offsetText.set_visible(True)
