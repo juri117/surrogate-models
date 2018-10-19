@@ -33,12 +33,7 @@ from myutils.time_track import TimeTrack
 PROJECT_NAME_PREFIX = 'newtonOpti'
 
 LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
-SHELL_FACTOR = 1e-2
-RIB_FACTOR = 1e-6
-WEIGHT_FAC = 1e-3
-STRESS_FAC = 1e-8
 
-WEIGHT_PANALTY_FAC = 0
 
 USE_ABA = True
 
@@ -85,6 +80,10 @@ class NewtonOpt:
         print('weight:' + str(opti_weights[best_i]))
 
     def shell_predict(self, shell_thick, rib_num):
+        if shell_thick > range_shell[1]:
+            shell_thick = range_shell[1]
+        if shell_thick < range_shell[0]:
+            shell_thick = range_shell[0]
         stress, _ = self.calc_stress_weight(shell_thick, rib_num)
         self.executionCounter += 1
         return stress - max_shear_strength
@@ -96,8 +95,8 @@ class NewtonOpt:
         res = pro.resultsCalcu
         if USE_ABA:
             res = pro.resultsAba
-        stress = res.stressMisesMax * STRESS_FAC
-        weight = pro.calc_wight() * WEIGHT_FAC
+        stress = res.stressMisesMax
+        weight = pro.calc_wight()
         return stress, weight
 
 
