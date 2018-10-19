@@ -17,13 +17,6 @@ import numpy as np
 import math
 from scipy import optimize
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/OpenMDAO')
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyDOE2')
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyoptsparse')
-from openmdao.api import Problem, ExecComp, pyOptSparseDriver, ScipyOptimizeDriver, IndepVarComp, ExplicitComponent, SqliteRecorder, ScipyKrylov, Group, DirectSolver, NewtonSolver, NonlinearBlockGS
-from openmdao.core.problem import Problem
-from openmdao.core.indepvarcomp import IndepVarComp
-
 from wingconstruction.wingutils.constants import Constants
 from wingconstruction.multi_run import MultiRun
 from wingconstruction.wingutils.defines import *
@@ -63,7 +56,7 @@ class NewtonOpt:
             root = optimize.newton(self.shell_predict, init_guess, args=[r], tol=1.48e-08, maxiter=50)
             opti_ribs.append(r)
             opti_shell.append(root)
-            stress, weight = self.calc_stress_weight(r, root)
+            stress, weight = self.calc_stress_weight(root, r)
             opti_stress.append(stress)
             opti_weights.append(weight)
             print('execution count: {:d}'.format(self.executionCounter))
