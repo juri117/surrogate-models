@@ -101,10 +101,10 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     weights = newWeight
 
     #calc offset and factors for scaling the inputs (some surrogates like scaled inputs -> RBF)
-    offset_rib = 0
-    offset_shell = 0
-    scale_rib = 1
-    scale_shell = 1
+    offset_rib = 0.
+    offset_shell = 0.
+    scale_rib = 1.
+    scale_shell = 1.
     if scale_it:
         offset_rib = range_rib[0]
         offset_shell = range_shell[0]
@@ -131,8 +131,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
     sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
     #d_opt = np.linalg.det(np.linalg.inv(np.array(sample_points).T @ np.array(sample_points)))
-    d_opt = np.linalg.det(np.array(sample_points).T @ np.array(sample_points))
-    print('D-Optimality: {:f}'.format(d_opt))
+    #d_opt = np.linalg.det(np.array(sample_points).T @ np.array(sample_points))
+    #print('D-Optimality: {:f}'.format(d_opt))
 
 
     # make the ribs be int
@@ -166,19 +166,11 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         # prev stored results:
         surro.update_param([0.002261264770141511, 277826.21903867245], [1.8766170168043503, 1.9959876593551822])
         print('starting Likelihood optimization')
-        opti_algo = 'basin' # 'grid', 'basin'
+        opti_algo = 'grid' # 'grid', 'basin'
         surro.optimize(opti_algo=opti_algo, record_data=True)
-        #if show_plots:
-        #    opti_plot = PlotHelper(['p', 'p'])
-        #    rec = np.array(surro.records)
-        #    opti_plot.ax.plot(rec[:,2], rec[:,3], 'o', color='blue')
-        #    opti_plot.finalize(show_legend=False)
-        #    opti_plot.show()
-
         if show_plots:
             pltLike = surro.plot_likelihoods(fancy=FANCY_PLOT, pgf=pgf, opti_path=np.array(surro.records))
             pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely' + opti_algo + '.pdf')
-            #pltLike.save(Constants().PLOT_PATH + 'wingSurroLikely.png')
             minLike = surro.calc_likelihood()
             print('minLike = ' + str(minLike))
             print('@theta1 = ' + str(surro.get_theta()[0]))
@@ -232,7 +224,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     used_ribs_s = (used_ribs - offset_rib) / scale_rib
     for i in range(0, len(used_ribs_s)):
         # SLSQP: proplem; find local min not glob. depending on init-vals
-        init_guess = (min(known_params_s[:, 0]) + max(known_params_s[:, 1]))/2
+        init_guess = (min(known_params_s[:, 1]) + max(known_params_s[:, 1]))/2
         #bnds = [(min(known_shell), max(known_shell))]
         #res = minimize(shell_predict, init_guess, args=[krig, ribs[i]], method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
         #opti_shell.append(res.x[0])
@@ -293,6 +285,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     results.optimumRib = opti_ribs[best_i]
     results.optimumShell = opti_shell[best_i]
     results.optimumWeights = opti_weights[best_i]
+    results.opti_curve = [opti_ribs, opti_shell, opti_stress, opti_weights]
 
     ##################################################
     # validate
@@ -399,8 +392,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         #plot3d.ax.plot_wireframe(rib_mat, shell_mat, limit, color='r', alpha=0.2, label='limit load')
 
         # plot surrogate model as wireframe
-        ribs_sample = np.linspace(0., 1., 200) #np.linspace(min(ribs_s), max(ribs_s), 200)
-        shell_sample = np.linspace(0., 1., 200)
+        ribs_sample = np.linspace(min(ribs_s), max(ribs_s), 200)
+        shell_sample = np.linspace(min(shell_s), max(shell_s), 200)
         surro_short_name = SURRO_NAMES[surro_type][:3]
         if len(SURRO_NAMES[surro_type]) > 3:
             surro_short_name += '.'
@@ -443,9 +436,38 @@ class SurroResults:
         self.runtime = 0.
         self.errorStr = '-'
         self.valiResults = ValidationResults()
+        self.opti_curve = None
 
 
 if __name__ == '__main__':
+    PGF = False
+    SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, run_validation=False, show_plots=True, scale_it=True)
+    if True:
+        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=False, show_plots=SHOW_PLOT, scale_it=False)
+    else:
+        SHOW_PLOT = False
+        SAMPLING = SAMPLE_LATIN
+        POINTS = 14
+        polR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
+        rbfR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_RBF, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
+        kriR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_KRIGING, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
+
+        #plot opti-lines
+        opti_lines = PlotHelper(['Rippen', 'opt. Gewicht'], pgf=PGF, fancy=True)
+        opti_lines.ax.plot(polR.opti_curve[0], polR.opti_curve[3], '-', label='Polynom', color='dodgerblue')
+        opti_lines.ax.plot([polR.optimumRib], [polR.optimumWeights], 'o', color='dodgerblue')
+
+        opti_lines.ax.plot(rbfR.opti_curve[0], rbfR.opti_curve[3], '-', label='RBF', color='orange')
+        opti_lines.ax.plot([rbfR.optimumRib], [rbfR.optimumWeights], 'o', color='orange')
+
+        opti_lines.ax.plot(kriR.opti_curve[0], kriR.opti_curve[3], '-', label='Kriging', color='mediumseagreen')
+        opti_lines.ax.plot([kriR.optimumRib], [kriR.optimumWeights], 'o', color='mediumseagreen')
+
+        import matplotlib.ticker as ticker
+        opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
+        opti_lines.finalize(height=2)
+        #opti_lines.show(Constants().PLOT_PATH + 'optiLines.pdf')
+        opti_lines.show()
+        print('done')

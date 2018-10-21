@@ -21,7 +21,7 @@ from myutils.plot_helper import PlotHelper
 
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    sample_methods = [SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_OPTI_LATIN_HYPER]  # SAMPLE_LATIN, SAMPLE_HALTON
+    sample_methods = [SAMPLE_OPTI_LATIN_HYPER] #[SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_OPTI_LATIN_HYPER]  # SAMPLE_LATIN, SAMPLE_HALTON
     sample_point_count = list(range(2, 40+1))
     use_abaqus = True
     use_pgf = False
@@ -75,11 +75,16 @@ def run_analysis():
 
 
 def plot_sample_point_analysis(file_name):
+    # DEVIATION: 5
+    # RMSE: 6
+    # MAE: 7
+    # PRESS: 8
+    data_i = 5
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
     sampling_point_count = data[:, 2]
-    deviation = data[:, 5]
+    deviation = data[:, data_i]
     sampling_data = {}
     for samp in SAMPLE_NAMES:
         sampling_data[samp] = []
@@ -87,13 +92,13 @@ def plot_sample_point_analysis(file_name):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
     samp_plot = PlotHelper(['Anzahl der Stützstellen', '$\O$ -Abweichung in $\%$'], fancy=True, pgf=False)
     # plot one % line
-    samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], 'k--', label='1%-Linie')
+    #samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], 'k--', label='1%-Linie')
     for key in sampling_data:
         x = [x for x,y in sampling_data[key]]
         y = [y for x,y in sampling_data[key]]
         y = np.array(y) * 100. # make it percent
         samp_plot.ax.plot(x, y, 'x-', label=key)
-    samp_plot.ax.set_ylim([0, 3.])
+    #samp_plot.ax.set_ylim([0, 3.])
     samp_plot.ax.set_xlim([0, max(sampling_point_count)])
     samp_plot.finalize()
     samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
@@ -101,6 +106,6 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    file = run_analysis()
-    plot_sample_point_analysis(file)
-    #plot_sample_point_analysis('surro_2018-09-15_12_59_09.csv')
+    #file = run_analysis()
+    #plot_sample_point_analysis(file)
+    plot_sample_point_analysis('analysis_2018-10-21_18_14_17_PolyV001.csv')

@@ -195,7 +195,8 @@ class Kriging:
         thetas = []
         for e in exps:
             thetas.append(10. ** e)
-        print('Kriging Likelihood optimization evaluations: {:d}'.format(len(self.records)))
+        if record_data:
+            print('Kriging Likelihood optimization evaluations: {:d}'.format(len(self.records)))
         #print('MY min: {:f}'.format(res.fun))
         #print('@: ' + str(thetas)+str(res.x[self._k:]))
         #print('diff: {:f}'.format(res.fun - resB.fun))
