@@ -441,11 +441,11 @@ class SurroResults:
 
 if __name__ == '__main__':
     PGF = False
-    SHOW_PLOT = True
+    SHOW_PLOT = False
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
-        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=False, show_plots=SHOW_PLOT, scale_it=False)
+        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN

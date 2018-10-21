@@ -21,7 +21,7 @@ from myutils.plot_helper import PlotHelper
 
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    sample_methods = [SAMPLE_OPTI_LATIN_HYPER] #[SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_OPTI_LATIN_HYPER]  # SAMPLE_LATIN, SAMPLE_HALTON
+    sample_methods = [SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON]  # SAMPLE_LATIN, SAMPLE_HALTON
     sample_point_count = list(range(2, 40+1))
     use_abaqus = True
     use_pgf = False
@@ -79,7 +79,7 @@ def plot_sample_point_analysis(file_name):
     # RMSE: 6
     # MAE: 7
     # PRESS: 8
-    data_i = 5
+    data_i = 6
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
