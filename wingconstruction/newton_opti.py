@@ -106,28 +106,34 @@ class NewtonOpt:
         output_f.write(out_str + '\n')
         output_f.close()
 
-    def plot_it(self, file_path=None):
+    def plot_it(self, file_path=None, plot_handle=None, marker='-'):
         if file_path == None:
             file_path = LOG_FILE_PATH
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
-        plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=False)
-        plot.ax.plot(data[:, 2], data[:, 5], '-', color='dodgerblue')
+        plot = plot_handle
+        if plot_handle == None:
+            plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=True)
+        plot.ax.plot(data[:, 2], data[:, 5], marker, color='dodgerblue')
         import matplotlib.ticker as ticker
         plot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-
         plot.ax.yaxis.label.set_color('dodgerblue')
         ax_shell = plot.ax.twinx()
         ax_shell.set_ylabel('Blechdicke in mm')
         ax_shell.yaxis.label.set_color('orange')
-        ax_shell.plot(data[:, 2], data[:, 3] * 1000, color='orange')
+        ax_shell.plot(data[:, 2], data[:, 3] * 1000, marker, color='orange')
         ax_shell.set_ylim(tuple(1000 * x for x in range_shell))
+        plot.ax.set_xlim((1, 30))
         plot.finalize(height=2, show_legend=False)
-        plot.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
-        plot.show()
+        #plot.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
+        #plot.show()
+        return plot
 
 
 if __name__ == '__main__':
     nw = NewtonOpt()
     #nw.opti_it()
     #nw.plot_it()
-    nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47.csv')
+    pl = nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47_all.csv', marker=':')
+    pl = nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47.csv', plot_handle=pl)
+    pl.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
+    pl.show()

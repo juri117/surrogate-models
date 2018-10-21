@@ -20,10 +20,10 @@ from wingconstruction.wingutils.constants import Constants
 from myutils.plot_helper import PlotHelper
 
 def run_analysis():
-    surro_methods = [SURRO_KRIGING, SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM
-    sample_methods = [SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE]  # SAMPLE_LATIN, SAMPLE_HALTON
-    sample_point_count = [14]#list(range(2, 26))
-    use_abaqus = False
+    surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
+    sample_methods = [SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_OPTI_LATIN_HYPER]  # SAMPLE_LATIN, SAMPLE_HALTON
+    sample_point_count = list(range(2, 26))
+    use_abaqus = True
     use_pgf = False
     job_count = len(surro_methods) * len(sample_methods) * sum(sample_point_count)
     jobs_done = 0

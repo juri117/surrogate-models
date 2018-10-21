@@ -278,9 +278,11 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
 
     if show_plots:
         optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=pgf)
-        optWeightPlot.ax.plot(opti_ribs, opti_weights, 'b-')
+        optWeightPlot.ax.plot(opti_ribs, opti_weights, '-', color='dodgerblue')
         optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
-        optWeightPlot.finalize()
+        import matplotlib.ticker as ticker
+        optWeightPlot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
+        optWeightPlot.finalize(height=2)
 
     print('optimum:')
     print('ribs: {:f}'.format(opti_ribs[best_i]))
@@ -372,7 +374,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
                                         ccount=20,
                                         linewidths=1,
                                         alpha=0.5)
-        samplePoints = plot3dw.ax.plot(known_params[:, 0], known_params[:, 1] * 1000., 'bo', label='sampling points')
+        samplePoints = plot3dw.ax.plot(known_params[:, 0], known_params[:, 1] * 1000., 'bo', label='Stützstellen')
         plot3dw.finalize(show_legend=True)
 
     if show_plots:
@@ -446,4 +448,4 @@ class SurroResults:
 if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=True, pgf=False, run_validation=False, show_plots=True, scale_it=True)
+    surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=False, run_validation=False, show_plots=True, scale_it=True)
