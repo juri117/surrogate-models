@@ -94,8 +94,8 @@ class LatinHyperCube:
         i_s = np.zeros(k)
         while True:
             i_s = [int(x) for x in i_s]
-            if dist_mat[tuple(np.flip(i_s))] == 1:
-                dist_mat[tuple(np.flip(i_s))] = self.calc_dist(np.flip(i_s), center)
+            if dist_mat[tuple(np.flip(i_s, 0))] == 1:
+                dist_mat[tuple(np.flip(i_s, 0))] = self.calc_dist(np.flip(i_s, 0), center)
             if not any(x < cube_size - 1 for x in i_s):
                 break
             self.increase_edge(i_s, cube_size)
@@ -146,7 +146,7 @@ class LatinHyperCube:
         cube_is = np.zeros(k)
         edge_is = np.zeros(k)
         while True:
-            i_s = np.flip(edge_is) + (cube_is * edge_devision)
+            i_s = np.flip(edge_is, 0) + (cube_is * edge_devision)
             i_s = [int(x) for x in i_s]
             samples[tuple(i_s)] = 1
             if not any(x < edge_devision-1 for x in edge_is):

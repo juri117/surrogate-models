@@ -22,14 +22,14 @@ from myutils.plot_helper import PlotHelper
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     sample_methods = [SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_OPTI_LATIN_HYPER]  # SAMPLE_LATIN, SAMPLE_HALTON
-    sample_point_count = list(range(2, 26))
+    sample_point_count = list(range(2, 40+1))
     use_abaqus = True
     use_pgf = False
     job_count = len(surro_methods) * len(sample_methods) * sum(sample_point_count)
     jobs_done = 0
     print('required runs: {:d}'.format(job_count))
 
-    output_file_name = 'surro_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
+    output_file_name = 'analysis_' + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
     output_f = open(Constants().WORKING_DIR + '/'
                     + output_file_name,
                     'w')
@@ -101,6 +101,6 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    #file = run_analysis()
-    #plot_sample_point_analysis(file)
-    plot_sample_point_analysis('surro_2018-09-15_12_59_09.csv')
+    file = run_analysis()
+    plot_sample_point_analysis(file)
+    #plot_sample_point_analysis('surro_2018-09-15_12_59_09.csv')
