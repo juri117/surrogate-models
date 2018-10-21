@@ -42,7 +42,7 @@ class LatinHyperCube:
         while True:
             i_s = [int(x) for x in i_s]
             if mat[tuple(i_s)] == 1:
-                samples.append(np.flip(np.array(i_s)))
+                samples.append(np.flip(np.array(i_s), 0))
             if not any(x < n - 1 for x in i_s):
                 break
             self.increase_edge(i_s, n)
