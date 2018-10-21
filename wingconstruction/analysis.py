@@ -85,7 +85,7 @@ def plot_sample_point_analysis(file_name):
         sampling_data[samp] = []
     for i in range(0, len(sampling_plan_id)):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
-    samp_plot = PlotHelper(['Anzahl der Sampling Punkte', 'Abweichung in %'], fancy=False, pgf=False)
+    samp_plot = PlotHelper(['Anzahl der Stützstellen', '$\O$ -Abweichung in $\%$'], fancy=True, pgf=False)
     # plot one % line
     samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], 'k--', label='1%-Linie')
     for key in sampling_data:
@@ -93,7 +93,7 @@ def plot_sample_point_analysis(file_name):
         y = [y for x,y in sampling_data[key]]
         y = np.array(y) * 100. # make it percent
         samp_plot.ax.plot(x, y, 'x-', label=key)
-    samp_plot.ax.set_ylim([0, 8.])
+    samp_plot.ax.set_ylim([0, 3.])
     samp_plot.ax.set_xlim([0, max(sampling_point_count)])
     samp_plot.finalize()
     samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
@@ -101,6 +101,6 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    file = run_analysis()
+    #file = run_analysis()
     #plot_sample_point_analysis(file)
     plot_sample_point_analysis('surro_2018-09-15_12_59_09.csv')

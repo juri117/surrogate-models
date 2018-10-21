@@ -39,7 +39,7 @@ range_shell = (0.002, 0.0033)
 #######################################################
 # CONSTANTS FOR INDEXING AND CHOICE
 
-SAMPLE_NAMES = ['LatinHyperCube', 'Halton', 'StructuredSampling', 'OptimizedLatinHyperCubePyKriging']
+SAMPLE_NAMES = ['LatinHyperCube', 'Halton', 'strukturiert', 'opt. LatinHyperCube']
 SAMPLE_LATIN = 0
 SAMPLE_HALTON = 1
 SAMPLE_STRUCTURE = 2

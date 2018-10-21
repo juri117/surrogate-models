@@ -84,7 +84,7 @@ if __name__ == '__main__':
 
     # plot validation
     valiPlot = PlotHelper(['Stützstellen', 'Wert'], fancy=True, pgf=True)
-    valiPlot.ax.plot(sampling_points, [r.deviation for r in vali_res], '--', color='silver', label=r'\O -Abweichung in $\%$')
+    valiPlot.ax.plot(sampling_points, [r.deviation for r in vali_res], '--', color='silver', label=r'$\O$ -Abweichung in $\%$')
     valiPlot.ax.plot(sampling_points, [r.rmse for r in vali_res], '-', color='orange', label=r'$RMSE$')
     valiPlot.ax.plot(sampling_points, [r.mae for r in vali_res], '-', color='green', label=r'$MAE$')
     valiPlot.ax.plot(sampling_points, np.array([r.press for r in vali_res]) * 0.1, 'k-', label=r'$PRESS \cdot 0.1$')

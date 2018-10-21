@@ -234,6 +234,7 @@ def plot_iter(file_path=None):
     iter_plot.save('../data_out/plot/openMDAOconv_ALPSO.pdf')
     iter_plot.show()
 
+
 if __name__ == '__main__':
     #01
     SHELL_FACTOR = 1e-2  # 1e-2
@@ -262,4 +263,4 @@ if __name__ == '__main__':
     #plot_iter()
 
     #plot_iter(Constants().WORKING_DIR + '/' + 'iterSLSQP_FEM2018-10-10_16_10_59_V001.csv')
-    plot_iter(Constants().WORKING_DIR + '/' + 'iterALPSO_FEM2018-10-10_13_47_44_V001.csv')
+    plot_iter(Constants().WORKING_DIR + '/' + 'iterALPSO_FEM2018-10-21_11_00_27_V002.csv')

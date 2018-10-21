@@ -110,10 +110,17 @@ class NewtonOpt:
         if file_path == None:
             file_path = LOG_FILE_PATH
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
-        plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=True)
-        plot.ax.plot(data[:, 2], data[:, 5])
+        plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=False)
+        plot.ax.plot(data[:, 2], data[:, 5], '-', color='dodgerblue')
         import matplotlib.ticker as ticker
         plot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
+
+        plot.ax.yaxis.label.set_color('dodgerblue')
+        ax_shell = plot.ax.twinx()
+        ax_shell.set_ylabel('Blechdicke in mm')
+        ax_shell.yaxis.label.set_color('orange')
+        ax_shell.plot(data[:, 2], data[:, 3] * 1000, color='orange')
+        ax_shell.set_ylim(tuple(1000 * x for x in range_shell))
         plot.finalize(height=2, show_legend=False)
         plot.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
         plot.show()
