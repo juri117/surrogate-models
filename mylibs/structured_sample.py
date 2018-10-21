@@ -53,7 +53,7 @@ class StructuredSample:
             for d in range(0, dimension):
                 #fix for if one row is missing
                 point = norm_point[i][d]
-                if max(np.array(norm_point)[:,d]) < 1:
+                if max(np.array(norm_point)[:,d]) < 1 and point_count > 2:
                     point = point * (1. / max(np.array(norm_point)[:,d]))
 
                 scaled_point.append(bounds[d][0] + (point * (bounds[d][1] - bounds[d][0])))
@@ -67,7 +67,7 @@ if __name__ == '__main__':
     str_plt = PlotHelper(['', ''], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
 
-    samples = sam.generate_sample_plan(26, 2, [(0, 30), (0, 30)])
+    samples = sam.generate_sample_plan(16, 2, [(0, 30), (0, 30)])
     for i in range(0, len(samples)):
         str_plt.ax.plot([samples[i][0]], [samples[i][1]], 'bo')
 
