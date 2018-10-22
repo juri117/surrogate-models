@@ -43,14 +43,6 @@ def run_analysis():
                 try:
                     sur = Surrogate(use_abaqus=True, pgf=use_pgf, show_plots=False, scale_it=True)
                     res, _ = sur.auto_run(sample_m, sample_points, surro_m, run_validation=True)
-
-                    #res, _ = surrogate_analysis(sample_m,
-                    #                         sample_points,
-                    #                         surro_m,
-                    #                         use_abaqus=use_abaqus,
-                    #                         pgf=use_pgf,
-                    #                         show_plots=False,
-                    #                         force_recalc=False)
                 except Exception as e:
                     print('ERROR ' + str(e))
                     res = SurroResults()
@@ -60,10 +52,10 @@ def run_analysis():
                                + '{:d}'.format(sample_points) + ','
                                + SURRO_NAMES[surro_m] + ','
                                + '{:d}'.format(surro_m) + ','
-                               + '{:f}'.format(res.valiResults.deviation) + ','
-                               + '{:f}'.format(res.valiResults.rmse) + ','
-                               + '{:f}'.format(res.valiResults.mae) + ','
-                               + '{:f}'.format(res.valiResults.press) + ','
+                               + '{:f}'.format(res.vali_results.deviation) + ','
+                               + '{:f}'.format(res.vali_results.rmse) + ','
+                               + '{:f}'.format(res.vali_results.mae) + ','
+                               + '{:f}'.format(res.vali_results.press) + ','
                                + '{:f}'.format(res.optimum_rib) + ','
                                + '{:f}'.format(res.optimum_shell) + ','
                                + '{:f}'.format(res.optimum_weight) + ','
@@ -87,7 +79,9 @@ def plot_sample_point_analysis(file_name):
     RIBS = 9
     SHELL = 10
     WEIGHT = 11
-    data_i = RMSE
+    STRESS = 12
+    ORDER = 13
+    data_i = ORDER
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
@@ -110,23 +104,26 @@ def plot_sample_point_analysis(file_name):
         if data_i == RMSE:
             y = np.array(y) * (100./max_shear_strength)
         samp_plot.ax.plot(x, y, 'x-', label=key)
+    legend_loc = 'upper right'
     if data_i == DEVIATION:
         samp_plot.ax.set_ylim([0, 3.])
     elif data_i == RMSE:
         samp_plot.ax.set_ylim([0, 5])
     elif data_i == MAE:
         samp_plot.ax.set_ylim([0, 5e+7])
+    elif data_i == ORDER:
+        legend_loc = 'upper left'
     #samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
-    samp_plot.finalize()
+    samp_plot.finalize(legendLoc=legend_loc)
     #samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
     #samp_plot.show()
 
 
 if __name__ == '__main__':
-    file = run_analysis()
+    #file = run_analysis()
     #plot_sample_point_analysis(file)
-    #plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
+    plot_sample_point_analysis('analysis_2018-10-22_14_56_22_PolyV003.csv')
     #plot_sample_point_analysis('analysis_2018-10-22_10_54_09_RbfV001.csv')
     #plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
-    #import matplotlib.pyplot as plt
-    #plt.show()
+    import matplotlib.pyplot as plt
+    plt.show()

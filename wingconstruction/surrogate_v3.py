@@ -12,12 +12,12 @@ __status__ = "Development"
 
 import sys
 import os
+from scipy.optimize import minimize
+import numpy as np
+from scipy import optimize
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/pyKriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../lib/inspyred')
-
-import numpy as np
-from scipy import optimize
 
 from wingconstruction.wingutils.constants import Constants
 from wingconstruction.multi_run import MultiRun
@@ -89,15 +89,21 @@ class Surrogate:
             return self.results, None
         self.run_fem_calculation()
         self.run_validation_points()
+        fit_time = TimeTrack('FitTime')
+        fit_time.tic()
         if surro_type == SURRO_POLYNOM and auto_fit:
             suc = self.auto_fit_poly()
+        elif surro_type == SURRO_RBF and auto_fit:
+            suc = self.auto_fit_rbf()
         else:
             suc = self.train_model(surro_type)
+        self.results.runtime = fit_time.toc()
         if not suc:
             return self.results, None
         if run_validation:
             self.run_validation(full_validation=True)
         self.optimize()
+        self.print_results()
         if self.show_plots:
             self.plot_it()
         return self.results, self.surro
@@ -108,11 +114,25 @@ class Surrogate:
         for i in range(0, len(orders)):
             self.train_model(SURRO_POLYNOM, [orders[i]])
             self.run_validation(full_validation=False)
-            rmse[i] = self.results.valiResults.rmse
+            rmse[i] = self.results.vali_results.rmse
         best_order = orders[np.argmin(rmse)]
-        self.results.order = best_order
+        self.results.opti_params = best_order
         self.train_model(SURRO_POLYNOM, [best_order])
         return True
+
+    def auto_fit_rbf(self):
+        rbf_func = 'gaus' # 'multi-quadratic'
+        init_a = 1.
+        res = minimize(self._opti_rbf, init_a, args=rbf_func, method='SLSQP', tol=1e-8,
+                       options={'disp': True, 'maxiter': 999}, bounds=[(0.01, 2.)])
+        self.results.opti_params = [res.x, rbf_func]
+        self.train_model(SURRO_RBF, [res.x, rbf_func])
+        return True
+
+    def _opti_rbf(self, a, rbf_func):
+        self.train_model(SURRO_RBF, [a, rbf_func])
+        self.run_validation(full_validation=False)
+        return self.results.vali_results.rmse / max_shear_strength
 
     def prepare(self, force_recalc=False):
         ##################################################
@@ -219,7 +239,12 @@ class Surrogate:
         elif surro_type == SURRO_RBF:
             self.surro_class = RBF
             self.surro = RBF(self.known_params_s, self.known_stress)
-            a = .78
+            a = 1.5
+            rbf_func = 'multi-quadratic'
+            if params != []:
+                a = params[0]
+                if len(params) > 1:
+                    rbf_func = params[1]
             self.surro.update_param(a, 'multi-quadratic')  # 'multi-quadratic')
             self.update_params = [a, 'multi-quadratic']  # ''multi-quadratic']
             #if self.show_plots:
@@ -282,10 +307,10 @@ class Surrogate:
                                             self.known_params_s, self.known_stress,
                                             self.vali_params_s, self.vali_values,
                                             self.surro.predict, self.surro_class, update_params=self.update_params)
-            self.results.valiResults = vali_r
+            self.results.vali_results = vali_r
         else:
             rmse = vali.calc_rmse(self.vali_params_s, self.vali_values, self.surro.predict)
-            self.results.valiResults.rmse = rmse
+            self.results.vali_results.rmse = rmse
         if self.show_plots and full_validation:
             deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=FANCY_PLOT, pgf=self.pgf)
             dev = np.zeros(self.stress.shape)
@@ -437,6 +462,19 @@ class Surrogate:
         if display_plots:
             plot3d.show()
 
+    def print_results(self):
+        print('optimum:')
+        print('ribs: {:f}'.format(self.results.optimum_rib))
+        print('shell: {:f}'.format(self.results.optimum_shell))
+        print('weight: {:f}'.format(self.results.optimum_weight))
+        print('stress: {:f}'.format(self.results.optimum_stress))
+        print('opti params: ' + str(self.results.opti_params))
+        print('runntime: {:f}'.format(self.results.runtime))
+        print('---')
+        print('deviation: {:f}'.format(self.results.vali_results.deviation))
+        print('rmse: {:f}'.format(self.results.vali_results.rmse))
+        print('mae: {:f}'.format(self.results.vali_results.mae))
+        print('press: {:f}'.format(self.results.vali_results.press))
 
 class SurroResults:
 
@@ -447,9 +485,9 @@ class SurroResults:
         self.optimum_stress = 0.
         self.runtime = 0.
         self.errorStr = '-'
-        self.valiResults = ValidationResults()
+        self.vali_results = ValidationResults()
         self.opti_curve = None
-        self.order = -1
+        self.opti_params = -1
 
 
 
@@ -468,12 +506,7 @@ if __name__ == '__main__':
     if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
         res, _ = sur.auto_run(SAMPLE_LATIN, 14, SURRO_RBF, run_validation=True)
-        print('optimum:')
-        print('ribs: {:f}'.format(res.optimum_rib))
-        print('shell: {:f}'.format(res.optimum_shell))
-        print('weight: {:f}'.format(res.optimum_weight))
-        print('stress: {:f}'.format(res.optimum_stress))
-        print('order: {:d}'.format(res.order))
+
         #surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
     else:
         SHOW_PLOT = False

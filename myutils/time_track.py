@@ -11,10 +11,14 @@ class TimeTrack:
     def tic(self):
         self._start = timer()
 
-    def toc(self):
+    def toc(self, print_it=False):
         self._stop = timer()
-        print(self._name + ': ' + str(self._stop - self._start) + ' s')
+        if print_it:
+            self.print_time()
         return self._stop - self._start
+
+    def print_time(self):
+        print(self._name + ': ' + str(self._stop - self._start) + ' s')
 
     def get_time(self):
         return timer() - self._start
