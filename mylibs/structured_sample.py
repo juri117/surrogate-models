@@ -67,7 +67,7 @@ if __name__ == '__main__':
     str_plt = PlotHelper(['', ''], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
 
-    samples = sam.generate_sample_plan(16, 2, [(0, 30), (0, 30)])
+    samples = sam.generate_sample_plan(30, 2, [(0, 30), (0, 30)])
     for i in range(0, len(samples)):
         str_plt.ax.plot([samples[i][0]], [samples[i][1]], 'bo')
 

@@ -350,6 +350,8 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     ##################################################
     # plot it
 
+    results.runtime = timer.toc()
+
     # convert all to np arrays
     shell = np.array(shell)
     opti_shell = np.array(opti_shell)
@@ -423,7 +425,6 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         plot3d.save(Constants().PLOT_PATH + 'wingSurro_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
         plot3d.show()
 
-    results.runtime = timer.toc()
     return results, surro
 
 
@@ -441,11 +442,11 @@ class SurroResults:
 
 if __name__ == '__main__':
     PGF = False
-    SHOW_PLOT = False
+    SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
-        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
+        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_KRIGING, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN

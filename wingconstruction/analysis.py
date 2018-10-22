@@ -79,14 +79,17 @@ def plot_sample_point_analysis(file_name):
     # RMSE: 6
     # MAE: 7
     # PRESS: 8
-    data_i = 6
+    # ribs: 9
+    # shell: 10
+    # weight: 11
+    data_i = 5
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
     sampling_point_count = data[:, 2]
     deviation = data[:, data_i]
     sampling_data = {}
-    for samp in SAMPLE_NAMES:
+    for samp in SAMPLE_NAMES[:-1]:
         sampling_data[samp] = []
     for i in range(0, len(sampling_plan_id)):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
@@ -98,8 +101,8 @@ def plot_sample_point_analysis(file_name):
         y = [y for x,y in sampling_data[key]]
         y = np.array(y) * 100. # make it percent
         samp_plot.ax.plot(x, y, 'x-', label=key)
-    #samp_plot.ax.set_ylim([0, 3.])
-    samp_plot.ax.set_xlim([0, max(sampling_point_count)])
+    samp_plot.ax.set_ylim([0, 3.])
+    samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
     samp_plot.finalize()
     samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
     samp_plot.show()
@@ -108,4 +111,5 @@ def plot_sample_point_analysis(file_name):
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    plot_sample_point_analysis('analysis_2018-10-21_18_14_17_PolyV001.csv')
+    #plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
+    plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')

@@ -26,6 +26,8 @@ from scipy.optimize import basinhopping
 from scipy import optimize
 import sys
 
+VERBOSE = False
+
 
 class Kriging:
 
@@ -36,10 +38,6 @@ class Kriging:
             self._knownIn = self._knownIn.reshape((self._knownIn.shape[0], 1))
         self._k = self._knownIn.shape[1]
         self._n = self._knownIn.shape[0]
-        #else:
-        #    self._k = 1
-        #    self._n = self._known_in.shape[0]
-
         self._theta = 1. * np.ones((self._k, 1)).flatten()
         self._p = 2. * np.ones((self._k, 1)).flatten()
         self._corMat = None
@@ -53,8 +51,6 @@ class Kriging:
     def update_param(self, theta, p):
         self._theta = np.array(theta)
         self._p = np.array(p)
-        #if theta.shape[0] != self._k or p.shape[0] != self._k:
-        #    raise ValueError('wrong theta or p dimension, should be ' + str(self._k) + 'x1')
         self._calc_cormat()
         self._calc_mu()
 
@@ -72,8 +68,8 @@ class Kriging:
             self._coreMatInv = np.linalg.inv(corMat)
             self._corMat = corMat
         except Exception as e:
-            print('ERROR: could not calc np.linalg.inv: ' + str(e))
-        #self._matU = np.transpose(np.linalg.cholesky(self._corMat))
+            if VERBOSE:
+                print('ERROR: could not calc np.linalg.inv: ' + str(e))
         return corMat
 
     def _calc_mu(self):
@@ -84,32 +80,28 @@ class Kriging:
 
     #calcs the likelyhood
     def calc_likelihood(self):
-        #lnDetCorMat = np.log(np.linalg.det(corMat))
-        #ToDo: sometimes this throws an warning (C:\python\Python365_x64\lib\site-packages\numpy\linalg\linalg.py:1817: RuntimeWarning: invalid value encountered in slogdet sign, logdet = _umath_linalg.slogdet(a, signature=signature))
-        #lnDetCorMat2 = 2 * sum(np.log(abs(np.diag(self._matU))))
-        #print('lnDetCorMat2 = {:f}'.format(lnDetCorMat2))
         lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
-        #print('slogdet = {:f}'.format(lnDetCorMat), flush=True)
         if np.isnan(lnDetCorMat):
-            print('NaN Alarm')
+            if VERBOSE:
+                print('NaN Alarm')
             return float('inf')
 
         one = np.ones((self._n, 1)).flatten()
-        #ToDo: sometimes this throws a warning (RuntimeWarning: invalid value encountered in log negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat))
         sigmaSqr = (np.transpose(self._knownVal - one * self._mu) @ self._coreMatInv @ (self._knownVal - one * self._mu)) / self._n
         if sigmaSqr < 0.:
-            print('Error: neg sigmaSqr')
+            if VERBOSE:
+                print('Error: neg sigmaSqr')
             return float('inf')
         negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat)
         if negLnLike == float('nan'):
-            print('Error: nan')
+            if VERBOSE:
+                print('Error: nan')
             return float('inf')
         return negLnLike
 
     def _calc_likelihood_opti_theta_only(self, params, *args):
         self.update_param(params, args[0])
         NegLnLike = self.calc_likelihood()
-        #print(str(NegLnLike))
         return NegLnLike
 
     def _calc_likelihood_opti(self, params, *args):
@@ -190,7 +182,7 @@ class Kriging:
             res = skipper.find(self._calc_likelihood_opti_exp, self._k)
             timer.toc()
         else:
-            raise Exception('ERROR: unknown uptimizer selected')
+            raise Exception('ERROR: unknown optimizer selected')
         exps = res.x[0:self._k]
         thetas = []
         for e in exps:
@@ -203,7 +195,6 @@ class Kriging:
         self.update_param(thetas, res.x[self._k:])
 
     def predict(self, x_pred):
-        #print(str(x_pred))
         one = np.ones((self._n, 1)).flatten()
         psi = np.ones((self._n, 1)).flatten()
         for i in range(0, self._n):
