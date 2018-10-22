@@ -75,14 +75,14 @@ def run_analysis():
 
 
 def plot_sample_point_analysis(file_name):
-    # DEVIATION: 5
-    # RMSE: 6
-    # MAE: 7
-    # PRESS: 8
-    # ribs: 9
-    # shell: 10
-    # weight: 11
-    data_i = 5
+    DEVIATION = 5
+    RMSE = 6
+    MAE = 7
+    PRESS = 8
+    RIBS = 9
+    SHELL = 10
+    WEIGHT = 11
+    data_i = RMSE
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
@@ -95,21 +95,33 @@ def plot_sample_point_analysis(file_name):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
     samp_plot = PlotHelper(['Anzahl der Stützstellen', '$\O$ -Abweichung in $\%$'], fancy=True, pgf=False)
     # plot one % line
-    #samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], 'k--', label='1%-Linie')
+    if data_i == DEVIATION or data_i == RMSE:
+        samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], '--', color='gray', label='1%-Linie')
     for key in sampling_data:
         x = [x for x,y in sampling_data[key]]
         y = [y for x,y in sampling_data[key]]
-        y = np.array(y) * 100. # make it percent
+        if data_i == DEVIATION:
+            y = np.array(y) * 100. # make it percent
+        if data_i == RMSE:
+            y = np.array(y) * (100./max_shear_strength)
         samp_plot.ax.plot(x, y, 'x-', label=key)
-    samp_plot.ax.set_ylim([0, 3.])
-    samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
+    if data_i == DEVIATION:
+        samp_plot.ax.set_ylim([0, 3.])
+    elif data_i == RMSE:
+        samp_plot.ax.set_ylim([0, 5])
+    elif data_i == MAE:
+        samp_plot.ax.set_ylim([0, 5e+7])
+    #samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
     samp_plot.finalize()
-    samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
-    samp_plot.show()
+    #samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
+    #samp_plot.show()
 
 
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    #plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
+    plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
+    plot_sample_point_analysis('analysis_2018-10-22_10_54_09_RbfV001.csv')
     plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
+    import matplotlib.pyplot as plt
+    plt.show()

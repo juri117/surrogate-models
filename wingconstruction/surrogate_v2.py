@@ -189,7 +189,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     elif surro_type == SURRO_POLYNOM:
         surro_class = Polynomial
         surro = Polynomial(known_params_s, known_stress)
-        o = 3
+        o = 5
         surro.update_param(o)
         surro.generate_formula()
         update_params = [o]
@@ -208,6 +208,71 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
         print('unknown surrogate type selected')
         results.errorStr = 'unknown surrogate type selected'
         return results
+
+    ##################################################
+    # validate
+
+    if run_validation:
+        center_r = (range_rib[1] + range_rib[0]) * 0.5
+        center_s = (range_shell[1] + range_shell[0]) * 0.5
+        d_r = (range_rib[1] - range_rib[0]) / 2.
+        d_s = (range_shell[1] - range_shell[0]) / 2.
+
+        vali_params = np.array([[center_r, center_s],
+                                [center_r - int(round(d_r / 4.)), center_s - (d_s / 4.)],
+                                [center_r - int(round(d_r / 3.)), center_s + (d_s / 3.)],
+                                [center_r + int(round(d_r / 2.7)), center_s + (d_s / 2.7)],
+                                [center_r + int(round(d_r / 2.2)), center_s - (d_s / 2.2)]])
+        vali_params_s = np.zeros(vali_params.shape)
+        vali_params_s[:, 0] = (vali_params[:, 0] - offset_rib) / scale_rib
+        vali_params_s[:, 1] = (vali_params[:, 1] - offset_shell) / scale_shell
+
+        # valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
+        valiValues = multi.run_sample_points(vali_params.T[0], vali_params.T[1], use_abaqus=use_abaqus)
+        # valiValues = np.array(list(map(f_2D, valiParams)))
+        # valiParams = valiParams.reshape((len(valiParams), 1))
+
+        p_x, p_y = np.meshgrid(ribs, shell)
+        params = np.array([p_x.flatten(), p_y.flatten()]).T
+        params_s = np.zeros(params.shape)
+        params_s[:, 0] = (params[:, 0] - offset_rib) / scale_rib
+        params_s[:, 1] = (params[:, 1] - offset_shell) / scale_shell
+        values = stress.flatten()
+
+        vali = Validation()
+        vali_r = vali.run_full_analysis(params_s, values,
+                                        known_params_s, known_stress,
+                                        vali_params_s, valiValues,
+                                        surro.predict, surro_class, update_params=update_params)
+        results.valiResults = vali_r
+        print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
+        print('rmse: {:f}'.format(vali_r.rmse))
+        print('mae: {:f}'.format(vali_r.mae))
+        print('rae: {:s}'.format(str(vali_r.rae)))
+        print('press: {:f}'.format(vali_r.press))
+
+        if show_plots:
+            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=FANCY_PLOT, pgf=pgf)
+            dev = np.zeros(stress.shape)
+            for xi in range(0, len(ribs)):
+                for yi in range(0, len(shell)):
+                    devi = (abs(stress[yi][xi] - surro.predict([ribs_s[xi], shell_s[yi]])) / np.array(
+                        stress).mean()) * 100.
+                    dev[yi][xi] = devi
+            pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd', alpha=0.7)
+            pcol.set_clim(0, 5.)
+            cbar = deri_plot.fig.colorbar(pcol)
+            deri_plot.ax.plot(known_params[:, 0], known_params[:, 1] * 1000, 'bo', label='Stützstellen')
+            deri_plot.ax.plot(vali_params[:, 0], vali_params[:, 1] * 1000, 'o', color='fuchsia',
+                              label='Vali.-Punkte')
+            #deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
+            #                  markersize=12, markeredgewidth=5, label='glob. Optimum')
+            deri_plot.ax.invert_yaxis()
+            deri_plot.finalize(width=6., height=4., legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.38),
+                               tighten_layout=True)
+            deri_plot.save(
+                Constants().PLOT_PATH + 'wingSurro_deri_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type],
+                                                                          SURRO_NAMES[surro_type]))
 
     ##################################################
     # optimize
@@ -287,65 +352,7 @@ def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus
     results.optimumWeights = opti_weights[best_i]
     results.opti_curve = [opti_ribs, opti_shell, opti_stress, opti_weights]
 
-    ##################################################
-    # validate
 
-    if run_validation:
-        center_r = (range_rib[1] + range_rib[0]) * 0.5
-        center_s = (range_shell[1] + range_shell[0]) * 0.5
-        d_r = (range_rib[1] - range_rib[0]) / 2.
-        d_s = (range_shell[1] - range_shell[0]) / 2.
-
-        vali_params = np.array([[center_r, center_s],
-                               [center_r - int(round(d_r / 4.)), center_s - (d_s / 4.)],
-                               [center_r - int(round(d_r / 3.)), center_s + (d_s / 3.)],
-                               [center_r + int(round(d_r / 2.7)), center_s + (d_s / 2.7)],
-                               [center_r + int(round(d_r / 2.2)), center_s - (d_s / 2.2)]])
-        vali_params_s = np.zeros(vali_params.shape)
-        vali_params_s[:, 0] = (vali_params[:, 0] - offset_rib) / scale_rib
-        vali_params_s[:, 1] = (vali_params[:, 1] - offset_shell) / scale_shell
-
-        #valiParams = np.array([[7., 0.0025], [13., 0.0030], [16., 0.0028]])#, [results.optimumRib, results.optimumShell]])
-        valiValues = multi.run_sample_points(vali_params.T[0], vali_params.T[1], use_abaqus=use_abaqus)
-        # valiValues = np.array(list(map(f_2D, valiParams)))
-        # valiParams = valiParams.reshape((len(valiParams), 1))
-
-        p_x, p_y = np.meshgrid(ribs, shell)
-        params = np.array([p_x.flatten(), p_y.flatten()]).T
-        params_s = np.zeros(params.shape)
-        params_s[:, 0] = (params[:, 0] - offset_rib) / scale_rib
-        params_s[:, 1] = (params[:, 1] - offset_shell) / scale_shell
-        values = stress.flatten()
-
-        vali = Validation()
-        vali_r = vali.run_full_analysis(params_s, values,
-                                        known_params_s, known_stress,
-                                        vali_params_s, valiValues,
-                                        surro.predict, surro_class, update_params=update_params)
-        results.valiResults = vali_r
-        print('avg deviation: {:.3e} (-> {:.3f}%)'.format(vali_r.deviation, vali_r.deviation * 100.))
-        print('rmse: {:f}'.format(vali_r.rmse))
-        print('mae: {:f}'.format(vali_r.mae))
-        print('rae: {:s}'.format(str(vali_r.rae)))
-        print('press: {:f}'.format(vali_r.press))
-
-        if show_plots:
-            deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=FANCY_PLOT, pgf=pgf)
-            dev = np.zeros(stress.shape)
-            for xi in range(0, len(ribs)):
-                for yi in range(0, len(shell)):
-                    devi = (abs(stress[yi][xi] - surro.predict([ribs_s[xi], shell_s[yi]])) / np.array(stress).mean()) * 100.
-                    dev[yi][xi] = devi
-            pcol = deri_plot.ax.pcolor(ribs, np.array(shell) * 1000, dev, cmap='YlOrRd', alpha=0.7)
-            pcol.set_clim(0, 5.)
-            cbar = deri_plot.fig.colorbar(pcol)
-            deri_plot.ax.plot(known_params[:, 0], known_params[:, 1] * 1000, 'bo', label='Stützstellen')
-            deri_plot.ax.plot(vali_params[:,0], vali_params[:,1] * 1000, 'o', color='fuchsia', label='Vali.-Punkte')
-            deri_plot.ax.plot([opti_ribs[best_i]], [opti_shell[best_i] * 1000.], 'rx',
-                           markersize=12, markeredgewidth=5, label='glob. Optimum')
-            deri_plot.ax.invert_yaxis()
-            deri_plot.finalize(width=6., height=4., legendLoc=8, legendNcol=3, bbox_to_anchor=(0.5, -0.38), tighten_layout=True)
-            deri_plot.save(Constants().PLOT_PATH + 'wingSurro_deri_{:s}_{:s}.pdf'.format(SAMPLE_NAMES[sampling_type], SURRO_NAMES[surro_type]))
 
     ##################################################
     # plot it
@@ -446,7 +453,7 @@ if __name__ == '__main__':
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
-        surrogate_analysis(SAMPLE_LATIN, 26, SURRO_KRIGING, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
+        surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN
