@@ -116,7 +116,7 @@ class Surrogate:
             self.run_validation(full_validation=False)
             rmse[i] = self.results.vali_results.rmse
         best_order = orders[np.argmin(rmse)]
-        self.results.opti_params = best_order
+        self.results.opti_params = [best_order]
         self.train_model(SURRO_POLYNOM, [best_order])
         return True
 
@@ -124,9 +124,9 @@ class Surrogate:
         rbf_func = 'gaus' # 'multi-quadratic'
         init_a = 1.
         res = minimize(self._opti_rbf, init_a, args=rbf_func, method='SLSQP', tol=1e-8,
-                       options={'disp': True, 'maxiter': 999}, bounds=[(0.01, 2.)])
-        self.results.opti_params = [res.x, rbf_func]
-        self.train_model(SURRO_RBF, [res.x, rbf_func])
+                       options={'disp': True, 'maxiter': 999}, bounds=[(0.01, 5.)])
+        self.results.opti_params = [res.x[0], rbf_func]
+        self.train_model(SURRO_RBF, [res.x[0], rbf_func])
         return True
 
     def _opti_rbf(self, a, rbf_func):
@@ -487,7 +487,7 @@ class SurroResults:
         self.errorStr = '-'
         self.vali_results = ValidationResults()
         self.opti_curve = None
-        self.opti_params = -1
+        self.opti_params = []
 
 
 

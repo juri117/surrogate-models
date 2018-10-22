@@ -33,7 +33,7 @@ def run_analysis():
     output_f = open(Constants().WORKING_DIR + '/'
                     + output_file_name,
                     'w')
-    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,rmse,mae,press,optRib,optShell,optWight,optStress,order,runtime,errorStr\n')
+    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,rmse,mae,press,optRib,optShell,optWight,optStress,optiParam1,optiParam2,runtime,errorStr\n')
 
     for surro_m in surro_methods:
         for sample_m in sample_methods:
@@ -47,6 +47,13 @@ def run_analysis():
                     print('ERROR ' + str(e))
                     res = SurroResults()
                     res.errorStr = 'general fail: ' + str(e)
+
+                opti_param1 = -1
+                opti_param2 = -1
+                if len(res.opti_params) > 0:
+                    opti_param1 = res.opti_params[0]
+                if len(res.opti_params) > 1:
+                    opti_param2 = res.opti_params[1]
                 output_f.write(SAMPLE_NAMES[sample_m] + ','
                                + '{:d}'.format(sample_m) + ','
                                + '{:d}'.format(sample_points) + ','
@@ -60,7 +67,8 @@ def run_analysis():
                                + '{:f}'.format(res.optimum_shell) + ','
                                + '{:f}'.format(res.optimum_weight) + ','
                                + '{:f}'.format(res.optimum_stress) + ','
-                               + str(res.opti_params) + ','
+                               + str(opti_param1) + ','
+                               + str(opti_param2) + ','
                                + '{:f}'.format(res.runtime) + ','
                                + res.errorStr.replace(',', ';') + '\n')
                 output_f.flush()
@@ -122,8 +130,8 @@ def plot_sample_point_analysis(file_name):
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    plot_sample_point_analysis('analysis_2018-10-22_14_56_22_PolyV003.csv')
-    #plot_sample_point_analysis('analysis_2018-10-22_10_54_09_RbfV001.csv')
+    #plot_sample_point_analysis('analysis_2018-10-22_14_56_22_PolyV003.csv')
+    plot_sample_point_analysis('analysis_2018-10-22_17_45_01_RbfV002.csv')
     #plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
     import matplotlib.pyplot as plt
     plt.show()
