@@ -60,7 +60,7 @@ def run_analysis():
                                + '{:f}'.format(res.optimum_shell) + ','
                                + '{:f}'.format(res.optimum_weight) + ','
                                + '{:f}'.format(res.optimum_stress) + ','
-                               + '{:f}'.format(res.order) + ','
+                               + str(res.opti_params) + ','
                                + '{:f}'.format(res.runtime) + ','
                                + res.errorStr.replace(',', ';') + '\n')
                 output_f.flush()
