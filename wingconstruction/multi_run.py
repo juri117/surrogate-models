@@ -117,7 +117,7 @@ class MultiRun:
         start = time.time()
         with Pool(USED_CORES) as p:
             projects = p.map(self.run_project, projects)
-        print("Time taken = {0:.5f}".format(time.time() - start))
+        #print("Time taken = {0:.5f}".format(time.time() - start))
         return projects
 
     def main_run(self, cleanup=False):

@@ -27,7 +27,7 @@ from wingconstruction.wingutils.constants import Constants
 from wingconstruction.multi_run import MultiRun
 from wingconstruction.wingutils.defines import *
 from myutils.plot_helper import PlotHelper
-from wingconstruction.surrogate_v2 import surrogate_analysis
+from wingconstruction.surrogate_v3 import Surrogate
 from myutils.time_track import TimeTrack
 
 PROJECT_NAME_PREFIX = 'iterSLSQP'
@@ -52,7 +52,9 @@ class WingStructureSurro(ExplicitComponent):
         ######################
         ### needed Objects ###
         self.runner = MultiRun(use_calcu=not USE_ABA, use_aba=USE_ABA, non_liner=False, project_name_prefix=PROJECT_NAME_PREFIX, force_recalc=False)
-        _, self.surro = surrogate_analysis(SAMPLE_LATIN, 14, SURRO_KRIGING, use_abaqus=USE_ABA, pgf=False, show_plots=False, run_validation=False)
+
+        sur = Surrogate(use_abaqus=USE_ABA, pgf=False, show_plots=False, scale_it=True)
+        _, self.surro = sur.auto_run(SAMPLE_LATIN, 14, SURRO_KRIGING, run_validation=False)
 
 
         #####################
@@ -247,7 +249,7 @@ if __name__ == '__main__':
     WEIGHT_PANALTY_FAC = 0
 
     #02
-    if True:
+    if False:
         SHELL_FACTOR = 1
         RIB_FACTOR = 1e-6  # 1e-6
         WEIGHT_FAC = 1e-3

@@ -14,8 +14,8 @@ from datetime import datetime
 import numpy as np
 
 from wingconstruction.wingutils.defines import *
-from wingconstruction.surrogate_v2 import surrogate_analysis
-from wingconstruction.surrogate_v2 import SurroResults
+from wingconstruction.surrogate_v3 import Surrogate
+from wingconstruction.surrogate_v3 import SurroResults
 from wingconstruction.wingutils.constants import Constants
 from myutils.plot_helper import PlotHelper
 
@@ -33,7 +33,7 @@ def run_analysis():
     output_f = open(Constants().WORKING_DIR + '/'
                     + output_file_name,
                     'w')
-    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,rmse,mae,press,optRib,optShell,optWight,runtime,errorStr\n')
+    output_f.write('SampleMethod,SampleMethodID,SamplePointCound,SurroMehtod,SurroMehtodID,deviation,rmse,mae,press,optRib,optShell,optWight,optStress,order,runtime,errorStr\n')
 
     for surro_m in surro_methods:
         for sample_m in sample_methods:
@@ -41,13 +41,16 @@ def run_analysis():
                 print('##################################################################################')
                 print('next run: surro: {:s}, sample: {:s}, points: {:d}'.format(SURRO_NAMES[surro_m], SAMPLE_NAMES[sample_m], sample_points))
                 try:
-                    res, _ = surrogate_analysis(sample_m,
-                                             sample_points,
-                                             surro_m,
-                                             use_abaqus=use_abaqus,
-                                             pgf=use_pgf,
-                                             show_plots=False,
-                                             force_recalc=False)
+                    sur = Surrogate(use_abaqus=True, pgf=use_pgf, show_plots=False, scale_it=True)
+                    res, _ = sur.auto_run(sample_m, sample_points, surro_m, run_validation=True)
+
+                    #res, _ = surrogate_analysis(sample_m,
+                    #                         sample_points,
+                    #                         surro_m,
+                    #                         use_abaqus=use_abaqus,
+                    #                         pgf=use_pgf,
+                    #                         show_plots=False,
+                    #                         force_recalc=False)
                 except Exception as e:
                     print('ERROR ' + str(e))
                     res = SurroResults()
@@ -61,9 +64,11 @@ def run_analysis():
                                + '{:f}'.format(res.valiResults.rmse) + ','
                                + '{:f}'.format(res.valiResults.mae) + ','
                                + '{:f}'.format(res.valiResults.press) + ','
-                               + '{:f}'.format(res.optimumRib) + ','
-                               + '{:f}'.format(res.optimumShell) + ','
-                               + '{:f}'.format(res.optimumWeights) + ','
+                               + '{:f}'.format(res.optimum_rib) + ','
+                               + '{:f}'.format(res.optimum_shell) + ','
+                               + '{:f}'.format(res.optimum_weight) + ','
+                               + '{:f}'.format(res.optimum_stress) + ','
+                               + '{:f}'.format(res.order) + ','
                                + '{:f}'.format(res.runtime) + ','
                                + res.errorStr.replace(',', ';') + '\n')
                 output_f.flush()
@@ -118,10 +123,10 @@ def plot_sample_point_analysis(file_name):
 
 
 if __name__ == '__main__':
-    #file = run_analysis()
+    file = run_analysis()
     #plot_sample_point_analysis(file)
-    plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
-    plot_sample_point_analysis('analysis_2018-10-22_10_54_09_RbfV001.csv')
-    plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
-    import matplotlib.pyplot as plt
-    plt.show()
+    #plot_sample_point_analysis('analysis_2018-10-21_19_50_16_PolyV002.csv')
+    #plot_sample_point_analysis('analysis_2018-10-22_10_54_09_RbfV001.csv')
+    #plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
+    #import matplotlib.pyplot as plt
+    #plt.show()
