@@ -21,11 +21,11 @@ class LikeliOptimizer:
     def __init__(self, debug=False):
         self.debug = debug
         self.pBounds = (1., 2.)
-        self.thetaBoundsExp = (-5, 10)
+        self.thetaBoundsExp = (-5, 3)
         self.maxIter = 5e3
 
     def find(self, func, dimensions):
-        opt={'disp': True, 'maxiter': self.maxIter}
+        opt={'disp': False, 'maxiter': self.maxIter}
         guess = self.generate_grid(func, dimensions, 8, 5)
 
         bnds = []
@@ -46,7 +46,7 @@ class LikeliOptimizer:
         minima_param = None
         ps = np.linspace(1., 2., num=p_sections)
         #thetas = np.logspace(-5, 9, num=theta_sections)
-        thetas = np.linspace(-5, 9, num=theta_sections)
+        thetas = np.linspace(-5, 3, num=theta_sections)
         p_param_i = np.zeros((dimensions))
         #t_param_i = np.zeros((dimensions))
         params = []

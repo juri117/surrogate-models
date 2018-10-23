@@ -39,7 +39,7 @@ if __name__ == '__main__':
     krig = Kriging(knownParams, knownValues)
     p = [1.8, 1.8]
     krig.update_param([0.001, 0.001], p)
-    print(str(krig.calc_likelihood()))
+    #print(str(krig.calc_likelihood()))
     #print(str(krig.calc_likelihood_v2([0.001, 0.001], p)))
 
     #thetas = np.linspace(0.001, 0.1, 100 + 1)
@@ -53,7 +53,7 @@ if __name__ == '__main__':
             krig.update_param([thetas[i1], thetas[i2]], p)
             likely[i2][i1] = krig.calc_likelihood()
 
-    krig.optimize()
+    krig.optimize(opti_algo='basin')
     minLike = krig.calc_likelihood()
     print('minLike = ' + str(minLike))
     print('@theta1 = ' + str(krig._theta[0]))

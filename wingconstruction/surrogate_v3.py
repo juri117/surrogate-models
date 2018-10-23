@@ -121,10 +121,10 @@ class Surrogate:
         return True
 
     def auto_fit_rbf(self):
-        rbf_func = 'gaus' # 'multi-quadratic'
+        rbf_func = 'multi-quadratic' # 'gaus' 'multi-quadratic'
         init_a = 1.
         res = minimize(self._opti_rbf, init_a, args=rbf_func, method='SLSQP', tol=1e-8,
-                       options={'disp': True, 'maxiter': 999}, bounds=[(0.01, 5.)])
+                       options={'disp': False, 'maxiter': 999}, bounds=[(0.01, 5.)])
         self.results.opti_params = [res.x[0], rbf_func]
         self.train_model(SURRO_RBF, [res.x[0], rbf_func])
         return True
@@ -437,10 +437,11 @@ class Surrogate:
         samplePoints = plot3d.ax.plot(self.known_params[:, 0], self.known_params[:, 1] * 1000., self.known_stress, 'bo',
                                       label=u'Stützstellen')
 
-        # plot limit load line
-        plot3d.ax.plot(self.results.opti_curve[0], np.array(self.results.opti_curve[1]) * 1000., self.results.opti_curve[2], 'k--', lw=3., label=u'max. Mises Stress')
-        # plot optimal point
-        plot3d.ax.plot([self.results.optimum_rib], [self.results.optimum_shell * 1000.], [self.results.optimum_stress], 'rx',
+        if self.results.opti_curve != []:
+            # plot limit load line
+            plot3d.ax.plot(self.results.opti_curve[0], np.array(self.results.opti_curve[1]) * 1000., self.results.opti_curve[2], 'k--', lw=3., label=u'max. Mises Stress')
+            # plot optimal point
+            plot3d.ax.plot([self.results.optimum_rib], [self.results.optimum_shell * 1000.], [self.results.optimum_stress], 'rx',
                        markersize=12,
                        markeredgewidth=5, label='glob. Optimum')
         plot3d.ax.locator_params(nbins=7, axis='x')
@@ -486,7 +487,7 @@ class SurroResults:
         self.runtime = 0.
         self.errorStr = '-'
         self.vali_results = ValidationResults()
-        self.opti_curve = None
+        self.opti_curve = []
         self.opti_params = []
 
 
@@ -505,9 +506,7 @@ if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_LATIN, 14, SURRO_RBF, run_validation=True)
-
-        #surrogate_analysis(SAMPLE_LATIN, 14, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=False)
+        res, _ = sur.auto_run(SAMPLE_LATIN, 26, SURRO_POLYNOM, run_validation=True)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN

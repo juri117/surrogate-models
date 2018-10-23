@@ -136,19 +136,6 @@ class Kriging:
         self._theta = res.x
 
     def optimize(self, init_guess=None, opti_algo='grid', record_data=False):
-        if init_guess is None:
-            init_guess = []
-            for t in self._theta:
-                init_guess.append(t)
-            for p in self._p:
-                init_guess.append(p)
-            #init_guess = [self._theta[0], self._theta[1], self._p[0], self._p[1]]
-        bnds = []
-        for i in range(0, self._k):
-            bnds.append((-5., +9.))
-        for i in range(0, self._k):
-            bnds.append((1., 2.))
-
         # SLSQP: proplem; find local min not glob. depending on init-vals
         #res = minimize(self._calc_likelihood_opti, init_guess, method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
 
@@ -162,6 +149,17 @@ class Kriging:
 
         if 'basin' in opti_algo:
             # basinhopping:
+            if init_guess is None:
+                init_guess = []
+                for t in self._theta:
+                    init_guess.append(t)
+                for p in self._p:
+                    init_guess.append(p)
+            bnds = []
+            for i in range(0, self._k):
+                bnds.append((-5., +3.))
+            for i in range(0, self._k):
+                bnds.append((1., 2.))
             bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
             step = BasinHoppingStep()
             minimizer_kwargs = dict(method='SLSQP', bounds=bnds, options={'disp': False, 'maxiter': 5e3}, tol=1e-4)
@@ -173,14 +171,14 @@ class Kriging:
                                take_step=step,
                                niter=1000,
                                niter_success=100)
-            timer.toc()
+            timer.toc(print_it=True)
             #print('basin min: {:f}'.format(resB.fun))
             #print('@: ' + str(resB.x[0:self._k])+str(resB.x[self._k:]))
         elif 'grid' in opti_algo:
             skipper = LikeliOptimizer(debug=True)
             timer.tic()
             res = skipper.find(self._calc_likelihood_opti_exp, self._k)
-            timer.toc()
+            timer.toc(print_it=True)
         else:
             raise Exception('ERROR: unknown optimizer selected')
         exps = res.x[0:self._k]
@@ -212,7 +210,7 @@ class Kriging:
             return
 
         opt_theta = self._theta
-        thetas = np.logspace(-5, 9, num=50)
+        thetas = np.logspace(-5, 3, num=50)
         likely_thet = np.zeros((len(thetas), len(thetas)))
         for i1 in range(0, len(thetas)):
             for i2 in range(0, len(thetas)):
@@ -312,7 +310,7 @@ class Kriging:
 
 class BasinHoppingBounds(object):
 
-    def __init__(self, xmax=[9., 9., 2., 2.], xmin=[-5., -5., 1., 1.]):
+    def __init__(self, xmax=[3., 3., 2., 2.], xmin=[-5., -5., 1., 1.]):
         self.xmax = np.array(xmax)
         self.xmin = np.array(xmin)
 

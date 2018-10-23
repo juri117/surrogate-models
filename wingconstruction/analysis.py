@@ -80,8 +80,8 @@ def run_analysis():
 
 
 def plot_sample_point_analysis(file_name):
-    DEVIATION = 5
-    RMSE = 6
+    DEVIATION = 5 # $\O$ -Abweichung in $\%$
+    RMSE = 6 # RMSE in $\%$
     MAE = 7
     PRESS = 8
     RIBS = 9
@@ -89,7 +89,7 @@ def plot_sample_point_analysis(file_name):
     WEIGHT = 11
     STRESS = 12
     ORDER = 13
-    data_i = ORDER
+    data_i = RMSE
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
@@ -100,10 +100,10 @@ def plot_sample_point_analysis(file_name):
         sampling_data[samp] = []
     for i in range(0, len(sampling_plan_id)):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
-    samp_plot = PlotHelper(['Anzahl der Stützstellen', '$\O$ -Abweichung in $\%$'], fancy=True, pgf=False)
+    samp_plot = PlotHelper(['Anzahl der Stützstellen', 'RMSE in $\%$'], fancy=True, pgf=False)
     # plot one % line
     if data_i == DEVIATION or data_i == RMSE:
-        samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], '--', color='gray', label='1%-Linie')
+        samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], '--', color='gray', label='1\%-Linie')
     for key in sampling_data:
         x = [x for x,y in sampling_data[key]]
         y = [y for x,y in sampling_data[key]]
@@ -122,16 +122,16 @@ def plot_sample_point_analysis(file_name):
     elif data_i == ORDER:
         legend_loc = 'upper left'
     #samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
-    samp_plot.finalize(legendLoc=legend_loc)
-    #samp_plot.save(Constants().PLOT_PATH + 'samplePlanCompare.pdf')
+    samp_plot.finalize(height=2.5, legendLoc=legend_loc)
+    samp_plot.save(Constants().PLOT_PATH + file_name.replace('csv', 'pdf'))
     #samp_plot.show()
 
 
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    #plot_sample_point_analysis('analysis_2018-10-22_14_56_22_PolyV003.csv')
-    plot_sample_point_analysis('analysis_2018-10-22_17_45_01_RbfV002.csv')
-    #plot_sample_point_analysis('analysis_2018-10-21_20_29_58_KrigV001.csv')
+    plot_sample_point_analysis('analysis_PolyV004.csv')
+    #plot_sample_point_analysis('analysis_RbfV002gaus.csv')
+    #plot_sample_point_analysis('analysis_KrigV001.csv')
     import matplotlib.pyplot as plt
     plt.show()
