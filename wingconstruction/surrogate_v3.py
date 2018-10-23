@@ -506,7 +506,7 @@ if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_LATIN, 26, SURRO_POLYNOM, run_validation=True)
+        res, _ = sur.auto_run(SAMPLE_STRUCTURE, 14, SURRO_POLYNOM, run_validation=True)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN

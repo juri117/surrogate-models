@@ -192,11 +192,11 @@ if __name__ == '__main__':
         plt.plot([samples[i][0]], [samples[i][1]], 'bo')
     plt.show()
 
-    pltHalton = PlotHelper([], fancy=True, pgf=False)
+    plt_latin = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
 
-    ax1 = pltHalton.fig.add_subplot(121)
-    ax2 = pltHalton.fig.add_subplot(122)
+    ax1 = plt_latin.fig.add_subplot(121)
+    ax2 = plt_latin.fig.add_subplot(122)
 
     sample_mat_full = sam.enhanced_latin_hypercube(2, 16)
     xy_full = sam.bool_mat_to_list(sample_mat_full)
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         #ax1.plot([deleteX[i]], [deleteY[i]], 'rx', mew=2, ms=10)
         ax1.plot([-1, 16], [deleteY[i], deleteY[i]], 'r-', linewidth=2)
         ax1.plot([deleteX[i], deleteX[i]], [-1, 16], 'r-', linewidth=2)
-        ax1.text(deleteX[i]-0.3, deleteY[i]-0.3, str(i+1), pltHalton.font, fontweight='bold')
+        ax1.text(deleteX[i] - 0.3, deleteY[i] - 0.3, str(i+1), plt_latin.font, fontweight='bold')
 
     ax1.set_xticks(range(0, 16), minor=False)
     ax1.set_yticks(range(0, 16), minor=False)
@@ -235,7 +235,7 @@ if __name__ == '__main__':
     ax2.grid(True)
     ax2.grid(True)
     #plt.show()
-    pltHalton.fig.set_size_inches(5, 2.5)
+    plt_latin.fig.set_size_inches(5, 2.5)
     plt.tight_layout()
-    pltHalton.save('../data_out/plot/latinHyper.pdf')
-    pltHalton.show()
+    plt_latin.save('../data_out/plot/latinHyper.pdf')
+    plt_latin.show()
