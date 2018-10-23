@@ -22,7 +22,7 @@ from myutils.plot_helper import PlotHelper
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     sample_methods = [SAMPLE_STRUCTURE, SAMPLE_LATIN, SAMPLE_HALTON]  # SAMPLE_LATIN, SAMPLE_HALTON
-    sample_point_count = list(range(2, 40+1))
+    sample_point_count = list(range(3, 30+1))
     use_abaqus = True
     use_pgf = False
     job_count = len(surro_methods) * len(sample_methods) * sum(sample_point_count)
@@ -79,7 +79,7 @@ def run_analysis():
     return output_file_name
 
 
-def plot_sample_point_analysis(file_name, ax=None, title=''):
+def plot_sample_point_analysis(file_name, ax=None, title='', data_i=6):
     DEVIATION = 5 # $\O$ -Abweichung in $\%$
     RMSE = 6 # RMSE in $\%$
     MAE = 7
@@ -88,8 +88,8 @@ def plot_sample_point_analysis(file_name, ax=None, title=''):
     SHELL = 10
     WEIGHT = 11
     STRESS = 12
-    ORDER = 13
-    data_i = RMSE
+    OPTI_PARAM = 13
+    #data_i = RMSE
     file_path = Constants().WORKING_DIR + '/' + file_name
     data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
     sampling_plan_id = data[:, 1]
@@ -119,8 +119,9 @@ def plot_sample_point_analysis(file_name, ax=None, title=''):
         samp_plot.ax.set_ylim([0, 3.])
     elif data_i == MAE:
         samp_plot.ax.set_ylim([0, 5e+7])
-    elif data_i == ORDER:
+    elif data_i == OPTI_PARAM:
         legend_loc = 'upper left'
+        samp_plot.ax.set_ylabel('Polynomgrad')
     samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
 
     if title != '':
@@ -129,15 +130,17 @@ def plot_sample_point_analysis(file_name, ax=None, title=''):
     if ax != None:
         show_legend = False
     samp_plot.ax.locator_params(nbins=4, axis='y')
-    samp_plot.finalize(height=1.8, legendLoc=legend_loc, show_legend=show_legend)
+    samp_plot.finalize(height=3, legendLoc=legend_loc, show_legend=show_legend)
     #samp_plot.save(Constants().PLOT_PATH + file_name.replace('csv', 'pdf'))
-    #samp_plot.show()
+    if ax == None:
+        samp_plot.show()
     return
 
 
 if __name__ == '__main__':
-    #file = run_analysis()
+    file = run_analysis()
     #plot_sample_point_analysis(file)
+    plot_sample_point_analysis('analysis_PolyV004.csv', data_i=13)
 
     plt_comp = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
@@ -145,13 +148,13 @@ if __name__ == '__main__':
     ax2 = plt_comp.fig.add_subplot(312)
     ax3 = plt_comp.fig.add_subplot(313)
 
-    plot_sample_point_analysis('analysis_PolyV003.csv', ax=ax1, title='Polynom')
+    plot_sample_point_analysis('analysis_PolyV004.csv', ax=ax1, title='Polynom')
     labels = [item.get_text() for item in ax1.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax1.set_xticklabels(empty_string_labels)
     ax1.set_xlabel('')
     ax1.set_ylabel('')
-    plot_sample_point_analysis('analysis_RbfV002gaus.csv', ax=ax2, title='RBF')
+    plot_sample_point_analysis('analysis_RbfV003gaus.csv', ax=ax2, title='RBF')
     labels = [item.get_text() for item in ax2.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax2.set_xticklabels(empty_string_labels)

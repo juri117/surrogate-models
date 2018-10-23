@@ -187,17 +187,20 @@ class Surrogate:
         # sample plan
         if sampling_type == SAMPLE_LATIN:
             sam = LatinHyperCube()
+            sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
         elif sampling_type == SAMPLE_HALTON:
             sam = Halton()
+            sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell], base=[2, 19])
         elif sampling_type == SAMPLE_STRUCTURE:
             sam = StructuredSample()
+            sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
         elif sampling_type == SAMPLE_OPTI_LATIN_HYPER:
             sam = OptiLatinHyper()
+            sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
         else:
             print('unknown sample plan selected')
             self.results.errorStr = 'unknown sample plan selected'
             return False
-        sample_points = sam.generate_sample_plan(sample_point_count, 2, [range_rib, range_shell])
         # make the ribs be int
         for i in range(0, len(sample_points)):
             sample_points[i][0] = int(round(sample_points[i][0]))
@@ -357,41 +360,43 @@ class Surrogate:
             try:
                 root_s = optimize.newton(self.shell_predict, init_guess, args=[self.surro, used_ribs_s[i]])
                 root = (root_s * self.scale_shell) + self.offset_shell
-                opti_ribs.append(used_ribs[i])
-                opti_shell.append(root)
-                opti_stress.append(self.surro.predict([used_ribs_s[i], root_s]))
-                weight = WingConstruction.calc_weight_stat(wing_length,
-                                                           chord_length * 0.4,
-                                                           chord_height,
-                                                           used_ribs[i],
-                                                           root,
-                                                           density)
-                opti_weights.append(weight)
+                root_stress = self.surro.predict([used_ribs_s[i], root_s])
+                if root_stress < max_shear_strength * 1.05: #this check is needed if the surrogate does not cross the max stress at all at this ribnumber
+                    opti_ribs.append(used_ribs[i])
+                    opti_shell.append(root)
+                    opti_stress.append(root_stress)
+                    weight = WingConstruction.calc_weight_stat(wing_length,
+                                                               chord_length * 0.4,
+                                                               chord_height,
+                                                               used_ribs[i],
+                                                               root,
+                                                               density)
+                    opti_weights.append(weight)
             except Exception as e:
                 print(e)
         # exclude model edges from opti vals
-        opti_ribs = opti_ribs[:-1]
-        opti_ribs = opti_ribs[1:]
-        opti_shell = opti_shell[:-1]
-        opti_shell = opti_shell[1:]
-        opti_stress = opti_stress[:-1]
-        opti_stress = opti_stress[1:]
-        opti_weights = opti_weights[:-1]
-        opti_weights = opti_weights[1:]
-        best_i = opti_weights.index(min(opti_weights))
-
-        if self.show_plots:
-            optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=self.pgf)
-            optWeightPlot.ax.plot(opti_ribs, opti_weights, '-', color='dodgerblue')
-            optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
-            import matplotlib.ticker as ticker
-            optWeightPlot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-            optWeightPlot.finalize(height=2)
-        self.results.optimum_rib = opti_ribs[best_i]
-        self.results.optimum_shell = opti_shell[best_i]
-        self.results.optimum_weight = opti_weights[best_i]
-        self.results.optimum_stress = opti_stress[best_i]
-        self.results.opti_curve = [opti_ribs, opti_shell, opti_stress, opti_weights]
+        #opti_ribs = opti_ribs[:-1]
+        #opti_ribs = opti_ribs[1:]
+        #opti_shell = opti_shell[:-1]
+        #opti_shell = opti_shell[1:]
+        #opti_stress = opti_stress[:-1]
+        #opti_stress = opti_stress[1:]
+        #opti_weights = opti_weights[:-1]
+        #opti_weights = opti_weights[1:]
+        if len(opti_weights) > 0:
+            best_i = opti_weights.index(min(opti_weights))
+            if self.show_plots:
+                optWeightPlot = PlotHelper(['ribs', 'weight'], pgf=self.pgf)
+                optWeightPlot.ax.plot(opti_ribs, opti_weights, '-', color='dodgerblue')
+                optWeightPlot.ax.plot([opti_ribs[best_i]], opti_weights[best_i], 'rx', label='minimum')
+                import matplotlib.ticker as ticker
+                optWeightPlot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
+                optWeightPlot.finalize(height=2)
+            self.results.optimum_rib = opti_ribs[best_i]
+            self.results.optimum_shell = opti_shell[best_i]
+            self.results.optimum_weight = opti_weights[best_i]
+            self.results.optimum_stress = opti_stress[best_i]
+            self.results.opti_curve = [opti_ribs, opti_shell, opti_stress, opti_weights]
 
     def plot_it(self, display_plots=True):
         ##################################################
@@ -506,7 +511,7 @@ if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_STRUCTURE, 14, SURRO_POLYNOM, run_validation=True)
+        res, _ = sur.auto_run(SAMPLE_HALTON, 14, SURRO_POLYNOM, run_validation=True)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN
