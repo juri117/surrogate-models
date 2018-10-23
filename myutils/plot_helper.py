@@ -14,6 +14,8 @@ class PlotHelper:
             matplotlib.rcParams.update(pgf_with_custom_preamble)
         import matplotlib.pyplot as plt
         from matplotlib import rc
+        #plt.style.use('tableau-colorblind10')
+        #plt.style.use('ggplot')
 
         self.fig = None
         self.FONT_SIZE = font_size
@@ -59,9 +61,9 @@ class PlotHelper:
         legend = None
         if self.ax != None and show_legend:
             if bbox_to_anchor is not None:
-                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=bbox_to_anchor)
+                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, bbox_to_anchor=bbox_to_anchor, fancybox=True)
             else:
-                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol)
+                legend = self.ax.legend(loc=legendLoc, ncol=legendNcol, fancybox=True)
         if self.fig is not None:
             self.fig.set_size_inches(width, height)
         if self.ax != None:

@@ -79,7 +79,7 @@ def run_analysis():
     return output_file_name
 
 
-def plot_sample_point_analysis(file_name, ax=None, title='', data_i=6):
+def plot_sample_point_analysis(file_name, ax=None, title='', data_i=8):
     DEVIATION = 5 # $\O$ -Abweichung in $\%$
     RMSE = 6 # RMSE in $\%$
     MAE = 7
@@ -102,14 +102,14 @@ def plot_sample_point_analysis(file_name, ax=None, title='', data_i=6):
         sampling_data[SAMPLE_NAMES[int(sampling_plan_id[i])]].append((sampling_point_count[i], deviation[i]))
     samp_plot = PlotHelper(['Anzahl der Stützstellen', 'RMSE in $\%$ von der max. Mises Spannung'], fancy=True, pgf=False, ax=ax)
     # plot one % line
-    if data_i == DEVIATION or data_i == RMSE:
-        samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], '--', color='gray', label='1\%-Linie')
+    if data_i == DEVIATION or data_i == RMSE or data_i == PRESS:
+        samp_plot.ax.plot([0, max(sampling_point_count)], [1., 1.], '--', color='lightgray', label='1\%-Linie')
     for key in sampling_data:
         x = [x for x,y in sampling_data[key]]
         y = [y for x,y in sampling_data[key]]
         if data_i == DEVIATION:
             y = np.array(y) * 100. # make it percent
-        if data_i == RMSE:
+        if data_i == RMSE or data_i == PRESS:
             y = np.array(y) * (100./max_shear_strength)
         samp_plot.ax.plot(x, y, 'x-', label=key)
     legend_loc = 'upper right'
@@ -119,53 +119,78 @@ def plot_sample_point_analysis(file_name, ax=None, title='', data_i=6):
         samp_plot.ax.set_ylim([0, 3.])
     elif data_i == MAE:
         samp_plot.ax.set_ylim([0, 5e+7])
+    elif data_i == PRESS:
+        samp_plot.ax.set_ylabel('PRESS in $\%$ von der max. Mises Spannung')
+        samp_plot.ax.set_ylim([0, 5])
     elif data_i == OPTI_PARAM:
-        legend_loc = 'upper left'
-        samp_plot.ax.set_ylabel('Polynomgrad')
-    samp_plot.ax.set_xlim([0, 30])#max(sampling_point_count)])
+        legend_loc = 'center left'
+        samp_plot.ax.set_ylabel('Polynom-Grad')
+    samp_plot.ax.set_xlim([5, 30])#max(sampling_point_count)])
 
     if title != '':
-        samp_plot.ax.text(24, 2.2, title, fontdict=samp_plot.font)
+        height = (samp_plot.ax.get_ylim()[1] - samp_plot.ax.get_ylim()[0]) * 0.75
+        samp_plot.ax.text(22, height, title, fontdict=samp_plot.font)
     show_legend = True
     if ax != None:
         show_legend = False
     samp_plot.ax.locator_params(nbins=4, axis='y')
-    samp_plot.finalize(height=3, legendLoc=legend_loc, show_legend=show_legend)
+    samp_plot.ax.locator_params(nbins=7, axis='x')
+    #samp_plot.finalize(height=4, width=3, legendLoc=legend_loc, show_legend=show_legend, bbox_to_anchor=(1., 0.5), tighten_layout=False)
     #samp_plot.save(Constants().PLOT_PATH + file_name.replace('csv', 'pdf'))
     if ax == None:
         samp_plot.show()
-    return
+    return samp_plot
 
 
 if __name__ == '__main__':
-    file = run_analysis()
+    #file = run_analysis()
     #plot_sample_point_analysis(file)
-    plot_sample_point_analysis('analysis_PolyV004.csv', data_i=13)
+    #order_plot = plot_sample_point_analysis('analysis_KrigV001.csv', data_i=9)
+    #order_plot.save(Constants().PLOT_PATH + 'polymOrderComp.pdf')
+    #order_plot.show()
 
-    plt_comp = PlotHelper([], fancy=True, pgf=False)
+    plt_comp = PlotHelper([], fancy=True, pgf=True)
     import matplotlib.pyplot as plt
-    ax1 = plt_comp.fig.add_subplot(311)
-    ax2 = plt_comp.fig.add_subplot(312)
-    ax3 = plt_comp.fig.add_subplot(313)
+    ax1 = plt_comp.fig.add_subplot(322)
+    ax2 = plt_comp.fig.add_subplot(324)
+    ax3 = plt_comp.fig.add_subplot(326)
 
-    plot_sample_point_analysis('analysis_PolyV004.csv', ax=ax1, title='Polynom')
+    plot_sample_point_analysis('analysis_PolyV001.csv', ax=ax1, title='Polynom', data_i=8)
     labels = [item.get_text() for item in ax1.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax1.set_xticklabels(empty_string_labels)
     ax1.set_xlabel('')
     ax1.set_ylabel('')
-    plot_sample_point_analysis('analysis_RbfV003gaus.csv', ax=ax2, title='RBF')
+    plot_sample_point_analysis('analysis_RbfV001.csv', ax=ax2, title='RBF', data_i=8)
     labels = [item.get_text() for item in ax2.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax2.set_xticklabels(empty_string_labels)
     ax2.set_xlabel('')
-    plot_sample_point_analysis('analysis_KrigV001.csv', ax=ax3, title='Kriging')
+    plot_sample_point_analysis('analysis_KrigV001.csv', ax=ax3, title='Kriging', data_i=8)
     ax3.set_ylabel('')
+
+    ax4 = plt_comp.fig.add_subplot(321)
+    ax5 = plt_comp.fig.add_subplot(323)
+    ax6 = plt_comp.fig.add_subplot(325)
+
+    plot_sample_point_analysis('analysis_PolyV001.csv', ax=ax4, title='Polynom', data_i=6)
+    labels = [item.get_text() for item in ax4.get_xticklabels()]
+    empty_string_labels = [''] * len(labels)
+    ax4.set_xticklabels(empty_string_labels)
+    ax4.set_xlabel('')
+    ax4.set_ylabel('')
+    plot_sample_point_analysis('analysis_RbfV001.csv', ax=ax5, title='RBF', data_i=6)
+    labels = [item.get_text() for item in ax5.get_xticklabels()]
+    empty_string_labels = [''] * len(labels)
+    ax5.set_xticklabels(empty_string_labels)
+    ax5.set_xlabel('')
+    plot_sample_point_analysis('analysis_KrigV001.csv', ax=ax6, title='Kriging', data_i=6)
+    ax6.set_ylabel('')
 
     handles, labels = ax1.get_legend_handles_labels()
     legend = plt_comp.fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, -0.01), ncol=4, fancybox=True)
     import matplotlib.pyplot as plt
-    plt_comp.finalize(show_legend=False, height=4.5)
-    plt.subplots_adjust(hspace=0.18, bottom=0.2)
-    #plt_comp.save(Constants().PLOT_PATH + 'sampleCompare.pdf')
+    plt_comp.finalize(show_legend=False, height=4.5, width=6, tighten_layout=False)
+    plt.subplots_adjust(hspace=0.18, bottom=0.2, top=.98, wspace=0.35, right=.98, left=0.1)
+    plt_comp.save(Constants().PLOT_PATH + 'sampleComparePressRmse.pdf')
     plt_comp.show()

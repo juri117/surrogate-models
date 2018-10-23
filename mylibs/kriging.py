@@ -157,7 +157,7 @@ class Kriging:
                     init_guess.append(p)
             bnds = []
             for i in range(0, self._k):
-                bnds.append((-5., +3.))
+                bnds.append((-5., +5.))
             for i in range(0, self._k):
                 bnds.append((1., 2.))
             bounds = BasinHoppingBounds(xmax=list(zip(*bnds))[1], xmin=list(zip(*bnds))[0])
@@ -310,7 +310,7 @@ class Kriging:
 
 class BasinHoppingBounds(object):
 
-    def __init__(self, xmax=[3., 3., 2., 2.], xmin=[-5., -5., 1., 1.]):
+    def __init__(self, xmax=[5., 5., 2., 2.], xmin=[-5., -5., 1., 1.]):
         self.xmax = np.array(xmax)
         self.xmin = np.array(xmin)
 
@@ -334,7 +334,7 @@ class BasinHoppingStep(object):
         for i in range(0, len(x)):
             if i < len(x) / 2:
                 # theta
-                x[i] = 10**np.random.uniform(-5, 10)
+                x[i] = 10**np.random.uniform(-5, 5)
             else:
                 # p
                 x[i] = np.random.uniform(1., 2)

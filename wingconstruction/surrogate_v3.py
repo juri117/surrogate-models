@@ -109,7 +109,7 @@ class Surrogate:
         return self.results, self.surro
 
     def auto_fit_poly(self):
-        orders = range(1, 9)
+        orders = range(1, 15)
         rmse = np.zeros((len(orders)))
         for i in range(0, len(orders)):
             self.train_model(SURRO_POLYNOM, [orders[i]])
@@ -121,7 +121,7 @@ class Surrogate:
         return True
 
     def auto_fit_rbf(self):
-        rbf_func = 'multi-quadratic' # 'gaus' 'multi-quadratic'
+        rbf_func = 'gaus' # 'gaus' 'multi-quadratic'
         init_a = 1.
         res = minimize(self._opti_rbf, init_a, args=rbf_func, method='SLSQP', tol=1e-8,
                        options={'disp': False, 'maxiter': 999}, bounds=[(0.01, 5.)])
@@ -375,14 +375,14 @@ class Surrogate:
             except Exception as e:
                 print(e)
         # exclude model edges from opti vals
-        #opti_ribs = opti_ribs[:-1]
-        #opti_ribs = opti_ribs[1:]
-        #opti_shell = opti_shell[:-1]
-        #opti_shell = opti_shell[1:]
-        #opti_stress = opti_stress[:-1]
-        #opti_stress = opti_stress[1:]
-        #opti_weights = opti_weights[:-1]
-        #opti_weights = opti_weights[1:]
+        opti_ribs = opti_ribs[:-1]
+        opti_ribs = opti_ribs[1:]
+        opti_shell = opti_shell[:-1]
+        opti_shell = opti_shell[1:]
+        opti_stress = opti_stress[:-1]
+        opti_stress = opti_stress[1:]
+        opti_weights = opti_weights[:-1]
+        opti_weights = opti_weights[1:]
         if len(opti_weights) > 0:
             best_i = opti_weights.index(min(opti_weights))
             if self.show_plots:
@@ -505,42 +505,42 @@ class SurroResults:
 
 
 if __name__ == '__main__':
-    PGF = False
+    PGF = True
     SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    if True:
+    if False:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 14, SURRO_POLYNOM, run_validation=True)
+        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_KRIGING, run_validation=False)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN
-        POINTS = 14
+        POINTS = 17
         surP = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
-        polR, _ = surP.auto_run(SAMPLING, POINTS, SURRO_POLYNOM, run_validation=True)
-        surR = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
-        rbfR, _ = surR.auto_run(SAMPLING, POINTS, SURRO_RBF, run_validation=True)
+        resP, _ = surP.auto_run(SAMPLING, POINTS, SURRO_POLYNOM, run_validation=False)
+        POINTS = 20
+        surR = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
+        resR, _ = surR.auto_run(SAMPLING, POINTS, SURRO_RBF, run_validation=False)
+        POINTS = 16
         surK = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
-        kriR, _ = surK.auto_run(SAMPLING, POINTS, SURRO_KRIGING, run_validation=True)
-
-        #polR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_POLYNOM, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
-        #rbfR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_RBF, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
-        #kriR, _ = surrogate_analysis(SAMPLING, POINTS, SURRO_KRIGING, use_abaqus=True, pgf=PGF, run_validation=True, show_plots=SHOW_PLOT, scale_it=True)
+        resK, _ = surK.auto_run(SAMPLING, POINTS, SURRO_KRIGING, run_validation=False)
 
         #plot opti-lines
         opti_lines = PlotHelper(['Rippen', 'opt. Gewicht'], pgf=PGF, fancy=True)
-        opti_lines.ax.plot(polR.opti_curve[0], polR.opti_curve[3], '-', label='Polynom', color='dodgerblue')
-        opti_lines.ax.plot([polR.optimum_rib], [polR.optimum_weight], 'o', color='dodgerblue')
+        opti_lines.ax.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom', color='dodgerblue')
+        opti_lines.ax.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color='dodgerblue')
 
-        opti_lines.ax.plot(rbfR.opti_curve[0], rbfR.opti_curve[3], '-', label='RBF', color='orange')
-        opti_lines.ax.plot([rbfR.optimum_rib], [rbfR.optimum_weight], 'o', color='orange')
+        opti_lines.ax.plot(resR.opti_curve[0], resR.opti_curve[3], '-', label='RBF', color='orange')
+        opti_lines.ax.plot([resR.optimum_rib], [resR.optimum_weight], 'o', color='orange')
 
-        opti_lines.ax.plot(kriR.opti_curve[0], kriR.opti_curve[3], '-', label='Kriging', color='mediumseagreen')
-        opti_lines.ax.plot([kriR.optimum_rib], [kriR.optimum_weight], 'o', color='mediumseagreen')
+        opti_lines.ax.plot(resK.opti_curve[0], resK.opti_curve[3], '-', label='Kriging', color='mediumseagreen')
+        opti_lines.ax.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color='mediumseagreen')
 
         import matplotlib.ticker as ticker
         opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-        opti_lines.finalize(height=2)
-        #opti_lines.show(Constants().PLOT_PATH + 'optiLines.pdf')
+        opti_lines.finalize(height=2, legendLoc=9, bbox_to_anchor=(0.5, -0.47), legendNcol=3)
+        opti_lines.ax.locator_params(nbins=4, axis='y')
+        import matplotlib.pyplot as plt
+        plt.subplots_adjust(bottom=0.45, top=0.98)
+        opti_lines.save(Constants().PLOT_PATH + 'optiLinesHalton.pdf')
         opti_lines.show()
-        print('done')

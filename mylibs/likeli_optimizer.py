@@ -30,7 +30,7 @@ class LikeliOptimizer:
 
         bnds = []
         for i in range(0, dimensions):
-            bnds.append((-5, +10))
+            bnds.append((-5, +5))
             #bnds.append((max(1e-5, guess[i] * 0.1), min(1e+10, guess[i] * 10)))
         for i in range(0, dimensions):
             bnds.append((1., 2.))
@@ -46,7 +46,7 @@ class LikeliOptimizer:
         minima_param = None
         ps = np.linspace(1., 2., num=p_sections)
         #thetas = np.logspace(-5, 9, num=theta_sections)
-        thetas = np.linspace(-5, 3, num=theta_sections)
+        thetas = np.linspace(-5, 5, num=theta_sections)
         p_param_i = np.zeros((dimensions))
         #t_param_i = np.zeros((dimensions))
         params = []

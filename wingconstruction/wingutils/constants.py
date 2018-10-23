@@ -36,9 +36,9 @@ class Constants(object):
     INPUT_DIR = PROJECT_ROOT_DIR + '/data_in'
 
     def __init__(self):
-        #print('init Constants...')
+        print('init Constants...')
         self.config = configparser.ConfigParser()
-        print(os.path.abspath(self.INPUT_DIR+'/setup.ini'))
+        #print(os.path.abspath(self.INPUT_DIR+'/setup.ini'))
         self.config.read(self.INPUT_DIR+'/setup.ini')
 
         ### PATHS
