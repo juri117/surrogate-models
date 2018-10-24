@@ -83,7 +83,7 @@ class Surrogate:
         self.results = SurroResults()
         self.prepare(force_recalc)
 
-    def auto_run(self, sampling_type, sample_point_count, surro_type, run_validation=True, auto_fit=True):
+    def auto_run(self, sampling_type, sample_point_count, surro_type, run_validation=True, auto_fit=False):
         suc = self.generate_sampling_plan(sampling_type, sample_point_count)
         if not suc:
             return self.results, None
@@ -243,13 +243,13 @@ class Surrogate:
             self.surro_class = RBF
             self.surro = RBF(self.known_params_s, self.known_stress)
             a = 1.5
-            rbf_func = 'multi-quadratic'
+            rbf_func = 'gaus' # 'gaus' 'multi-quadratic'
             if params != []:
                 a = params[0]
                 if len(params) > 1:
                     rbf_func = params[1]
-            self.surro.update_param(a, 'multi-quadratic')  # 'multi-quadratic')
-            self.update_params = [a, 'multi-quadratic']  # ''multi-quadratic']
+            self.surro.update_param(a, rbf_func)
+            self.update_params = [a, rbf_func]
             #if self.show_plots:
             #    print('coeff1 = ' + str(self.surro.get_coeff()[0]))
             #    print('coeff2 = ' + str(self.surro.get_coeff()[1]))
@@ -505,13 +505,13 @@ class SurroResults:
 
 
 if __name__ == '__main__':
-    PGF = True
+    PGF = False
     SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    if False:
+    if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_KRIGING, run_validation=False)
+        res, _ = sur.auto_run(SAMPLE_HALTON, 14, SURRO_RBF, run_validation=False)
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_LATIN
