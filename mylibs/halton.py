@@ -119,9 +119,17 @@ if __name__ == '__main__':
     #    point = hal.halton(i, 2)
 
     #sys.exit(15)
+    import matplotlib.pyplot as plt
+    samples = hal.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)], base=[2,3])
+    for i in range(0, len(samples)):
+        plt.plot([samples[i][0]], [samples[i][1]], 'bo')
+    plt.show()
+    sys.exit(0)
 
     pltHalton = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
+
+
 
     ax1 = pltHalton.fig.add_subplot(121)
     ax2 = pltHalton.fig.add_subplot(122)

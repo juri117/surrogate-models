@@ -210,7 +210,7 @@ class Kriging:
             return
 
         opt_theta = self._theta
-        thetas = np.logspace(-5, 3, num=50)
+        thetas = np.logspace(-5, 5, num=50)
         likely_thet = np.zeros((len(thetas), len(thetas)))
         for i1 in range(0, len(thetas)):
             for i2 in range(0, len(thetas)):

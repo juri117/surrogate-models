@@ -83,26 +83,36 @@ class Surrogate:
         self.results = SurroResults()
         self.prepare(force_recalc)
 
-    def auto_run(self, sampling_type, sample_point_count, surro_type, run_validation=True, auto_fit=False):
+    def auto_run(self, sampling_type, sample_point_count, surro_type, run_validation=True, auto_fit=True, params=[], sequential_runs=0):
         suc = self.generate_sampling_plan(sampling_type, sample_point_count)
         if not suc:
             return self.results, None
-        self.run_fem_calculation()
         self.run_validation_points()
-        fit_time = TimeTrack('FitTime')
-        fit_time.tic()
-        if surro_type == SURRO_POLYNOM and auto_fit:
-            suc = self.auto_fit_poly()
-        elif surro_type == SURRO_RBF and auto_fit:
-            suc = self.auto_fit_rbf()
-        else:
-            suc = self.train_model(surro_type)
-        self.results.runtime = fit_time.toc()
-        if not suc:
-            return self.results, None
+        for i in range(0, sequential_runs + 1):
+            if self.results.optimum_weight > 0.:
+                self.known_params = np.append(self.known_params,
+                                              [[self.results.optimum_rib, self.results.optimum_shell]], axis=0)
+                self._generate_scaled_sampling_points()
+
+            self.run_fem_calculation()
+
+            #fit_time = TimeTrack('FitTime')
+            #fit_time.tic()
+            if surro_type == SURRO_POLYNOM and auto_fit:
+                suc = self.auto_fit_poly()
+            elif surro_type == SURRO_RBF and auto_fit:
+                suc = self.auto_fit_rbf(params=params)
+            else:
+                suc = self.train_model(surro_type, params=params)
+            #self.results.runtime = fit_time.toc()
+            if not suc:
+                return self.results, None
+            self.optimize()
+
         if run_validation:
+            self.run_validation_points(flip_points=True)
             self.run_validation(full_validation=True)
-        self.optimize()
+
         self.print_results()
         if self.show_plots:
             self.plot_it()
@@ -120,9 +130,12 @@ class Surrogate:
         self.train_model(SURRO_POLYNOM, [best_order])
         return True
 
-    def auto_fit_rbf(self):
+    def auto_fit_rbf(self, params=[]):
         rbf_func = 'gaus' # 'gaus' 'multi-quadratic'
         init_a = 1.
+        if len(params) == 2:
+            init_a = params[0]
+            rbf_func = params[1]
         res = minimize(self._opti_rbf, init_a, args=rbf_func, method='SLSQP', tol=1e-8,
                        options={'disp': False, 'maxiter': 999}, bounds=[(0.01, 5.)])
         self.results.opti_params = [res.x[0], rbf_func]
@@ -205,11 +218,14 @@ class Surrogate:
         for i in range(0, len(sample_points)):
             sample_points[i][0] = int(round(sample_points[i][0]))
         self.known_params = np.array(sample_points)
+        self._generate_scaled_sampling_points()
+        print('sample plan using {:d} known values'.format(len(self.known_params[:, 0])))
+        return True
+
+    def _generate_scaled_sampling_points(self):
         self.known_params_s = np.zeros(self.known_params.shape)
         self.known_params_s[:, 0] = (self.known_params[:, 0] - self.offset_rib) / self.scale_rib
         self.known_params_s[:, 1] = (self.known_params[:, 1] - self.offset_shell) / self.scale_shell
-        print('sample plan using {:d} known values'.format(len(self.known_params[:, 0])))
-        return True
 
     def run_fem_calculation(self):
         ##################################################
@@ -279,16 +295,19 @@ class Surrogate:
             return False
         return True
 
-    def run_validation_points(self):
+    def run_validation_points(self, flip_points=False):
+        factor = 1
+        if flip_points:
+            factor = -1
         center_r = (range_rib[1] + range_rib[0]) * 0.5
         center_s = (range_shell[1] + range_shell[0]) * 0.5
         d_r = (range_rib[1] - range_rib[0]) / 2.
         d_s = (range_shell[1] - range_shell[0]) / 2.
         self.vali_params = np.array([[center_r, center_s],
-                                [center_r - int(round(d_r / 4.)), center_s - (d_s / 4.)],
-                                [center_r - int(round(d_r / 3.)), center_s + (d_s / 3.)],
-                                [center_r + int(round(d_r / 2.7)), center_s + (d_s / 2.7)],
-                                [center_r + int(round(d_r / 2.2)), center_s - (d_s / 2.2)]])
+                                [center_r - int(round(d_r / 4.) * factor), center_s - (factor * d_s / 4.)],
+                                [center_r - int(round(d_r / 3.) * factor), center_s + (factor * d_s / 3.)],
+                                [center_r + int(round(d_r / 2.7) * factor), center_s + (factor * d_s / 2.7)],
+                                [center_r + int(round(d_r / 2.2) * factor), center_s - (factor * d_s / 2.2)]])
         self.vali_params_s = np.zeros(self.vali_params.shape)
         self.vali_params_s[:, 0] = (self.vali_params[:, 0] - self.offset_rib) / self.scale_rib
         self.vali_params_s[:, 1] = (self.vali_params[:, 1] - self.offset_shell) / self.scale_shell
@@ -449,6 +468,7 @@ class Surrogate:
             plot3d.ax.plot([self.results.optimum_rib], [self.results.optimum_shell * 1000.], [self.results.optimum_stress], 'rx',
                        markersize=12,
                        markeredgewidth=5, label='glob. Optimum')
+            plot3d.ax.plot([17], [2.565], [max_shear_strength], 'kx')
         plot3d.ax.locator_params(nbins=7, axis='x')
         plot3d.ax.locator_params(nbins=5, axis='y')
 
@@ -477,10 +497,10 @@ class Surrogate:
         print('opti params: ' + str(self.results.opti_params))
         print('runntime: {:f}'.format(self.results.runtime))
         print('---')
-        print('deviation: {:f}'.format(self.results.vali_results.deviation))
-        print('rmse: {:f}'.format(self.results.vali_results.rmse))
-        print('mae: {:f}'.format(self.results.vali_results.mae))
-        print('press: {:f}'.format(self.results.vali_results.press))
+        print('deviation: {:f}'.format(100. * self.results.vali_results.deviation))
+        print('rmse: {:f} ({:f}%)'.format(self.results.vali_results.rmse, 100. * self.results.vali_results.rmse / max_shear_strength))
+        print('mae: {:f} ({:f}%)'.format(self.results.vali_results.mae, 100. * self.results.vali_results.mae / max_shear_strength))
+        print('press: {:f} ({:f}%)'.format(self.results.vali_results.press, 100. * self.results.vali_results.press / max_shear_strength))
 
 class SurroResults:
 
@@ -509,38 +529,56 @@ if __name__ == '__main__':
     SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    if True:
+    if False:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 14, SURRO_RBF, run_validation=False)
+        res, _ = sur.auto_run(SAMPLE_HALTON, 16, SURRO_KRIGING, run_validation=False, params=[1., 'gaus'], auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
     else:
         SHOW_PLOT = False
-        SAMPLING = SAMPLE_LATIN
+        SAMPLING = SAMPLE_HALTON
+        VALIDATION = True
         POINTS = 17
         surP = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
-        resP, _ = surP.auto_run(SAMPLING, POINTS, SURRO_POLYNOM, run_validation=False)
+        resP, _ = surP.auto_run(SAMPLING, POINTS, SURRO_POLYNOM, run_validation=VALIDATION)
+        POINTS = 14
+        surRg = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
+        resRg, _ = surRg.auto_run(SAMPLING, POINTS, SURRO_RBF, run_validation=VALIDATION, params=[1., 'gaus'])
         POINTS = 20
-        surR = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        resR, _ = surR.auto_run(SAMPLING, POINTS, SURRO_RBF, run_validation=False)
+        surRm = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
+        resRm, _ = surRm.auto_run(SAMPLING, POINTS, SURRO_RBF, run_validation=VALIDATION, params=[1., 'multi-quadratic'])
         POINTS = 16
         surK = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
-        resK, _ = surK.auto_run(SAMPLING, POINTS, SURRO_KRIGING, run_validation=False)
+        resK, _ = surK.auto_run(SAMPLING, POINTS, SURRO_KRIGING, run_validation=VALIDATION)
+
+        print('POLY------------------------')
+        surP.print_results()
+        print('RBF gaus------------------------')
+        surRg.print_results()
+        print('RBF mq------------------------')
+        surRm.print_results()
+        print('KRIGING------------------------')
+        surK.print_results()
 
         #plot opti-lines
         opti_lines = PlotHelper(['Rippen', 'opt. Gewicht'], pgf=PGF, fancy=True)
-        opti_lines.ax.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom', color='dodgerblue')
-        opti_lines.ax.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color='dodgerblue')
+        l0 = opti_lines.ax.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom') #, color='dodgerblue')
+        opti_lines.ax.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color=l0[0].get_color())
 
-        opti_lines.ax.plot(resR.opti_curve[0], resR.opti_curve[3], '-', label='RBF', color='orange')
-        opti_lines.ax.plot([resR.optimum_rib], [resR.optimum_weight], 'o', color='orange')
+        l1 = opti_lines.ax.plot(resRg.opti_curve[0], resRg.opti_curve[3], '-', label='RBF-gauß') #, color='orange')
+        opti_lines.ax.plot([resRg.optimum_rib], [resRg.optimum_weight], 'o', color=l1[0].get_color())
 
-        opti_lines.ax.plot(resK.opti_curve[0], resK.opti_curve[3], '-', label='Kriging', color='mediumseagreen')
-        opti_lines.ax.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color='mediumseagreen')
+        l2 = opti_lines.ax.plot(resRm.opti_curve[0], resRm.opti_curve[3], '-', label='RBF-mq') #, color='magenta')
+        opti_lines.ax.plot([resRm.optimum_rib], [resRm.optimum_weight], 'o', color=l2[0].get_color())
+
+        l3 = opti_lines.ax.plot(resK.opti_curve[0], resK.opti_curve[3], '-', label='Kriging') #, color='mediumseagreen')
+        opti_lines.ax.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color=l3[0].get_color())
+
+        opt = opti_lines.ax.plot([17], [405.5], 'kx', label='exakte Lösung')
 
         import matplotlib.ticker as ticker
         opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-        opti_lines.finalize(height=2, legendLoc=9, bbox_to_anchor=(0.5, -0.47), legendNcol=3)
+        opti_lines.finalize(height=2.3, legendLoc=9, bbox_to_anchor=(0.5, -0.42), legendNcol=3)
         opti_lines.ax.locator_params(nbins=4, axis='y')
         import matplotlib.pyplot as plt
-        plt.subplots_adjust(bottom=0.45, top=0.98)
+        plt.subplots_adjust(bottom=0.49, top=0.98)
         opti_lines.save(Constants().PLOT_PATH + 'optiLinesHalton.pdf')
         opti_lines.show()

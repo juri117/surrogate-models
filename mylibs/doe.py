@@ -57,7 +57,7 @@ class DoE:
         out += '{:s}\t\t\t\t|{:s}\n'.format('result', '%')
         for r in self._results:
             for i in range(self._k):
-                out += '({:d}){:02f}\t|'.format(r.inp[i], self._levels[i][r.inp[i]])
+                out += '({:01d}){:.5f}\t|'.format(r.inp[i], self._levels[i][r.inp[i]])
             out += '{:f}\t|{:f}\n'.format(r.res, 100*(r.res/ref))
         print(out)
 
@@ -102,6 +102,6 @@ if __name__ == '__main__':
     ranges = [range_rib, range_shell]
     from wingconstruction.multi_run import MultiRun
     runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, force_recalc=False, project_name_prefix='DoE')
-    d = DoE(input_names, ranges, runner.calc_stress, level_count=3)
+    d = DoE(input_names, ranges, runner.calc_stress, level_count=2)
     d.corellation()
     d.print_res_table()

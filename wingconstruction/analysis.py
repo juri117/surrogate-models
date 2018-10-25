@@ -145,9 +145,10 @@ def plot_sample_point_analysis(file_name, ax=None, title='', data_i=8):
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    #order_plot = plot_sample_point_analysis('analysis_KrigV001.csv', data_i=9)
+    order_plot = plot_sample_point_analysis('analysis_KrigV001.csv', data_i=9)
+    order_plot.ax.locator_params(nbins=15, axis='y')
     #order_plot.save(Constants().PLOT_PATH + 'polymOrderComp.pdf')
-    #order_plot.show()
+    order_plot.show()
 
     plt_comp = PlotHelper([], fancy=True, pgf=True)
     import matplotlib.pyplot as plt
@@ -155,36 +156,40 @@ if __name__ == '__main__':
     ax2 = plt_comp.fig.add_subplot(324)
     ax3 = plt_comp.fig.add_subplot(326)
 
-    plot_sample_point_analysis('analysis_PolyV001.csv', ax=ax1, title='Polynom', data_i=8)
+    poly_file = 'analysis_PolyV001.csv'
+    rbf_file = 'analysis_RbfV001.csv'
+    krig_file = 'analysis_KrigV001.csv'
+
+    plot_sample_point_analysis(poly_file, ax=ax1, title='Polynom', data_i=8)
     labels = [item.get_text() for item in ax1.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax1.set_xticklabels(empty_string_labels)
     ax1.set_xlabel('')
     ax1.set_ylabel('')
-    plot_sample_point_analysis('analysis_RbfV001.csv', ax=ax2, title='RBF', data_i=8)
+    plot_sample_point_analysis(rbf_file, ax=ax2, title='RBF (mq)', data_i=8)
     labels = [item.get_text() for item in ax2.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax2.set_xticklabels(empty_string_labels)
     ax2.set_xlabel('')
-    plot_sample_point_analysis('analysis_KrigV001.csv', ax=ax3, title='Kriging', data_i=8)
+    plot_sample_point_analysis(krig_file, ax=ax3, title='Kriging', data_i=8)
     ax3.set_ylabel('')
 
     ax4 = plt_comp.fig.add_subplot(321)
     ax5 = plt_comp.fig.add_subplot(323)
     ax6 = plt_comp.fig.add_subplot(325)
 
-    plot_sample_point_analysis('analysis_PolyV001.csv', ax=ax4, title='Polynom', data_i=6)
+    plot_sample_point_analysis(poly_file, ax=ax4, title='Polynom', data_i=6)
     labels = [item.get_text() for item in ax4.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax4.set_xticklabels(empty_string_labels)
     ax4.set_xlabel('')
     ax4.set_ylabel('')
-    plot_sample_point_analysis('analysis_RbfV001.csv', ax=ax5, title='RBF', data_i=6)
+    plot_sample_point_analysis(rbf_file, ax=ax5, title='RBF (mq)', data_i=6)
     labels = [item.get_text() for item in ax5.get_xticklabels()]
     empty_string_labels = [''] * len(labels)
     ax5.set_xticklabels(empty_string_labels)
     ax5.set_xlabel('')
-    plot_sample_point_analysis('analysis_KrigV001.csv', ax=ax6, title='Kriging', data_i=6)
+    plot_sample_point_analysis(krig_file, ax=ax6, title='Kriging', data_i=6)
     ax6.set_ylabel('')
 
     handles, labels = ax1.get_legend_handles_labels()
