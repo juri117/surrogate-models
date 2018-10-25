@@ -306,8 +306,8 @@ class Surrogate:
         self.vali_params = np.array([[center_r, center_s],
                                 [center_r - int(round(d_r / 4.) * factor), center_s - (factor * d_s / 4.)],
                                 [center_r - int(round(d_r / 3.) * factor), center_s + (factor * d_s / 3.)],
-                                [center_r + int(round(d_r / 2.7) * factor), center_s + (factor * d_s / 2.7)],
-                                [center_r + int(round(d_r / 2.2) * factor), center_s - (factor * d_s / 2.2)]])
+                                [center_r + int(round(d_r / 2.7) * factor), center_s + (factor * d_s / 2.5)],
+                                [center_r + int(round(d_r / 2.2) * factor), center_s - (factor * d_s / 1.2)]])
         self.vali_params_s = np.zeros(self.vali_params.shape)
         self.vali_params_s[:, 0] = (self.vali_params[:, 0] - self.offset_rib) / self.scale_rib
         self.vali_params_s[:, 1] = (self.vali_params[:, 1] - self.offset_shell) / self.scale_shell
@@ -531,7 +531,7 @@ if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_POLYNOM, run_validation=False, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
+        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_POLYNOM, run_validation=True, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_HALTON
