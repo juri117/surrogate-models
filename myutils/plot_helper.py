@@ -73,11 +73,11 @@ class PlotHelper:
             plt.tight_layout()
         return legend
 
-    def save(self, file_path):
+    def save(self, file_path, transparent=True):
         import matplotlib.pyplot as plt
-        plt.savefig(file_path, transparent=True)
+        plt.savefig(file_path, transparent=transparent)
         if self._use_pgf and '.pdf' in file_path:
-            plt.savefig(file_path.replace('pdf', 'pgf'), transparent=True)
+            plt.savefig(file_path.replace('pdf', 'pgf'), transparent=transparent)
 
     def show(self):
         import matplotlib.pyplot as plt

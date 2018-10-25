@@ -119,7 +119,7 @@ class Surrogate:
         return self.results, self.surro
 
     def auto_fit_poly(self):
-        orders = range(1, 15)
+        orders = range(1, 10)
         rmse = np.zeros((len(orders)))
         for i in range(0, len(orders)):
             self.train_model(SURRO_POLYNOM, [orders[i]])
@@ -529,9 +529,9 @@ if __name__ == '__main__':
     SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    if False:
+    if True:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 16, SURRO_KRIGING, run_validation=False, params=[1., 'gaus'], auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
+        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_POLYNOM, run_validation=False, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_HALTON
@@ -576,9 +576,36 @@ if __name__ == '__main__':
 
         import matplotlib.ticker as ticker
         opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-        opti_lines.finalize(height=2.3, legendLoc=9, bbox_to_anchor=(0.5, -0.42), legendNcol=3)
+        opti_lines.finalize(height=2.5, legendLoc=9, bbox_to_anchor=(0.5, -0.39), legendNcol=3)
         opti_lines.ax.locator_params(nbins=4, axis='y')
         import matplotlib.pyplot as plt
-        plt.subplots_adjust(bottom=0.49, top=0.98)
-        opti_lines.save(Constants().PLOT_PATH + 'optiLinesHalton.pdf')
+        plt.subplots_adjust(bottom=0.44, top=0.92)
+
+        #magnifier
+        from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
+        from mpl_toolkits.axes_grid1.inset_locator import mark_inset
+        axins = zoomed_inset_axes(opti_lines.ax, 3, loc='upper left', bbox_to_anchor=(300, 250))
+        axins.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom', color=l0[0].get_color())
+        axins.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color=l0[0].get_color())
+
+        axins.plot(resRg.opti_curve[0], resRg.opti_curve[3], '-', label='RBF-gauß', color=l1[0].get_color())
+        axins.plot([resRg.optimum_rib], [resRg.optimum_weight], 'o', color=l1[0].get_color())
+        axins.plot(resRm.opti_curve[0], resRm.opti_curve[3], '-', label='RBF-mq', color=l2[0].get_color())
+        axins.plot([resRm.optimum_rib], [resRm.optimum_weight], 'o', color=l2[0].get_color())
+        axins.plot(resK.opti_curve[0], resK.opti_curve[3], '-',
+                                label='Kriging', color=l3[0].get_color())
+        axins.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color=l3[0].get_color())
+        axins.plot([17], [405.5], 'kx', label='exakte Lösung')
+
+        x1, x2, y1, y2 = 16.8, 19.2, 404, 411
+        axins.set_xlim(x1, x2)
+        axins.set_ylim(y1, y2)
+        from matplotlib import rc
+        rc('font', **opti_lines.font)
+        plt.xticks(visible=False)
+        plt.yticks(visible=False)
+        mark_inset(opti_lines.ax, axins, loc1=3, loc2=4, fc="none", ec="0.5")
+
+
+        opti_lines.save(Constants().PLOT_PATH + 'optiLinesHalton.pdf', transparent=False)
         opti_lines.show()
