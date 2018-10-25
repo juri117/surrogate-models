@@ -135,28 +135,29 @@ def plot_sample_point_analysis(file_name, ax=None, title='', data_i=8):
         show_legend = False
     samp_plot.ax.locator_params(nbins=4, axis='y')
     samp_plot.ax.locator_params(nbins=7, axis='x')
-    #samp_plot.finalize(height=4, width=3, legendLoc=legend_loc, show_legend=show_legend, bbox_to_anchor=(1., 0.5), tighten_layout=False)
+
     #samp_plot.save(Constants().PLOT_PATH + file_name.replace('csv', 'pdf'))
     if ax == None:
-        samp_plot.show()
+        samp_plot.ax.locator_params(nbins=5, axis='y')
+        samp_plot.finalize(height=2, width=6, legendLoc=legend_loc, show_legend=show_legend, bbox_to_anchor=(1., 0.5))
+        #samp_plot.show()
     return samp_plot
 
 
 if __name__ == '__main__':
     #file = run_analysis()
     #plot_sample_point_analysis(file)
-    order_plot = plot_sample_point_analysis('analysis_KrigV001.csv', data_i=9)
-    order_plot.ax.locator_params(nbins=15, axis='y')
+    #order_plot = plot_sample_point_analysis('analysis_PolyV002.csv', data_i=13)
     #order_plot.save(Constants().PLOT_PATH + 'polymOrderComp.pdf')
-    order_plot.show()
+    #order_plot.show()
 
-    plt_comp = PlotHelper([], fancy=True, pgf=True)
+    plt_comp = PlotHelper([], fancy=True, pgf=False)
     import matplotlib.pyplot as plt
     ax1 = plt_comp.fig.add_subplot(322)
     ax2 = plt_comp.fig.add_subplot(324)
     ax3 = plt_comp.fig.add_subplot(326)
 
-    poly_file = 'analysis_PolyV001.csv'
+    poly_file = 'analysis_PolyV002.csv'
     rbf_file = 'analysis_RbfV001.csv'
     krig_file = 'analysis_KrigV001.csv'
 

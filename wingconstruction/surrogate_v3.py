@@ -35,6 +35,7 @@ from mylibs.validation import Validation
 from mylibs.validation import ValidationResults
 from wingconstruction.fem.wing_construction_v4 import WingConstruction
 from wingconstruction.wingutils.defines import *
+from wingconstruction.newton_opti import NewtonOpt
 
 FANCY_PLOT = True
 RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
@@ -119,13 +120,13 @@ class Surrogate:
         return self.results, self.surro
 
     def auto_fit_poly(self):
-        orders = range(1, 10)
-        rmse = np.zeros((len(orders)))
+        orders = range(1, 9+1)
+        mae = np.zeros((len(orders)))
         for i in range(0, len(orders)):
             self.train_model(SURRO_POLYNOM, [orders[i]])
             self.run_validation(full_validation=False)
-            rmse[i] = self.results.vali_results.mae
-        best_order = orders[np.argmin(rmse)]
+            mae[i] = self.results.vali_results.mae
+        best_order = orders[np.argmin(mae)]
         self.results.opti_params = [best_order]
         self.train_model(SURRO_POLYNOM, [best_order])
         return True
@@ -333,8 +334,7 @@ class Surrogate:
         else:
             rmse = vali.calc_rmse(self.vali_params_s, self.vali_values, self.surro.predict)
             self.results.vali_results.rmse = rmse
-            mae = vali.calc_mae(self.vali_params_s, self.vali_values, self.surro.predict)
-            self.results.vali_results.mae = mae
+            self.results.vali_results.mae = vali.calc_mae(self.vali_params_s, self.vali_values, self.surro.predict)
         if self.show_plots and full_validation:
             deri_plot = PlotHelper(['Rippen', 'Blechdicke in mm'], fancy=FANCY_PLOT, pgf=self.pgf)
             dev = np.zeros(self.stress.shape)
@@ -531,15 +531,15 @@ if __name__ == '__main__':
     SHOW_PLOT = True
     # SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE, SAMPLE_OPTI_LATIN_HYPER
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
-    if True:
+    if False:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 17, SURRO_POLYNOM, run_validation=False, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
+        res, _ = sur.auto_run(SAMPLE_HALTON, 15, SURRO_POLYNOM, run_validation=False, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_HALTON
-        VALIDATION = True
+        VALIDATION = False
         POINTS = 17
-        surP = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=False)
+        surP = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
         resP, _ = surP.auto_run(SAMPLING, POINTS, SURRO_POLYNOM, run_validation=VALIDATION)
         POINTS = 14
         surRg = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
@@ -574,7 +574,13 @@ if __name__ == '__main__':
         l3 = opti_lines.ax.plot(resK.opti_curve[0], resK.opti_curve[3], '-', label='Kriging') #, color='mediumseagreen')
         opti_lines.ax.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color=l3[0].get_color())
 
-        opt = opti_lines.ax.plot([17], [405.5], 'kx', label='exakte Lösung')
+        newton_file = '../data_out/newtonOpti2018-10-19_15_57_47.csv'
+        if os.path.isfile(newton_file):
+            data = np.genfromtxt(newton_file, delimiter=',', skip_header=1)
+            lex = opti_lines.ax.plot(data[:, 2], data[:, 5], '--', label='exakte Lösung')
+            opti_lines.ax.plot([17], [405.5], 'o', color=lex[0].get_color())
+
+        opti_lines.ax.set_xlim((5, 25))
 
         import matplotlib.ticker as ticker
         opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
@@ -586,7 +592,7 @@ if __name__ == '__main__':
         #magnifier
         from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
         from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-        axins = zoomed_inset_axes(opti_lines.ax, 3, loc='upper left', bbox_to_anchor=(300, 250))
+        axins = zoomed_inset_axes(opti_lines.ax, 3.5, loc='upper left', bbox_to_anchor=(285, 250))
         axins.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom', color=l0[0].get_color())
         axins.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color=l0[0].get_color())
 
@@ -597,9 +603,13 @@ if __name__ == '__main__':
         axins.plot(resK.opti_curve[0], resK.opti_curve[3], '-',
                                 label='Kriging', color=l3[0].get_color())
         axins.plot([resK.optimum_rib], [resK.optimum_weight], 'o', color=l3[0].get_color())
-        axins.plot([17], [405.5], 'kx', label='exakte Lösung')
 
-        x1, x2, y1, y2 = 16.8, 19.2, 404, 411
+        newton_file = '../data_out/newtonOpti2018-10-19_15_57_47.csv'
+        if os.path.isfile(newton_file):
+            axins.plot(data[:, 2], data[:, 5], '--', color=lex[0].get_color())
+            axins.plot([17], [405.5], 'o', color=lex[0].get_color())
+
+        x1, x2, y1, y2 = 16.8, 19.2, 404.5, 410.5
         axins.set_xlim(x1, x2)
         axins.set_ylim(y1, y2)
         from matplotlib import rc

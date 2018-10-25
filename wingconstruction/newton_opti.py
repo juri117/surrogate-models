@@ -135,5 +135,5 @@ if __name__ == '__main__':
     #nw.plot_it()
     pl = nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47_all.csv', marker=':')
     pl = nw.plot_it('../data_out/newtonOpti2018-10-19_15_57_47.csv', plot_handle=pl)
-    pl.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
+    #pl.save(Constants().PLOT_PATH + 'newtonOptiPlot.pdf')
     pl.show()

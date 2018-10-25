@@ -76,6 +76,11 @@ class RBF:
                 rad_sum += (x_pred[ik] - self._known_in[i][ik]) ** 2.
             radius = math.sqrt(rad_sum)
             res += self._coeff[i] * self._rbf(self._rbf_const, radius)
+        try:
+            r = res.item()
+            res = r
+        except:
+            pass
         return res
 
 def lin_rbf(a, r):
