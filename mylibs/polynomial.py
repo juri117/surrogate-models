@@ -11,18 +11,8 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-from myutils.plot_helper import PlotHelper
-from myutils.time_track import TimeTrack
 
 import numpy as np
-import math
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import rc
-import matplotlib
-import scipy
-from scipy.optimize import minimize
-from scipy.optimize import basinhopping
-from scipy import optimize
 
 VARS = ['x', 'y', 'z']
 
@@ -39,9 +29,18 @@ class Polynomial:
         self._order = 2
 
     def train(self):
+        """
+        trains the surrogate if available
+        :return: None
+        """
         self.update_param(self._order)
 
     def update_param(self, order):
+        """
+        updates the parameters of the surrogate model
+        :param order: the maximum polynomial order
+        :return: None
+        """
         self._order = order
         self._calc_vandermonde_mat()
         self._calc_weights()
@@ -90,6 +89,11 @@ class Polynomial:
         self._weights = weights
 
     def predict(self, x_pred):
+        """
+        predicts a value from the surrogate model
+        :param x_pred: vector of input values
+        :return: result value
+        """
         fx = 0.
         iw = 0
         fx += self._weights[iw]
@@ -135,14 +139,3 @@ class Polynomial:
 
     def get_weights(self):
         return self._weights
-
-
-if __name__ == '__main__':
-    x = [[1, 2, 3, 4, 5]]
-    y = [1, 3, 3, 2, 0]
-
-    pol = Polynomial(x, y)
-    pol.update_param(5)
-
-    print(pol.predict([2.5, 2.5, 2.5]))
-    pol.generate_formula()

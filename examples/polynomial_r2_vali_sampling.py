@@ -11,17 +11,17 @@ from mylibs.halton import Halton
 from mylibs.structured_sample import StructuredSample
 
 if __name__ == '__main__':
-    polyPlot = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=True)
+    polyPlot = PlotHelper(['Eingang', 'Ausgang'], fancy=True, pgf=False)
 
     # the smooth whole function
     fx = np.linspace(0, 10, 1001)
-    fy = list(map(f_2D,fx))
+    fy = list(map(f_2d, fx))
 
     polyPlot.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
 
     # validate points
     valiParams = np.array([1., 5. , 9.])
-    valiValues = np.array(list(map(f_2D, valiParams)))
+    valiValues = np.array(list(map(f_2d, valiParams)))
     valiParams = valiParams.reshape((len(valiParams), 1))
 
     fx = fx.reshape((len(fx), 1))
@@ -37,7 +37,7 @@ if __name__ == '__main__':
         knownParams = sample.generate_sample_plan(n, 1, [(0., 10.)])
         knownParams = np.array(knownParams).flatten()
         #knownParams = np.array([0., 2., 4., 6., 8., 10.])
-        knownValues = np.array(list(map(f_2D, knownParams)))
+        knownValues = np.array(list(map(f_2d, knownParams)))
 
         # Polynomials
         poly = Polynomial(knownParams, knownValues)

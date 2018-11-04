@@ -48,7 +48,6 @@ print('min mieses stress: ' + str(pro1.resultsAba.stressMisesMin))
 print('max mieses stress: ' + str(pro1.resultsAba.stressMisesMax))
 print('weight: ' + str(pro1.calc_wight()))
 
-#todo: detect failed mesh generation
 pro1.errorFlag = False
 pro1.solve()
 if not pro1.errorFlag:

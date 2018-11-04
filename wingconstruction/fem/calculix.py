@@ -15,12 +15,6 @@ import os
 
 from wingconstruction.wingutils.constants import Constants
 
-##############################################
-# set up variables
-
-#SHELL_THICKNESS = 0.008 #in mm
-#SHELL_MATERIAL_YOUNG = 60e9 #N/m^2
-#SHELL_MATERIAL_POISSON = 0.34
 
 class Calculix():
 
@@ -45,11 +39,16 @@ class Calculix():
     ##############################################
     # fem postprocessing
 
-    def generate_postpro_file(self, partName):
-        f = open(self.get_file_path(partName + '_post.fbd'), 'w')
+    def generate_postpro_file(self, part_name):
+        """
+        writes standard postprocessing file for calculix
+        :param part_name: name of the part
+        :return: None
+        """
+        f = open(self.get_file_path(part_name + '_post.fbd'), 'w')
         inpLines = []
-        inpLines.append('read ' + partName + '.frd')
-        inpLines.append('read ' + partName + '.inp nom') #nom -> no-mesh, since it is already in frd file
+        inpLines.append('read ' + part_name + '.frd')
+        inpLines.append('read ' + part_name + '.inp nom') #nom -> no-mesh, since it is already in frd file
         # deformation
         inpLines.append('view edge off')
         inpLines.append('text deformation')
@@ -60,7 +59,7 @@ class Calculix():
         #inpLines.append('seta ! all')
         inpLines.append('frame')
         inpLines.append('hcpy png')
-        inpLines.append('sys mv hcpy_1.png ' + partName + '_deform.png')
+        inpLines.append('sys mv hcpy_1.png ' + part_name + '_deform.png')
         # mieses top
         inpLines.append('text Mieses stress top')
         inpLines.append('view disp off')
@@ -70,19 +69,19 @@ class Calculix():
         inpLines.append('min 0 f')
         inpLines.append('frame')
         inpLines.append('hcpy png')
-        inpLines.append('sys mv hcpy_2.png ' + partName + '_mieses_top.png')
+        inpLines.append('sys mv hcpy_2.png ' + part_name + '_mieses_top.png')
         #mieses buttom
         inpLines.append('text Mieses stress buttom')
         inpLines.append('rot r 180')
         inpLines.append('frame')
         inpLines.append('hcpy png')
-        inpLines.append('sys mv hcpy_3.png ' + partName + '_mieses_buttom.png')
+        inpLines.append('sys mv hcpy_3.png ' + part_name + '_mieses_buttom.png')
         #mesh buttom
         inpLines.append('view surf')
         inpLines.append('view elem')
         inpLines.append('frame')
         inpLines.append('hcpy png')
-        inpLines.append('sys mv hcpy_4.png ' + partName + '_mesh_buttom.png')
+        inpLines.append('sys mv hcpy_4.png ' + part_name + '_mesh_buttom.png')
         inpLines.append('quit')
 
         f.writelines(line + '\n' for line in inpLines)
@@ -93,12 +92,22 @@ class Calculix():
 
     # generates the mesh from a given .fbl-file
     def generate_mesh(self, part_name):
+        """
+        calls calculix to generate the mesh file
+        :param part_name: name of the part
+        :return: None
+        """
         print('run fem pre-processor cgx('+self._workingDir+')')
         p = self.run_cgx(part_name + '.fbl', pipe_response=True)
         out, err = p.communicate()
 
     # calls the fem solver (all input files must be present in the working directory)
     def solve_model(self, file_name):
+        """
+        calls calculix to solve the model
+        :param file_name: the name of the part
+        :return: None
+        """
         # print('--- start ccx output ---------------------------------------')
         print('run fem solver ccx('+self._workingDir+')')
         p = self.run_ccx(file_name, pipe_response=True)
@@ -118,6 +127,11 @@ class Calculix():
         """
 
     def run_postprocessing(self, file_name):
+        """
+        calls calculix to run post-processing
+        :param file_name: name of the postprocessing file
+        :return: None
+        """
         # ToDo: run it with pipeRespnose=True results in calculix gui freeze
         # print('--- start cgx output ---------------------------------------')
         print('run fem post-processing cgx('+self._workingDir+')')
@@ -146,8 +160,13 @@ class Calculix():
 
 
 
-    def process_cgx_output(self, strOut):
-        lines = strOut.split(b'\n')
+    def process_cgx_output(self, str_out):
+        """
+        parses post-processing output, to find min and max for displacement and von mises stress
+        :param str_out: return string of the post-processing calculix call
+        :return: None
+        """
+        lines = str_out.split(b'\n')
         for i in range(0, len(lines) - 3):
             if b'DISP' in lines[i] and b'D3' in lines[i]:
                 if b'max:' in lines[i + 2]:
@@ -178,12 +197,12 @@ class Calculix():
     ##############################################
     # helper functions
 
-    def run_ccx(self, fileName, pipe_response=False):
+    def run_ccx(self, file_name, pipe_response=False):
         if pipe_response:
-            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, fileName], cwd=self._workingDir,
+            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, file_name], cwd=self._workingDir,
                                  stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
-            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, fileName], cwd=self._workingDir)
+            p = subprocess.Popen([Constants().CALCULIX_CCX_EXE_PATH, file_name], cwd=self._workingDir)
             p.wait()
         return p
 
@@ -196,16 +215,8 @@ class Calculix():
             p.wait()
         return p
 
-    '''
-    def run_cgx_postprocessing(self, partName):
-        p = subprocess.Popen([self.pathCGX, '-b', partName + '.fbd'], cwd=self.workingDir)
-        p.wait()
-        print("done")
-        return p
-    '''
-
-    def get_file_path(self, fileName):
-        return self._workingDir + '/' + fileName
+    def get_file_path(self, file_name):
+        return self._workingDir + '/' + file_name
 
 
 if __name__ == '__main__':

@@ -4,7 +4,7 @@ __email__ = "juribieler@gmail.com"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :n-dimensional Sampling plans
+# description     :n-dimensional Sampling plan full-factorial sampling
 # date            :2018-07-23
 # version         :0.01
 # notes           :
@@ -13,10 +13,7 @@ __status__ = "Development"
 
 
 import numpy as np
-from ast import literal_eval
 import math
-import sys
-from myutils.plot_helper import PlotHelper
 
 
 class StructuredSample:
@@ -35,6 +32,13 @@ class StructuredSample:
         return edge_count
 
     def generate_sample_plan(self, point_count, dimension, bounds):
+        """
+        generates sampling plan
+        :param point_count: number of sampling points
+        :param dimension: dimension of the sampling plan
+        :param bounds: vector of tooples representing the bounds for every input
+        :return: matrix: list of point_count entries with each dimension entries representing the sampling plan
+        """
         sample_indices = []
         edge = math.ceil(point_count**(1/float(dimension)))
         edge_count = np.zeros((dimension))
@@ -59,26 +63,3 @@ class StructuredSample:
                 scaled_point.append(bounds[d][0] + (point * (bounds[d][1] - bounds[d][0])))
             points.append(scaled_point)
         return points
-
-
-if __name__ == '__main__':
-    sam = StructuredSample()
-
-    str_plt = PlotHelper(['', ''], fancy=True, pgf=False)
-    import matplotlib.pyplot as plt
-
-    samples = sam.generate_sample_plan(30, 2, [(0, 30), (0, 30)])
-    for i in range(0, len(samples)):
-        str_plt.ax.plot([samples[i][0]], [samples[i][1]], 'bo')
-
-    str_plt.ax.xaxis.set_ticklabels([])
-    str_plt.ax.yaxis.set_ticklabels([])
-    #str_plt.ax.set_xticks(range(0, 31), minor=False)
-    #str_plt.ax.set_yticks(range(0, 31), minor=False)
-    str_plt.ax.locator_params(nbins=4, axis='x')
-    str_plt.ax.locator_params(nbins=4, axis='y')
-    str_plt.ax.grid(True)
-
-    str_plt.finalize(width=1.5, height=1.5, show_legend=False)
-    str_plt.save('../data_out/plot/structuredSamp.pdf')
-    str_plt.show()

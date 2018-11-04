@@ -30,6 +30,10 @@ class WingConstruction:
         self.beamLoad = False
 
     def calc_weight(self, density):
+        """
+        :param density: density of the material (SI)
+        :return: the weight of the boy-structure in kg
+        """
         v_box = self.halfSpan * 2. * (self.boxHeight + self.boxDepth) * self.shellThickness
         v_ribs = self.ribs * self.boxHeight * self.boxDepth * self.shellThickness
         w = (v_box + v_ribs) * density
@@ -37,6 +41,16 @@ class WingConstruction:
 
     @staticmethod
     def calc_weight_stat(half_span, box_depth, box_height, ribs, shell_thickness, density):
+        """
+
+        :param half_span: half span in m
+        :param box_depth: box depth in m
+        :param box_height: box height in m
+        :param ribs: rib count
+        :param shell_thickness: shell thickness in m
+        :param density: density of the material (SI)
+        :return: the weight of the boy-structure in kg
+        """
         v_box = half_span * 2. * (box_height + box_depth) * shell_thickness
         v_ribs = ribs * box_height * box_depth * shell_thickness
         w = (v_box + v_ribs) * density
@@ -44,12 +58,6 @@ class WingConstruction:
 
     def calc_span_division(self, length):
         return self.calc_division(length)
-        #div = int(length / self.elementSize)
-        #if self.ribs <= 1:
-        #    return self.calc_division(length)
-        #while div % (self.ribs - 1) > 0 or div % 2 > 0:
-        #    div += 1
-        #return div
 
     # the division shouldn't be odd or 0
     def calc_division(self, length):
@@ -61,6 +69,15 @@ class WingConstruction:
         return div
 
     def generate_wing(self, force_top, force_bot, engine_weight, element_size, element_type='qu4'):
+        """
+        generates a input file for calculix defining the wing structure
+        :param force_top: the force evenly distributed on the top of the wing-box surface
+        :param force_bot: the force evenly distributed on the bottom of the wing-box surface
+        :param engine_weight: weight of the engine
+        :param element_size: size of one element
+        :param element_type: type name string of the elements (e.g. qu4, qu8)
+        :return: None
+        """
         self.elementSize = element_size
         out_lines = []
         out_lines.append('# draw flat T as lines')
@@ -112,7 +129,6 @@ class WingConstruction:
             out_lines.append('seta str3 str3')
             out_lines.append('swep str3 str3 tra 0 0 {:f} 2'.format(-1*self.stringerHeight))
             out_lines.append('')
-
 
         out_lines.append('seta II2d all')
         out_lines.append('')
@@ -259,6 +275,11 @@ class WingConstruction:
         f.close()
 
     def generate_inp(self, nonlinear=False):
+        """
+        generates input file that includes the prev. generated geometry files
+        :param nonlinear: True if calculation should be non-linear
+        :return: None
+        """
         material_young = Constants().config.getfloat('defaults', 'material_young')
         material_poisson = Constants().config.getfloat('defaults', 'material_poisson')
         out_lines = []

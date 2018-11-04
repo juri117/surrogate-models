@@ -1,11 +1,18 @@
+__author__ = "Juri Bieler"
+__version__ = "0.0.1"
+__email__ = "juribieler@gmail.com"
+__status__ = "Development"
+
+# ==============================================================================
+# description     :n-dimensional Kriging (alternativ implementation using non-numpy-methods)
+# date            :2018-07-23
+# version         :0.01
+# notes           :
+# python_version  :3.6
+# ==============================================================================
 
 import numpy as np
 import math
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import rc
-import matplotlib
-import scipy
 from scipy.optimize import minimize
 
 

@@ -59,18 +59,18 @@ class BasinHoppingBoundsLow(object):
 if __name__ == '__main__':
     # the smooth whole function
     fx = np.linspace(0, 10, 1001)
-    fy = list(map(f_2D,fx))
+    fy = list(map(f_2d, fx))
 
     # now we pretend we only know a view points
     sample = StructuredSample()
     #knownParams = np.array([1., 3., 5., 7., 9., 11.])
     knwonParams = sample.generate_sample_plan(8, 1, [(0., 10.)])
     knownParams = np.array(knwonParams).flatten()
-    knownValues = np.array(list(map(f_2D, knownParams)))
+    knownValues = np.array(list(map(f_2d, knownParams)))
 
     # validate points
     valiParams = np.array([2., 6., 8.])
-    valiValues = np.array(list(map(f_2D, valiParams)))
+    valiValues = np.array(list(map(f_2d, valiParams)))
     valiParams = valiParams.reshape((len(valiParams), 1))
 
     #first fixed exponent here
@@ -116,7 +116,8 @@ if __name__ == '__main__':
     plt0 = PlotHelper([r'$\theta$', r'Likelihood'], fancy=True, pgf=PGF)
     plt0.ax.semilogx(thetas, likely[-1])
     plt0.ax.semilogx(krig._theta[0], minLike, 'r+', markersize=8, label='Minimum')
-    plt0.finalize(width=4, height=2, legendLoc='upper right', legendNcol=1)
+    plt0.finalize(width=4, height=1.8, legendLoc='upper right', legendNcol=1, tighten_layout=True)
+    plt.subplots_adjust(bottom=0.26, top=.98)
     plt0.save('../data_out/plot/krigingR2likelihood.pdf')
     #plt0.show()
 

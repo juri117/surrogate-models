@@ -3,7 +3,7 @@ __version__ = "0.0.1"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :main file for testing
+# description     :runs the fem calculation parallel
 # author          :Juri Bieler
 # date            :2018-07-13
 # notes           :
@@ -14,11 +14,8 @@ import numpy as np
 from datetime import datetime
 from wingconstruction.wingutils.constants import Constants
 from wingconstruction.project import Project
-from myutils.time_track import TimeTrack
 from myutils.plot_helper import PlotHelper
 from wingconstruction.wingutils.defines import *
-
-from mpl_toolkits.mplot3d import axes3d
 
 from matplotlib import cm
 from multiprocessing import Pool
@@ -29,7 +26,6 @@ from scipy import interpolate
 # USED_CORES = 1
 # if not USE_ABAQUS:
 USED_CORES = Constants().config.getint('meta', 'used_cores', fallback=1)
-
 
 
 class MultiRun:

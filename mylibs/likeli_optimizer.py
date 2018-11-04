@@ -4,17 +4,17 @@ __email__ = "juribieler@gmail.com"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :n-dimensional Optimizer if the global min is hard to find
+# description     :n-dimensional Optimizer if the global min is hard to find for Kriging
 # date            :2018-07-23
 # version         :0.01
 # notes           :
 # python_version  :3.6
 # ==============================================================================
 
+
 from scipy.optimize import minimize
 import numpy as np
 
-from myutils.plot_helper import PlotHelper
 
 class LikeliOptimizer:
 
@@ -25,6 +25,12 @@ class LikeliOptimizer:
         self.maxIter = 5e3
 
     def find(self, func, dimensions):
+        """
+        finds the min neg. log. likelihood by generating a grind and starting gradient based optimization from its best result
+        :param func: pointer to the likelihood calculaiton function
+        :param dimensions: number of dimensions
+        :return: the minimum as a scipy.optimize.minimize result
+        """
         opt={'disp': False, 'maxiter': self.maxIter}
         guess = self.generate_grid(func, dimensions, 8, 5)
 

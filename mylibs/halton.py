@@ -13,10 +13,6 @@ __status__ = "Development"
 
 
 import numpy as np
-from ast import literal_eval
-import math
-import sys
-from myutils.plot_helper import PlotHelper
 
 
 class Halton:
@@ -24,11 +20,11 @@ class Halton:
     def __init__(self):
         pass
 
-    '''
-    :param n
-    :return the n-th prime number (starting from n=0 => 2)
-    '''
     def prime(self, n):
+        """
+        :param n
+        :return the n-th prime number (starting from n=0 => 2)
+        """
         n += 1
         prime_list = [2]
         num = 3
@@ -41,11 +37,11 @@ class Halton:
             num += 2
         return prime_list[-1]
 
-    '''
-    :param i the index of the generated number
-    :param prim the base
-    '''
     def halton(self, i, prim):
+        """
+       :param i the index of the generated number
+       :param prim the base
+       """
         # add one to exclude 0 as result
         i = int(i+1)
         baseStr = self.base(i, prim)
@@ -54,33 +50,33 @@ class Halton:
         #print(decimal)
         return decimal
 
-    '''
-    :param number list
-    :return the inverse list of numbers
-    '''
     def str_inverse(self, nums):
+        """
+        :param number list
+        :return the inverse list of numbers
+        """
         strInv = np.zeros((len(nums)))
         for i in range(0, len(nums)):
             strInv[len(nums)-1 - i ] = nums[i]
         return list(strInv)
 
-    '''
-    :param baseFracs a list that represents a number with base notation
-    :param the base of baseFracStr
-    :return a float of baseFracs evaluated with base, as fraction
-    '''
-    def base_fract_str_to_float(self, baseFracs, base):
+    def base_fract_str_to_float(self, base_fracs, base):
+        """
+        :param baseFracs a list that represents a number with base notation
+        :param the base of baseFracStr
+        :return a float of baseFracs evaluated with base, as fraction
+        """
         res = 0.
-        for i in range(0, len(baseFracs)):
-            res += int(baseFracs[i]) * int(base) ** (-1 * (i + 1))
+        for i in range(0, len(base_fracs)):
+            res += int(base_fracs[i]) * int(base) ** (-1 * (i + 1))
         return res
 
-    '''
-    :param decimal int number
-    :param base the base to use for convertion
-    :return the decimal number noted as base-number
-    '''
     def base(self, decimal, base):
+        """
+        :param decimal int number
+        :param base the base to use for convertion
+        :return the decimal number noted as base-number
+        """
         #list = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         other_base = []
         while decimal != 0:
@@ -92,68 +88,26 @@ class Halton:
                 out.append(s)
         return out
 
-
     def generate_sample_plan(self, point_count, dimension, bounds, base=None):
+        """
+        generates sampling plan
+        :param point_count: number of sampling points
+        :param dimension: dimension of the sampling plan
+        :param bounds: vector of tooples representing the bounds for every input
+        :param base: vector of bases for every input
+        :return: matrix: list of point_count entries with each dimension entries representing the sampling plan
+        """
         if not base is None:
-            usedBase = base
+            used_base = base
         else:
-            usedBase = []
+            used_base = []
             for i in range(0, dimension):
-                usedBase.append(self.prime(i))
+                used_base.append(self.prime(i))
         points = []
         for i in range(0, point_count):
-            scaledPoint = []
+            scaled_point = []
             for d in range(0, dimension):
-                halt = self.halton(i, usedBase[d])
-                scaledPoint.append(bounds[d][0] + (halt * (bounds[d][1]- bounds[d][0])))
-            points.append(scaledPoint)
+                halt = self.halton(i, used_base[d])
+                scaled_point.append(bounds[d][0] + (halt * (bounds[d][1]- bounds[d][0])))
+            points.append(scaled_point)
         return points
-
-
-
-if __name__ == '__main__':
-    hal = Halton()
-    print(hal.halton(10, 2))
-
-    #for i in range(0, 10):
-    #    point = hal.halton(i, 2)
-
-    #sys.exit(15)
-    import matplotlib.pyplot as plt
-    samples = hal.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)], base=[2,3])
-    for i in range(0, len(samples)):
-        plt.plot([samples[i][0]], [samples[i][1]], 'bo')
-    plt.show()
-    sys.exit(0)
-
-    pltHalton = PlotHelper([], fancy=True, pgf=False)
-    import matplotlib.pyplot as plt
-
-
-
-    ax1 = pltHalton.fig.add_subplot(121)
-    ax2 = pltHalton.fig.add_subplot(122)
-
-    #ax = fig.add_subplot(1, 2, 1)
-    for i in range(0, 100):
-        point = [hal.halton(i, 11), hal.halton(i, 29)]
-        ax1.plot([point[1]], [point[0]], 'bo', markersize=3)
-    ax1.xaxis.set_ticklabels([])
-    ax1.yaxis.set_ticklabels([])
-
-    #ax = fig.add_subplot(1, 2, 2)
-    for i in range(0, 100):
-        point = [hal.halton(i, 2), hal.halton(i, 19)]
-        ax2.plot([point[1]], [point[0]], 'bo', markersize=3)
-    ax2.xaxis.set_ticklabels([])
-    ax2.yaxis.set_ticklabels([])
-
-    pltHalton.fig.set_size_inches(5, 2.5)
-    plt.tight_layout()
-    pltHalton.save('../data_out/plot/halton.pdf')
-    pltHalton.show()
-
-    #samples = hal.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
-    #for i in range(0, 14):
-    #    plt.plot([samples[i][0]], [samples[i][1]], 'bo')
-    #plt.show()

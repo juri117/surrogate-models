@@ -17,14 +17,8 @@ from mylibs.likeli_optimizer import LikeliOptimizer
 
 import numpy as np
 import math
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib import rc
-import matplotlib
-import scipy
 from scipy.optimize import minimize
 from scipy.optimize import basinhopping
-from scipy import optimize
-import sys
 
 VERBOSE = False
 
@@ -46,9 +40,19 @@ class Kriging:
         self._matU = None
 
     def train(self):
+        """
+        trains the surrogate if available
+        :return: None
+        """
         self.optimize()
 
     def update_param(self, theta, p):
+        """
+        updates the parameters of the surrogate model
+        :param theta: vector of theta parameters for each entry one (from range [1e-5 .. 1e+5])
+        :param p: vector of p parameters for each entry one (from range[1 ..2])
+        :return: None
+        """
         self._theta = np.array(theta)
         self._p = np.array(p)
         self._calc_cormat()
@@ -78,7 +82,6 @@ class Kriging:
                 np.transpose(one) @ self._coreMatInv @ one)
         return self._mu
 
-    #calcs the likelyhood
     def calc_likelihood(self):
         lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
         if np.isnan(lnDetCorMat):
@@ -136,17 +139,10 @@ class Kriging:
         self._theta = res.x
 
     def optimize(self, init_guess=None, opti_algo='grid', record_data=False):
-        # SLSQP: proplem; find local min not glob. depending on init-vals
-        #res = minimize(self._calc_likelihood_opti, init_guess, method='SLSQP', tol=1e-6, options={'disp': True, 'maxiter': 99999}, bounds=bnds)
-
-        # random: not good enough... space is too big, cand find anything
-        #res = optimize.differential_evolution(self._calc_likelihood_opti, bnds, maxiter=int(1e8))
         timer = TimeTrack('optiTimer')
-
         self.records = None
         if record_data:
             self.records = []
-
         if 'basin' in opti_algo:
             # basinhopping:
             if init_guess is None:
@@ -172,8 +168,6 @@ class Kriging:
                                niter=1000,
                                niter_success=100)
             timer.toc(print_it=True)
-            #print('basin min: {:f}'.format(resB.fun))
-            #print('@: ' + str(resB.x[0:self._k])+str(resB.x[self._k:]))
         elif 'grid' in opti_algo:
             skipper = LikeliOptimizer(debug=True)
             timer.tic()
@@ -187,12 +181,14 @@ class Kriging:
             thetas.append(10. ** e)
         if record_data:
             print('Kriging Likelihood optimization evaluations: {:d}'.format(len(self.records)))
-        #print('MY min: {:f}'.format(res.fun))
-        #print('@: ' + str(thetas)+str(res.x[self._k:]))
-        #print('diff: {:f}'.format(res.fun - resB.fun))
         self.update_param(thetas, res.x[self._k:])
 
     def predict(self, x_pred):
+        """
+        predicts a value from the surrogate model
+        :param x_pred: vector of input values
+        :return: result value
+        """
         one = np.ones((self._n, 1)).flatten()
         psi = np.ones((self._n, 1)).flatten()
         for i in range(0, self._n):
@@ -202,7 +198,6 @@ class Kriging:
             psi[i] = math.exp(-sum)
         fx = self._mu + np.transpose(psi) @ self._coreMatInv @ (self._knownVal - one * self._mu)
         return fx
-
 
     def plot_theta_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
         if self._k != 2:
@@ -228,10 +223,6 @@ class Kriging:
             plt_theta.ax.plot(10**opti_path[:, 0], 10**opti_path[:, 1], '+', color='white', markeredgewidth=0.5, markersize=5, label='Optimierer-Pfad')
         plt_theta.ax.plot(self._theta[0], self._theta[1], 'x', color='black', label='Minimum', markersize=8, markeredgewidth=1.5)
         legend = plt_theta.finalize(width=6, height=5, legendLoc=4, show_legend=False)
-        #legend.get_frame().set_facecolor('#000000')
-        #for text in legend.get_texts():
-        #    text.set_color('#FFFFFF')
-        #plt_theta.show()
         return pcol
 
     def plot_p_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
@@ -255,9 +246,6 @@ class Kriging:
             plt_P.ax.plot(opti_path[:, 0], opti_path[:, 1], '+', color='white', markeredgewidth=0.5, markersize=5, label='Optimierer-Pfad')
         plt_P.ax.plot(self._p[0], self._p[1], 'x', color='k', label='Minimum', markersize=8, markeredgewidth=1.5)
         legend = plt_P.finalize(width=6, height=5, legendLoc=4, show_legend=False)
-        #legend.get_frame().set_facecolor('#000000')
-        #for text in legend.get_texts():
-        #    text.set_color('#FFFFFF')
         return pcol
 
     def plot_likelihoods(self, fancy=False, pgf=False, opti_path=[]):
@@ -291,14 +279,11 @@ class Kriging:
         cbar_ax = pltLike.fig.add_axes([0.88, 0.15, 0.02, 0.78])
         pltLike.fig.colorbar(pcol2, cax=cbar_ax)
         pltLike.fig.text(0.97, 0.7, 'neg. log. Likelihood', size=pltLike.FONT_SIZE, rotation=90.)
-
-
         handles, labels = ax1.get_legend_handles_labels()
         legend = pltLike.fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.01), ncol=2, fancybox=True)
         legend.get_frame().set_facecolor('#A3A3A3')
         for text in legend.get_texts():
            text.set_color('#000000')
-
         return pltLike
 
     def get_p(self):
@@ -325,12 +310,8 @@ class BasinHoppingStep(object):
 
     def __init__(self, stepsize=1.):
         self.stepsize = stepsize
-        #self.counter = 0
 
     def __call__(self, x):
-        #print('call: {:d}'.format(self.counter))
-        #self.counter += 1
-        #s = self.stepsize
         for i in range(0, len(x)):
             if i < len(x) / 2:
                 # theta
@@ -338,9 +319,4 @@ class BasinHoppingStep(object):
             else:
                 # p
                 x[i] = np.random.uniform(1., 2)
-        #x[0] = 10**np.random.uniform(-5, 10)
-        #x[1] = 10**np.random.uniform(-5, 10)
-        #x[2] = np.random.uniform(1., 2)
-        #x[3] = np.random.uniform(1., 2)
-        #print('STEP: {:f}, {:f}, {:f}, {:f}'.format(x[0], x[1], x[2], x[3]))
         return x

@@ -15,7 +15,7 @@ if __name__ == '__main__':
 
     # the smooth whole function
     fx = np.linspace(0, 10, 1001)
-    fy = list(map(f_2D,fx))
+    fy = list(map(f_2d, fx))
 
     polyPlot.ax.plot(fx, fy, 'r-', label=r'$f_{original}$')
 
@@ -24,11 +24,11 @@ if __name__ == '__main__':
     knwonParams = sample.generate_sample_plan(6, 1, [(0., 10.)])
     knownParams = np.array(knwonParams).flatten()
     #knownParams = np.array([0., 2., 4., 6., 8., 10.])
-    knownValues = np.array(list(map(f_2D, knownParams)))
+    knownValues = np.array(list(map(f_2d, knownParams)))
 
     # validate points
     valiParams = np.array([1., 5. , 9.])
-    valiValues = np.array(list(map(f_2D, valiParams)))
+    valiValues = np.array(list(map(f_2d, valiParams)))
     valiParams = valiParams.reshape((len(valiParams), 1))
 
     fx = fx.reshape((len(fx), 1))

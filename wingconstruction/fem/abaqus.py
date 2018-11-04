@@ -12,16 +12,9 @@ __status__ = "Development"
 
 import subprocess
 import os
-from shutil import copyfile
 
 from wingconstruction.wingutils.constants import Constants
 
-##############################################
-# set up variables
-
-#SHELL_THICKNESS = 0.008 #in mm
-#SHELL_MATERIAL_YOUNG = 60e9 #N/m^2
-#SHELL_MATERIAL_POISSON = 0.34
 
 class Abaqus():
 
@@ -42,10 +35,12 @@ class Abaqus():
     ##############################################
     # fem pre-processing
 
-    '''
-    reads in the files created by Calculix.py and writes a abaqus-runnable inp file
-    '''
     def calculix_to_abaqus(self, shell_thickness):
+        """
+        reads in the files created by Calculix.py and writes a abaqus-runnable inp file
+        :param shell_thickness: shell thickness in m
+        :return: None
+        """
         # open a new file
         aba_f = open(self._workingDir + '/' + 'abaqusJob.inp', 'w')
         aba_f.write('*Heading\n')
@@ -173,11 +168,13 @@ class Abaqus():
     ##############################################
     # fem post-processing
 
-    '''
-    calls abaqus with odbreport and the odb-file (binary) with the results
-    the reply of abaqus is a List of results that is parsed in python
-    '''
     def post_processing(self, save_to_file=False):
+        """
+        calls abaqus with odbreport and the odb-file (binary) with the results
+        the reply of abaqus is a List of results that is parsed in python
+        :param save_to_file: store results csv (might be very big)
+        :return: None
+        """
         print('run fem post-processing abaqus(' + self._workingDir + ')')
         p = subprocess.Popen([Constants().ABAQUS_EXE_PATH, 'odbreport', 'odb=abaqusJob', 'mode=CSV', 'results', 'invariants'],
                              cwd=self._workingDir,
@@ -231,8 +228,12 @@ class Abaqus():
     ##############################################
     # fem calls
 
-    # calls the fem solver (all input files must be present in the working directory)
     def solve_model(self, used_cpus=1):
+        """
+        calls the fem solver (all input files must be present in the working directory)
+        :param used_cpus: number of cpus used (argument for abaqus)
+        :return: None
+        """
         if os.path.isfile(self._workingDir + '/abaqusJob.lck'):
             print('WARNING: Abaqus Lockfile was still there... I will remove it for you!')
             os.remove(self._workingDir + '/abaqusJob.lck')
@@ -255,8 +256,8 @@ class Abaqus():
     ##############################################
     # helper functions
 
-    def get_file_path(self, fileName):
-        return self._workingDir + '/' + fileName
+    def get_file_path(self, file_name):
+        return self._workingDir + '/' + file_name
 
 
 class Load:

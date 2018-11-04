@@ -3,21 +3,23 @@ __version__ = "0.0.1"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :analysis of surrogate with different methods
+# description     :analysis of surrogate with different methods, batch run for different sampling plan, surrogate method and sampling point count
 # author          :Juri Bieler
 # date            :2018-09-10
 # notes           :
 # python_version  :3.6
 # ==============================================================================
 
+
 from datetime import datetime
 import numpy as np
 
 from wingconstruction.wingutils.defines import *
-from wingconstruction.surrogate_v3 import Surrogate
-from wingconstruction.surrogate_v3 import SurroResults
+from wingconstruction.surrogate_run import Surrogate
+from wingconstruction.surrogate_run import SurroResults
 from wingconstruction.wingutils.constants import Constants
 from myutils.plot_helper import PlotHelper
+
 
 def run_analysis():
     surro_methods = [SURRO_POLYNOM]  # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
@@ -41,7 +43,7 @@ def run_analysis():
                 print('##################################################################################')
                 print('next run: surro: {:s}, sample: {:s}, points: {:d}'.format(SURRO_NAMES[surro_m], SAMPLE_NAMES[sample_m], sample_points))
                 try:
-                    sur = Surrogate(use_abaqus=True, pgf=use_pgf, show_plots=False, scale_it=True)
+                    sur = Surrogate(use_abaqus=use_abaqus, pgf=use_pgf, show_plots=False, scale_it=True)
                     res, _ = sur.auto_run(sample_m, sample_points, surro_m, run_validation=True)
                 except Exception as e:
                     print('ERROR ' + str(e))

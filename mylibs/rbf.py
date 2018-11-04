@@ -11,6 +11,7 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
+
 import numpy as np
 import math
 
@@ -29,10 +30,19 @@ class RBF:
         self._rbf = gaus_rbf
 
     def train(self):
+        """
+        trains the surrogate if available
+        :return: None
+        """
         pass
-        #self.update_param(self._rbf_const, self._rbf)
 
     def update_param(self, rbf_const, rbf_name):
+        """
+        updates the parameters of the surrogate model
+        :param rbf_const: the rbf constant a
+        :param rbf_name: the short name of the rbf to use (lin. gaus, mq, imq)
+        :return: None
+        """
         self._rbf_const = rbf_const
         if rbf_name == 'lin':
             self._rbf = lin_rbf
@@ -40,7 +50,7 @@ class RBF:
             self._rbf = cubic_rbf
         elif rbf_name == 'gaus':
             self._rbf = gaus_rbf
-        elif rbf_name == 'multi-quadratic':
+        elif rbf_name == 'multi-quadratic' or rbf_name == 'mq':
             self._rbf = multi_quad_rbf
         elif rbf_name == 'inverse-multi-quadratic' or rbf_name == 'imq':
             self._rbf = inv_multi_quad_rbf
@@ -69,6 +79,11 @@ class RBF:
         return self._coeff
 
     def predict(self, x_pred):
+        """
+        predicts a value from the surrogate model
+        :param x_pred: vector of input values
+        :return: result value
+        """
         res = 0.
         for i in range(0, self._n):
             rad_sum = 0.

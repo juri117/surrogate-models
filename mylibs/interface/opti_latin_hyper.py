@@ -4,7 +4,7 @@ __email__ = "juribieler@gmail.com"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :n-dimensional Sampling plans
+# description     :n-dimensional Sampling plans, interface to pykrigings latin hyper cube implementation
 # date            :2018-07-23
 # version         :0.01
 # notes           :
@@ -12,17 +12,11 @@ __status__ = "Development"
 # ==============================================================================
 
 
-import numpy as np
-from ast import literal_eval
-import math
 import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../lib/pykriging')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__))+'/../../lib/inspyred')
-
-#import pyKriging
-#from pyKriging.krige import kriging
 
 
 class OptiLatinHyper:
@@ -48,7 +42,6 @@ if __name__ == '__main__':
     sam = OptiLatinHyper()
 
     import matplotlib.pyplot as plt
-
     samples = sam.generate_sample_plan(14, 2, [(5, 20), (0.01, 0.05)])
     for i in range(0, 14):
         plt.plot([samples[i][0]], [samples[i][1]], 'bo')

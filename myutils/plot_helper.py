@@ -1,5 +1,19 @@
+__author__ = "Juri Bieler"
+__version__ = "0.0.1"
+__email__ = "juribieler@gmail.com"
+__status__ = "Development"
+
+# ==============================================================================
+# description     :helper class for fancy latex ready plots
+# date            :2018-07-23
+# version         :0.01
+# notes           :
+# python_version  :3.6
+# ==============================================================================
+
 
 import numpy as np
+
 
 class PlotHelper:
 

@@ -9,6 +9,7 @@
 # python_version  :3.6
 # ==============================================================================
 
+
 #helper class to support Singletons
 class Singleton(type):
     #Define an Instance operation that lets clients access its unique instance.

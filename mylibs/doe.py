@@ -13,10 +13,6 @@ __status__ = "Development"
 
 
 import numpy as np
-from ast import literal_eval
-import math
-import sys
-from myutils.plot_helper import PlotHelper
 
 
 class DoE:
@@ -42,6 +38,10 @@ class DoE:
         self._levels = levels
 
     def corellation(self):
+        """
+        calculates the FEM-results for level_count levels on the ranges
+        :return: None
+        """
         inp = np.zeros(self._k)
         for i in range(0, self._l**self._k):
             bin = self.base(i, self._l)
@@ -49,8 +49,12 @@ class DoE:
                 bin = [0] + bin
             self._run(bin)
 
-    def print_res_table(self):
-        ref = self._results[0].res
+    def print_res_table(self, ref=100):
+        """
+        prints the results
+        :param ref: reference for percentage notation
+        :return: None
+        """
         out = ''
         for i in range(self._k):
             out += '{:s}\t\t|'.format(self._inputNames[i])
@@ -94,14 +98,3 @@ class DoERun:
     def __init__(self, inp, res):
         self.inp = inp
         self.res = res
-
-
-if __name__ == '__main__':
-    input_names = ['ribs', 'shell']
-    from wingconstruction.wingutils.defines import *
-    ranges = [range_rib, range_shell]
-    from wingconstruction.multi_run import MultiRun
-    runner = MultiRun(use_calcu=True, use_aba=False, non_liner=False, force_recalc=False, project_name_prefix='DoE')
-    d = DoE(input_names, ranges, runner.calc_stress, level_count=2)
-    d.corellation()
-    d.print_res_table()

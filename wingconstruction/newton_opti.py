@@ -10,11 +10,9 @@ __status__ = "Development"
 # python_version  :3.6
 # ==============================================================================
 
-import sys
-import os
+
 from datetime import datetime
 import numpy as np
-import math
 from scipy import optimize
 
 from wingconstruction.wingutils.constants import Constants
@@ -24,12 +22,8 @@ from myutils.plot_helper import PlotHelper
 from myutils.time_track import TimeTrack
 
 PROJECT_NAME_PREFIX = 'newtonOpti'
-
 LOG_FILE_PATH = Constants().WORKING_DIR + '/' + PROJECT_NAME_PREFIX + datetime.now().strftime('%Y-%m-%d_%H_%M_%S') + '.csv'
-
-
 USE_ABA = True
-
 PGF = True
 
 
@@ -112,7 +106,7 @@ class NewtonOpt:
         data = np.genfromtxt(file_path, delimiter=',', skip_header=1)
         plot = plot_handle
         if plot_handle == None:
-            plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=True)
+            plot = PlotHelper(['Rippenanzahl', 'Gewicht in kg'], fancy=True, pgf=False)
         plot.ax.plot(data[:, 2], data[:, 5], marker, color='dodgerblue')
         import matplotlib.ticker as ticker
         plot.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))

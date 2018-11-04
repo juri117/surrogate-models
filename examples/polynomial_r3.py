@@ -12,13 +12,13 @@ if __name__ == '__main__':
 
     fx = np.linspace(-2, 12, 101)
     fy = np.linspace(-2, 12, 101)
-    plt1.plot_function_3d(f_3D, fx, fy, r'$f_{original}$', color='r')
+    plt1.plot_function_3d(f_3d, fx, fy, r'$f_{original}$', color='r')
     # the smooth whole function
 
     # now we pretend we only know a view points
     pxEdge = [0., 2., 4., 6., 8., 10.]
     pyEdge = [0., 2., 4., 6., 8., 10.]
-    px, py, pz = generate_sample_data(f_3D, pxEdge, pyEdge)
+    px, py, pz = generate_sample_data(f_3d, pxEdge, pyEdge)
     knownParams = np.array([px, py]).T
 
     scat1 = plt1.ax.scatter(px, py, pz, c='r', marker='o', s=10, label=r'St\"utzstellen')

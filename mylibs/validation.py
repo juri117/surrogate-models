@@ -13,9 +13,6 @@ __status__ = "Development"
 
 import numpy as np
 import math
-import sys
-
-from myutils.plot_helper import PlotHelper
 
 
 class Validation:
@@ -23,10 +20,13 @@ class Validation:
     def __init__(self):
         pass
 
-    '''
-    calc the deviation of a matrix with known solutions to the surrogate solution
-    '''
     def calc_deviation(self, params, values, surro_func):
+        """
+        :param list of entries for fem grid calculation
+        :param values: list of results of params
+        :param surro_func: pointer to the surrogates predict function
+        :return: the deviation of a matrix with known solutions to the surrogate solution
+        """
         count = 0
         sum_deviation = 0
         # sample_indices = np.array([known_x_i, known_y_i]).T.tolist()
@@ -39,20 +39,26 @@ class Validation:
         avg_deviation_per = avg_deviation / np.array(values).mean()
         return avg_deviation_per
 
-    '''
-    :return root mean square error (RMSE)
-    '''
     def calc_rmse(self, vali_x, vali_fx, surro_func):
+        """
+        :param vali_x: list of list of entry values
+        :param vali_fx: list of results to each vali_x
+        :param surro_func: pointer to the surrogates predict function
+        :return: root mean square error (RMSE)
+        """
         sum = 0.
         for i in range(0, len(vali_x)):
             res = surro_func(vali_x[i])
             sum += (vali_fx[i] - res) ** 2
         return math.sqrt(sum / len(vali_x))
 
-    '''
-    :return maximum absolute error (MAE)
-    '''
     def calc_mae(self, vali_x, vali_fx, surro_func):
+        """
+        :param vali_x: list of list of entry values
+        :param vali_fx: list of results to each vali_x
+        :param surro_func: pointer to the surrogates predict function
+        :return: maximum absolute error (MAE)
+        """
         mae = -1 * float('inf')
         for i in range(0, len(vali_x)):
             res = surro_func(vali_x[i])
@@ -60,17 +66,25 @@ class Validation:
             mae = max(mae, ae)
         return mae
 
-    '''
-    :return relative absolute error (RAE)
-    '''
     def calc_rae(self, vali_x, vali_fx, surro_func):
+        """
+        :param vali_x: list of list of entry values
+        :param vali_fx: list of results to each vali_x
+        :param surro_func: pointer to the surrogates predict function
+        :return: list of relative absolute error (RAE) for each sample point
+        """
         pred = list(map(surro_func, vali_x))
         return abs(np.divide((vali_fx - pred), vali_fx))
 
-    '''
-    :return prediction sum of squares (PRESS)
-    '''
     def calc_press(self, known_x, known_fx, surro_func, surro_class, update_params=None):
+        """
+        :param known_x: list of sampling points (matrix)
+        :param known_fx: list of results for known_x
+        :param surro_func: pointer to the surrogates predict function
+        :param surro_class: class of the used surrogate
+        :param update_params: parameters to pass to surrogate on fitting
+        :return: prediction sum of squares (PRESS)
+        """
         sum = 0.
         for i in range(0, len(known_x)):
             res = surro_func(known_x[i])
@@ -96,6 +110,19 @@ class Validation:
         return math.sqrt(sum / len(known_x))
 
     def run_full_analysis(self, params, values, known_x, known_fx, vali_x, vali_fx, surro_func, surro_class, update_params=None):
+        """
+        runs all validation techniques above
+        :param params: list of entries for fem grid calculation
+        :param values: list of results of params
+        :param known_x: list of sampling points (matrix)
+        :param known_fx: list of results for known_x
+        :param vali_x: list of list of entry values
+        :param vali_fx: list of results to each vali_x
+        :param surro_func: pointer to the surrogates predict function
+        :param surro_class: class of the used surrogate
+        :param update_params: parameters to pass to surrogate on fitting
+        :return:
+        """
         res = ValidationResults()
         res.deviation = self.calc_deviation(params, values, surro_func)
         res.rmse = self.calc_rmse(vali_x, vali_fx, surro_func)
@@ -103,24 +130,6 @@ class Validation:
         res.rae = self.calc_rae(vali_x, vali_fx, surro_func)
         res.press = self.calc_press(known_x, known_fx, surro_func, surro_class, update_params=update_params)
         return res
-
-    '''
-    def plot_derivation2d(self, xs, ys, vals, surro_func, sample_x=None, sample_y=None, opti_x=None, opti_y=None):
-        deri_plot = PlotHelper(['param1', 'param2'], fancy=False, pgf=False)
-        dev = np.zeros(vals.shape)
-        for xi in range(0, len(xs)):
-            for yi in range(0, len(ys)):
-                devi = (abs(vals[yi][xi] - surro_func([xs[xi], ys[yi]])) / np.array(vals).mean()) *100.
-                dev[yi][xi] = devi
-        pcol = deri_plot.ax.pcolor(xs, ys, dev, cmap='YlOrRd')
-        pcol.set_clim(0, 5.)
-        cbar = deri_plot.fig.colorbar(pcol)
-        show_legend = False
-        if sample_x.all() != None and sample_y.all() != None:
-            deri_plot.ax.plot(sample_x, sample_y, 'bo', label='sampling points')
-            show_legend = True
-        deri_plot.finalize(width=6, height=5, legendLoc='upper right', show_legend=show_legend)
-    '''
 
 
 class ValidationResults():
@@ -130,9 +139,3 @@ class ValidationResults():
         self.mae = 0.
         self.rae = 0.
         self.press = 0.
-
-
-if __name__ == '__main__':
-    val = Validation()
-
-

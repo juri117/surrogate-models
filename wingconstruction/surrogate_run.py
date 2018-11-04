@@ -3,7 +3,7 @@ __version__ = "0.0.1"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :creates the surrogate for wing-structure test
+# description     :creates the surrogate for wing-structure tests
 # author          :Juri Bieler
 # date            :2018-07-13
 # notes           :
@@ -33,26 +33,23 @@ from mylibs.interface.opti_latin_hyper import OptiLatinHyper
 from mylibs.structured_sample import StructuredSample
 from mylibs.validation import Validation
 from mylibs.validation import ValidationResults
-from wingconstruction.fem.wing_construction_v4 import WingConstruction
+from wingconstruction.fem.wing_construction import WingConstruction
 from wingconstruction.wingutils.defines import *
-from wingconstruction.newton_opti import NewtonOpt
 
 FANCY_PLOT = True
 RESULTS_FILE = '/2drun_2018-08-23_16_49_18_final01_cruiseLoad.csv'
 
-'''
-performs full surrogate analysis and comparison to real FEM-Model
-:param sampling_type SAMPLE_LATIN, SAMPLE_HALTON, SAMPLE_STRUCTURE
-:param sample_point_count amount of sample points
-:param surro_type SURRO_KRIGING, SURRO_RBF
-:param use_abaqus if False Calculix will be used
-:param pgf if set to True LaTex ready plot files will be written to disk
-:param show_plots weather plots will be displayed at runtime
-:return SurroResults with all the results
-'''
+
 class Surrogate:
 
     def __init__(self, use_abaqus=False, pgf=False, show_plots=True, force_recalc=False, scale_it=True):
+        """
+        :param use_abaqus: if False Calculix will be used
+        :param pgf: if set to True LaTex ready plot files will be written to disk
+        :param show_plots: weather plots will be displayed at runtime
+        :param force_recalc: force recalculation of the FEM-solution even if there are already results in data_out
+        :param scale_it: use scaling of all inputs in the range [0 .. 1]
+        """
         self.use_abaqus = use_abaqus
         self.force_recalc = force_recalc
         self.pgf = pgf
@@ -85,6 +82,17 @@ class Surrogate:
         self.prepare(force_recalc)
 
     def auto_run(self, sampling_type, sample_point_count, surro_type, run_validation=True, auto_fit=True, params=[], sequential_runs=0):
+        """
+        runs whole surrogate process
+        :param sampling_type: index of the sampling type (definition in defines.py)
+        :param sample_point_count: number of sampling points
+        :param surro_type: index of the surrogate type (definition in defines.py)
+        :param run_validation: run all validations (rmse, mae, press, avg-deviation)
+        :param auto_fit: auto fit RBF and polynom surrogate by using validation
+        :param params: adiational parameters to pass to the surrogate algorithm
+        :param sequential_runs: number of sequential runs (add found optimum to sampling plan and build a new surrogate including the prev. optimum)
+        :return: results as instance of SurroResults, pointer to the surrogate model instance
+        """
         suc = self.generate_sampling_plan(sampling_type, sample_point_count)
         if not suc:
             return self.results, None
@@ -97,15 +105,15 @@ class Surrogate:
 
             self.run_fem_calculation()
 
-            #fit_time = TimeTrack('FitTime')
-            #fit_time.tic()
+            fit_time = TimeTrack('FitTime')
+            fit_time.tic()
             if surro_type == SURRO_POLYNOM and auto_fit:
                 suc = self.auto_fit_poly()
             elif surro_type == SURRO_RBF and auto_fit:
                 suc = self.auto_fit_rbf(params=params)
             else:
                 suc = self.train_model(surro_type, params=params)
-            #self.results.runtime = fit_time.toc()
+            self.results.runtime = fit_time.toc()
             if not suc:
                 return self.results, None
             self.optimize()
@@ -120,6 +128,10 @@ class Surrogate:
         return self.results, self.surro
 
     def auto_fit_poly(self):
+        """
+        automatic training of polynom surrogate
+        :return: True if no errors
+        """
         orders = range(1, 9+1)
         mae = np.zeros((len(orders)))
         for i in range(0, len(orders)):
@@ -132,6 +144,11 @@ class Surrogate:
         return True
 
     def auto_fit_rbf(self, params=[]):
+        """
+        auto trains rbf-surrogate
+        :param params: additional parameter, if a rbf other than gaus should be used (see rbf.py)
+        :return: True if no errors
+        """
         rbf_func = 'gaus' # 'gaus' 'multi-quadratic'
         init_a = 1.
         if len(params) == 2:
@@ -149,6 +166,11 @@ class Surrogate:
         return self.results.vali_results.rmse / max_shear_strength
 
     def prepare(self, force_recalc=False):
+        """
+        initializes fem data and scaling
+        :param force_recalc: force recalculation of the FEM-solution even if there are already results in data_out
+        :return: None
+        """
         ##################################################
         # collect data
         ribs, shell, stress, disp, weights = self.multi.read_data_file(RESULTS_FILE, use_abaqus=self.use_abaqus)
@@ -196,6 +218,12 @@ class Surrogate:
         self.shell_s = (self.shell - self.offset_shell) / self.scale_shell
 
     def generate_sampling_plan(self, sampling_type, sample_point_count):
+        """
+        generates the selected sampling plan
+        :param sampling_type: index of the sampling type (definition in defines.py)
+        :param sample_point_count: number of sampling points
+        :return: True if no errors
+        """
         self.sampling_type = sampling_type
         ##################################################
         # sample plan
@@ -229,11 +257,21 @@ class Surrogate:
         self.known_params_s[:, 1] = (self.known_params[:, 1] - self.offset_shell) / self.scale_shell
 
     def run_fem_calculation(self):
+        """
+        starts the fem calculation, this might take some time
+        :return: None
+        """
         ##################################################
         # FEM calculation, collecting results
         self.known_stress = self.multi.run_sample_points(self.known_params[:, 0], self.known_params[:, 1], use_abaqus=self.use_abaqus)
 
     def train_model(self, surro_type, params=[]):
+        """
+        creates and trains the surrogate model
+        :param surro_type: index of the surrogate type (definition in defines.py)
+        :param params: additional parameters that will be passed to the surrogate model
+        :return: True if no errors
+        """
         self.surro_type = surro_type
         ##################################################
         # build surrogate model and fit it
@@ -297,6 +335,11 @@ class Surrogate:
         return True
 
     def run_validation_points(self, flip_points=False):
+        """
+        starts FEM-calculation of the validation points
+        :param flip_points: if true the validation point plan gets flipped (so one validation plan can be used for training and one for true validation)
+        :return: None
+        """
         factor = 1
         if flip_points:
             factor = -1
@@ -316,6 +359,11 @@ class Surrogate:
                                                    use_abaqus=self.use_abaqus)
 
     def run_validation(self, full_validation=False):
+        """
+        does the validation of the surrogate model
+        :param full_validation: if True does everything, if False only rmse and mae
+        :return: None
+        """
         ##################################################
         # validate
         vali = Validation()
@@ -364,6 +412,10 @@ class Surrogate:
         return stress_val - max_shear_strength
 
     def optimize(self):
+        """
+        runs optimizaiton on the surrogate model
+        :return: None
+        """
         ##################################################
         # optimize
         opti_ribs = []
@@ -420,6 +472,11 @@ class Surrogate:
             self.results.opti_curve = [opti_ribs, opti_shell, opti_stress, opti_weights]
 
     def plot_it(self, display_plots=True):
+        """
+        plots the results
+        :param display_plots: display it or only save it
+        :return: None
+        """
         ##################################################
         # plot it
         # convert all to np arrays
@@ -491,6 +548,10 @@ class Surrogate:
             plot3d.show()
 
     def print_results(self):
+        """
+        prints the results
+        :return: None
+        """
         print('optimum:')
         print('ribs: {:f}'.format(self.results.optimum_rib))
         print('shell: {:f}'.format(self.results.optimum_shell))
@@ -503,6 +564,7 @@ class Surrogate:
         print('rmse: {:f} ({:f}%)'.format(self.results.vali_results.rmse, 100. * self.results.vali_results.rmse / max_shear_strength))
         print('mae: {:f} ({:f}%)'.format(self.results.vali_results.mae, 100. * self.results.vali_results.mae / max_shear_strength))
         print('press: {:f} ({:f}%)'.format(self.results.vali_results.press, 100. * self.results.vali_results.press / max_shear_strength))
+
 
 class SurroResults:
 
@@ -518,14 +580,6 @@ class SurroResults:
         self.opti_params = []
 
 
-
-#def surrogate_analysis(sampling_type, sample_point_count, surro_type, use_abaqus=False, pgf=False, show_plots=True, run_validation=True, scale_it=True):
-#    return results, surro
-
-
-
-
-
 if __name__ == '__main__':
     PGF = False
     SHOW_PLOT = True
@@ -533,7 +587,7 @@ if __name__ == '__main__':
     # SURRO_KRIGING, SURRO_RBF, SURRO_POLYNOM, SURRO_PYKRIGING, SURRO_RBF_SCIPY
     if False:
         sur = Surrogate(use_abaqus=True, pgf=PGF, show_plots=SHOW_PLOT, scale_it=True)
-        res, _ = sur.auto_run(SAMPLE_HALTON, 15, SURRO_POLYNOM, run_validation=False, auto_fit=True, sequential_runs=0) # 'gaus' 'multi-quadratic'
+        res, _ = sur.auto_run(SAMPLE_LATIN, 14, SURRO_KRIGING, run_validation=False, auto_fit=False, sequential_runs=0, params=[1.,'cubic']) # 'gaus' 'multi-quadratic'
     else:
         SHOW_PLOT = False
         SAMPLING = SAMPLE_HALTON
@@ -584,15 +638,15 @@ if __name__ == '__main__':
 
         import matplotlib.ticker as ticker
         opti_lines.ax.xaxis.set_major_locator(ticker.IndexLocator(base=2, offset=0))
-        opti_lines.finalize(height=2.5, legendLoc=9, bbox_to_anchor=(0.5, -0.39), legendNcol=3)
+        opti_lines.finalize(height=3.5, legendLoc=9, bbox_to_anchor=(0.5, -0.23), legendNcol=3)
         opti_lines.ax.locator_params(nbins=4, axis='y')
         import matplotlib.pyplot as plt
-        plt.subplots_adjust(bottom=0.44, top=0.92)
+        plt.subplots_adjust(bottom=0.32, top=0.92)
 
         #magnifier
         from mpl_toolkits.axes_grid1.inset_locator import zoomed_inset_axes
         from mpl_toolkits.axes_grid1.inset_locator import mark_inset
-        axins = zoomed_inset_axes(opti_lines.ax, 3.5, loc='upper left', bbox_to_anchor=(285, 250))
+        axins = zoomed_inset_axes(opti_lines.ax, 3.5, loc='upper left', bbox_to_anchor=(285, 350))
         axins.plot(resP.opti_curve[0], resP.opti_curve[3], '-', label='Polynom', color=l0[0].get_color())
         axins.plot([resP.optimum_rib], [resP.optimum_weight], 'o', color=l0[0].get_color())
 
@@ -617,7 +671,6 @@ if __name__ == '__main__':
         plt.xticks(visible=False)
         plt.yticks(visible=False)
         mark_inset(opti_lines.ax, axins, loc1=3, loc2=4, fc="none", ec="0.5")
-
 
         opti_lines.save(Constants().PLOT_PATH + 'optiLinesHalton.pdf', transparent=False)
         opti_lines.show()

@@ -4,7 +4,7 @@ __email__ = "juribieler@gmail.com"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :n-dimensional rbf
+# description     :n-dimensional rbf interface to scipy RBF implementation
 # date            :2018-07-23
 # version         :0.01
 # notes           :
@@ -23,6 +23,7 @@ __status__ = "Development"
 
 from scipy.interpolate import Rbf
 import numpy as np
+
 
 class RBFscipy:
 
