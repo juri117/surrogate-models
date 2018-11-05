@@ -18,6 +18,12 @@ import numpy as np
 class DoE:
 
     def __init__(self, input_names, ranges, func, level_count=2):
+        """
+        :param input_names: names of the inputs (only used for prints)
+        :param ranges: list of tuples of ranges of the inputs
+        :param func: handle to the function that can be called with a list of input values and returns the result
+        :param level_count: amount of levels to use per input
+        """
         self._inputNames = input_names
         self._ranges = ranges
         self._func = func
@@ -28,6 +34,10 @@ class DoE:
         self.auto_define_levels()
 
     def auto_define_levels(self):
+        """
+        defines the levels, so they are evenly distributed
+        :return: None
+        """
         levels = []
         for i in range(0, self._k):
             inc = (self._ranges[i][1] - self._ranges[i][0]) / (self._l - 1)
@@ -65,12 +75,13 @@ class DoE:
             out += '{:f}\t|{:f}\n'.format(r.res, 100*(r.res/ref))
         print(out)
 
-    '''
-    :param decimal int number
-    :param base the base to use for convertion
-    :return the decimal number noted as base-number
-    '''
     def base(self, decimal, base):
+        """
+        converts a decimal number to a number in a number system of the base given
+        :param decimal: int number that should be converted to base-numer-system
+        :param base: int base of the number system to use
+        :return: decimal number represented in base number system
+        """
         other_base = []
         while decimal != 0:
             other_base.append(int(decimal % base))

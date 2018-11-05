@@ -26,18 +26,22 @@ VERBOSE = False
 class Kriging:
 
     def __init__(self, known_in, known_val):
-        self._knownIn = np.array(known_in)
-        self._knownVal = np.array(known_val)
-        if len(self._knownIn.shape) == 1:
-            self._knownIn = self._knownIn.reshape((self._knownIn.shape[0], 1))
-        self._k = self._knownIn.shape[1]
-        self._n = self._knownIn.shape[0]
+        """
+        :param known_in: list of lists with input sample points
+        :param known_val: list of results for the known_in
+        """
+        self._known_in = np.array(known_in)
+        self._known_val = np.array(known_val)
+        if len(self._known_in.shape) == 1:
+            self._known_in = self._known_in.reshape((self._known_in.shape[0], 1))
+        self._k = self._known_in.shape[1]
+        self._n = self._known_in.shape[0]
         self._theta = 1. * np.ones((self._k, 1)).flatten()
         self._p = 2. * np.ones((self._k, 1)).flatten()
-        self._corMat = None
-        self._coreMatInv = None
+        self._cor_mat = None
+        self._core_mat_inv = None
         self._mu = None
-        self._matU = None
+        self._mat_u = None
 
     def train(self):
         """
@@ -60,59 +64,68 @@ class Kriging:
 
     #calcs the correlation matrix
     def _calc_cormat(self):
-        corMat = np.zeros((self._n, self._n))
+        """
+        :return: correlation matrix
+        """
+        cor_mat = np.zeros((self._n, self._n))
         for i in range(0, self._n):
             for j in range(i, self._n):
                 sum = 0.
                 for ik in range(0, self._k):
-                    sum += self._theta[ik] * (abs(self._knownIn[i][ik] - self._knownIn[j][ik]) ** self._p[ik])
-                corMat[i][j] = math.exp(-sum)
-                corMat[j][i] = corMat[i][j]
+                    sum += self._theta[ik] * (abs(self._known_in[i][ik] - self._known_in[j][ik]) ** self._p[ik])
+                cor_mat[i][j] = math.exp(-sum)
+                cor_mat[j][i] = cor_mat[i][j]
         try:
-            self._coreMatInv = np.linalg.inv(corMat)
-            self._corMat = corMat
+            self._core_mat_inv = np.linalg.inv(cor_mat)
+            self._cor_mat = cor_mat
         except Exception as e:
             if VERBOSE:
                 print('ERROR: could not calc np.linalg.inv: ' + str(e))
-        return corMat
+        return cor_mat
 
     def _calc_mu(self):
+        """
+        :return: the factor mu
+        """
         one = np.ones((self._n, 1)).flatten()
-        self._mu = (np.transpose(one) @ self._coreMatInv @ self._knownVal) / (
-                np.transpose(one) @ self._coreMatInv @ one)
+        self._mu = (np.transpose(one) @ self._core_mat_inv @ self._known_val) / (
+                np.transpose(one) @ self._core_mat_inv @ one)
         return self._mu
 
     def calc_likelihood(self):
-        lnDetCorMat = np.linalg.slogdet(self._corMat)[1]
-        if np.isnan(lnDetCorMat):
+        """
+        calculates the negative logarithmic likelihood
+        :return: negative logarithmic likelihood (or infinity if an error appears)
+        """
+        ln_det_cor_mat = np.linalg.slogdet(self._cor_mat)[1]
+        if np.isnan(ln_det_cor_mat):
             if VERBOSE:
                 print('NaN Alarm')
             return float('inf')
-
         one = np.ones((self._n, 1)).flatten()
-        sigmaSqr = (np.transpose(self._knownVal - one * self._mu) @ self._coreMatInv @ (self._knownVal - one * self._mu)) / self._n
-        if sigmaSqr < 0.:
+        sigma_sqr = (np.transpose(self._known_val - one * self._mu) @ self._core_mat_inv @ (self._known_val - one * self._mu)) / self._n
+        if sigma_sqr < 0.:
             if VERBOSE:
                 print('Error: neg sigmaSqr')
             return float('inf')
-        negLnLike = (-1) * (-(self._n / 2) * np.log(sigmaSqr) - 0.5 * lnDetCorMat)
-        if negLnLike == float('nan'):
+        neg_ln_like = (-1) * (-(self._n / 2) * np.log(sigma_sqr) - 0.5 * ln_det_cor_mat)
+        if neg_ln_like == float('nan'):
             if VERBOSE:
                 print('Error: nan')
             return float('inf')
-        return negLnLike
+        return neg_ln_like
 
     def _calc_likelihood_opti_theta_only(self, params, *args):
         self.update_param(params, args[0])
-        NegLnLike = self.calc_likelihood()
-        return NegLnLike
+        neg_ln_like = self.calc_likelihood()
+        return neg_ln_like
 
     def _calc_likelihood_opti(self, params, *args):
         self.update_param(params[0:self._k], params[self._k:])
-        NegLnLike = self.calc_likelihood()
+        neg_ln_like = self.calc_likelihood()
         if self.records != None:
             self.records.append(params)
-        return NegLnLike
+        return neg_ln_like
 
     def _calc_likelihood_opti_exp(self, params, *args):
         if np.isnan(params).any():
@@ -122,10 +135,10 @@ class Kriging:
         for e in exps:
             thetas.append(10.**e)
         self.update_param(thetas, params[self._k:])
-        NegLnLike = self.calc_likelihood()
+        neg_ln_like = self.calc_likelihood()
         if self.records != None:
             self.records.append(params)
-        return NegLnLike
+        return neg_ln_like
 
     def optimize_theta_only(self):
         x0 = np.ones((self._k,1)).flatten()
@@ -139,6 +152,13 @@ class Kriging:
         self._theta = res.x
 
     def optimize(self, init_guess=None, opti_algo='grid', record_data=False):
+        """
+        runs automatic optimization of thetas and ps
+        :param init_guess: list of input values for an initial guess
+        :param opti_algo: string for the algorithm to use 'grid' (self implemented LikeliOptimizer) or 'basin' (using scipy.optimize.basin-hopping)
+        :param record_data: if True the test points of the optimizer gets recorded (this is needed for plot of optimizer path in plot_likelihoods)
+        :return: None
+        """
         timer = TimeTrack('optiTimer')
         self.records = None
         if record_data:
@@ -194,16 +214,22 @@ class Kriging:
         for i in range(0, self._n):
             sum = 0.
             for ik in range(0, self._k):
-                sum += self._theta[ik] * (abs(self._knownIn[i][ik] - x_pred[ik]) ** self._p[ik])
+                sum += self._theta[ik] * (abs(self._known_in[i][ik] - x_pred[ik]) ** self._p[ik])
             psi[i] = math.exp(-sum)
-        fx = self._mu + np.transpose(psi) @ self._coreMatInv @ (self._knownVal - one * self._mu)
+        fx = self._mu + np.transpose(psi) @ self._core_mat_inv @ (self._known_val - one * self._mu)
         return fx
 
-    def plot_theta_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
+    def plot_theta_likelihood_r2(self, ax=None, pgf=False, opti_path=[]):
+        """
+        plot colormap of likelihood for theta1 and theta2
+        :param ax: handle of the axis if this should be embedded in an existing plot
+        :param pgf: store it as pgf file (for latex embedding)
+        :param opti_path: show the path of the optimization as white crosses
+        :return: the handle to the pcolor legend
+        """
         if self._k != 2:
             print('ERROR: plot_theta_likelihood_R2 only works with exactly 2 inputs')
             return
-
         opt_theta = self._theta
         thetas = np.logspace(-5, 5, num=50)
         likely_thet = np.zeros((len(thetas), len(thetas)))
@@ -225,7 +251,14 @@ class Kriging:
         legend = plt_theta.finalize(width=6, height=5, legendLoc=4, show_legend=False)
         return pcol
 
-    def plot_p_likelihood_R2(self, ax=None, pgf=False, opti_path=[]):
+    def plot_p_likelihood_r2(self, ax=None, pgf=False, opti_path=[]):
+        """
+        plot colormap of likelihood for p1 and p2
+        :param ax: handle of the axis if this should be embedded in an existing plot
+        :param pgf: store it as pgf file (for latex embedding)
+        :param opti_path: show the path of the optimization as white crosses
+        :return:
+        """
         if self._k != 2:
             print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
             return
@@ -249,42 +282,49 @@ class Kriging:
         return pcol
 
     def plot_likelihoods(self, fancy=False, pgf=False, opti_path=[]):
+        """
+        creates a plot that shows the likelihood over p1, p2, theta1, theta2 (only supports two inputs)
+        two colormaps represent the likelihoods for p and theta
+        :param fancy: use latex in plot
+        :param pgf: store it as pgf file (for latex embedding)
+        :param opti_path: show the path of the optimization as white crosses
+        :return: pointer to PlotHelper instance (if no errors)
+        """
+        if self._k != 2:
+            print('ERROR: plot_p_likelihood_R2 only works with exactly 2 inputs')
+            return
         path_p = []
         path_theta = []
         if len(opti_path) > 0:
             path_theta = np.array([opti_path[:, 0], opti_path[:, 1]]).T
             path_p = np.array([opti_path[:, 2], opti_path[:, 3]]).T
 
-        pltLike = PlotHelper([], fancy=fancy, pgf=pgf)
+        plt_like = PlotHelper([], fancy=fancy, pgf=pgf)
         import matplotlib.pyplot as plt
-        ax1 = pltLike.fig.add_subplot(121)
-        ax2 = pltLike.fig.add_subplot(122)
-        #ax1 = pltLike.fig.add_subplot(211)
-        #ax2 = pltLike.fig.add_subplot(212)
+        ax1 = plt_like.fig.add_subplot(121)
+        ax2 = plt_like.fig.add_subplot(122)
 
-        pcol1 = self.plot_p_likelihood_R2(ax=ax1, pgf=pgf, opti_path=path_p)
-        pcol2 = self.plot_theta_likelihood_R2(ax=ax2, pgf=pgf, opti_path=path_theta)
+        pcol1 = self.plot_p_likelihood_r2(ax=ax1, pgf=pgf, opti_path=path_p)
+        pcol2 = self.plot_theta_likelihood_r2(ax=ax2, pgf=pgf, opti_path=path_theta)
         like_min = min(min(pcol1._A), min(pcol2._A))
         like_max = max(max(pcol1._A), max(pcol2._A))
         pcol1.set_clim(like_min, like_max)
         pcol2.set_clim(like_min, like_max)
 
-        pltLike.fig.set_size_inches(6, 3)
-        #pltLike.fig.set_size_inches(6, 9)
+        plt_like.fig.set_size_inches(6, 3)
         plt.tight_layout()
 
-        # cbar = figLike.colorbar(pcol1)
-        pltLike.fig.subplots_adjust(right=0.85)
-        pltLike.fig.subplots_adjust(bottom=0.3)
-        cbar_ax = pltLike.fig.add_axes([0.88, 0.15, 0.02, 0.78])
-        pltLike.fig.colorbar(pcol2, cax=cbar_ax)
-        pltLike.fig.text(0.97, 0.7, 'neg. log. Likelihood', size=pltLike.FONT_SIZE, rotation=90.)
+        plt_like.fig.subplots_adjust(right=0.85)
+        plt_like.fig.subplots_adjust(bottom=0.3)
+        cbar_ax = plt_like.fig.add_axes([0.88, 0.15, 0.02, 0.78])
+        plt_like.fig.colorbar(pcol2, cax=cbar_ax)
+        plt_like.fig.text(0.97, 0.7, 'neg. log. Likelihood', size=plt_like.FONT_SIZE, rotation=90.)
         handles, labels = ax1.get_legend_handles_labels()
-        legend = pltLike.fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.01), ncol=2, fancybox=True)
+        legend = plt_like.fig.legend(handles, labels, loc='lower center', bbox_to_anchor=(0.5, 0.01), ncol=2, fancybox=True)
         legend.get_frame().set_facecolor('#A3A3A3')
         for text in legend.get_texts():
            text.set_color('#000000')
-        return pltLike
+        return plt_like
 
     def get_p(self):
         return self._p
@@ -293,6 +333,9 @@ class Kriging:
         return self._theta
 
 
+"""
+helper classes for basin hopping
+"""
 class BasinHoppingBounds(object):
 
     def __init__(self, xmax=[5., 5., 2., 2.], xmin=[-5., -5., 1., 1.]):

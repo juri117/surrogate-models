@@ -20,12 +20,16 @@ VARS = ['x', 'y', 'z']
 class Polynomial:
 
     def __init__(self, known_in, known_val):
-        self._knownIn = np.array(known_in)
-        self._knownVal = np.array(known_val)
-        if len(self._knownIn.shape) == 1:
-            self._knownIn = self._knownIn.reshape((self._knownIn.shape[0], 1))
-        self._k = self._knownIn.shape[1]
-        self._n = self._knownIn.shape[0]
+        """
+        :param known_in: list of lists with input sample points
+        :param known_val: list of results for the known_in
+        """
+        self._known_in = np.array(known_in)
+        self._known_val = np.array(known_val)
+        if len(self._known_in.shape) == 1:
+            self._known_in = self._known_in.reshape((self._known_in.shape[0], 1))
+        self._k = self._known_in.shape[1]
+        self._n = self._known_in.shape[0]
         self._order = 2
 
     def train(self):
@@ -66,15 +70,15 @@ class Polynomial:
             iw += 1
             for o in range(1, self._order+1):
                 for ik in range(0, self._k):
-                    vander[i][iw] = self._knownIn[i][ik]**o
+                    vander[i][iw] = self._known_in[i][ik] ** o
                     iw += 1
                     for ikc in range(0, self._k):
                         if ikc > ik and 2*o < self._order+1:
-                            vander[i][iw] = (self._knownIn[i][ik] ** o) * (self._knownIn[i][ikc] ** o)
+                            vander[i][iw] = (self._known_in[i][ik] ** o) * (self._known_in[i][ikc] ** o)
                             iw += 1
                         if ikc != ik:
                             for ioc in range(1, min(o, (self._order+1)-o)):
-                                vander[i][iw] = (self._knownIn[i][ik]**o) * (self._knownIn[i][ikc]**ioc)
+                                vander[i][iw] = (self._known_in[i][ik] ** o) * (self._known_in[i][ikc] ** ioc)
                                 iw += 1
         # delete unused columns
         for i in range(0, self._calc_term_count() - iw):
@@ -85,7 +89,7 @@ class Polynomial:
     def _calc_weights(self):
         # moore-penrose pseudo-inverse
         pin_vander = np.linalg.pinv(self._vander)
-        weights = pin_vander @ self._knownVal
+        weights = pin_vander @ self._known_val
         self._weights = weights
 
     def predict(self, x_pred):

@@ -31,7 +31,7 @@ d2.print_res_table(ref=max_shear_strength)
 
 if True:
     FANCY = True
-    PGF = False
+    PGF = True
 
     avg = 0.5 * (d2._results[0].res + d2._results[3].res) - 0.5 * (d2._results[1].res + d2._results[2].res)
     print('interaction: {:f}'.format(avg))
@@ -45,17 +45,20 @@ if True:
     ax3 = pl.fig.add_subplot(224)
 
     pl1 = PlotHelper(['Level', 'Ausgang'], fancy=FANCY, pgf=PGF, ax=ax1)
-    line_b = pl1.ax.plot([-1, 1], [d2._results[0].res, d2._results[1].res], '-', label='Blech-Einfl.(Rippen-L.: -1)')
-    line_r = pl1.ax.plot([-1, 1], [d2._results[0].res, d2._results[2].res], '-', label='Rippen-Einfl.(Blech-L.: -1)')
+    line_b = pl1.ax.plot([-1, 1], [d2._results[0].res, d2._results[1].res], '-', label='Blech-Einfl.(Rippen-L.: $-$)')
+    line_r = pl1.ax.plot([-1, 1], [d2._results[0].res, d2._results[2].res], '-', label='Rippen-Einfl.(Blech-L.: $-$)')
+    pl1.ax.xaxis.set_ticks([-1,1])
     pl1.finalize(show_legend=False, legendLoc='upper right', bbox_to_anchor=(1.2, 1.))
 
     pl2 = PlotHelper(['Level', 'Ausgang'], fancy=FANCY, pgf=PGF, ax=ax2)
-    pl2.ax.plot([-1, 1], [d2._results[0].res, d2._results[1].res], '-', color=line_b[0].get_color(), label='Blech-Einfl.(Rippen-L.: -1)')
-    pl2.ax.plot([-1, 1], [d2._results[2].res, d2._results[3].res], '--', color=line_b[0].get_color(), label='Blech-Einfl.(Rippen-L.: +1)')
+    pl2.ax.plot([-1, 1], [d2._results[0].res, d2._results[1].res], '-', color=line_b[0].get_color(), label='Blech-Einfl.(Rippen-L.: $-$)')
+    pl2.ax.plot([-1, 1], [d2._results[2].res, d2._results[3].res], '--', color=line_b[0].get_color(), label='Blech-Einfl.(Rippen-L.: $+$)')
+    pl2.ax.xaxis.set_ticks([-1, 1])
 
     pl3 = PlotHelper(['Level', 'Ausgang'], fancy=FANCY, pgf=PGF, ax=ax3)
-    pl3.ax.plot([-1, 1], [d2._results[0].res, d2._results[2].res], '-', color=line_r[0].get_color(), label='Rippen-Einfl.(Blech-L.: -1)')
-    pl3.ax.plot([-1, 1], [d2._results[1].res, d2._results[3].res], '--', color=line_r[0].get_color(), label='Rippen-Einfl.(Blech-L.: +1)')
+    pl3.ax.plot([-1, 1], [d2._results[0].res, d2._results[2].res], '-', color=line_r[0].get_color(), label='Rippen-Einfl.(Blech-L.: $-$)')
+    pl3.ax.plot([-1, 1], [d2._results[1].res, d2._results[3].res], '--', color=line_r[0].get_color(), label='Rippen-Einfl.(Blech-L.: $+$)')
+    pl3.ax.xaxis.set_ticks([-1, 1])
 
     handles2, labels2 = ax2.get_legend_handles_labels()
     handles3, labels3 = ax3.get_legend_handles_labels()

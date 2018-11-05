@@ -3,7 +3,7 @@ __version__ = "0.0.1"
 __status__ = "Development"
 
 # ==============================================================================
-# description     :main file for testing
+# description     :file for testing a single fem-calculation
 # author          :Juri Bieler
 # date            :2018-07-13
 # notes           :
@@ -20,7 +20,7 @@ from wingconstruction.wingutils.defines import *
 
 t = TimeTrack()
 t.tic()
-projectName = 'testSolver'#_r07_s002'
+projectName = 'testSolver'
 pro1 = Project(projectName)
 pro1.halfSpan = wing_length
 pro1.boxDepth = chord_length*0.4

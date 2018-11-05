@@ -28,6 +28,10 @@ import numpy as np
 class RBFscipy:
 
     def __init__(self, known_in, known_val):
+        """
+        :param known_in: list of lists with input sample points
+        :param known_val: list of results for the known_in
+        """
         self._known_in = np.array(known_in.copy())
         self._known_val = np.array(known_val.copy())
         self._k = self._known_in.shape[1]

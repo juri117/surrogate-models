@@ -19,6 +19,10 @@ import math
 class RBF:
 
     def __init__(self, known_in, known_val):
+        """
+        :param known_in: list of lists with input sample points
+        :param known_val: list of results for the known_in
+        """
         self._known_in = np.array(known_in)
         self._known_val = np.array(known_val)
         if len(self._known_in.shape) == 1:

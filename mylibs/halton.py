@@ -39,15 +39,14 @@ class Halton:
 
     def halton(self, i, prim):
         """
-       :param i the index of the generated number
-       :param prim the base
-       """
+        :param i the index of the generated number
+        :param prim the base
+        """
         # add one to exclude 0 as result
         i = int(i+1)
         baseStr = self.base(i, prim)
         baseStrInv = self.str_inverse(baseStr)
         decimal = self.base_fract_str_to_float(baseStrInv, prim)
-        #print(decimal)
         return decimal
 
     def str_inverse(self, nums):
@@ -55,10 +54,10 @@ class Halton:
         :param number list
         :return the inverse list of numbers
         """
-        strInv = np.zeros((len(nums)))
+        str_inv = np.zeros((len(nums)))
         for i in range(0, len(nums)):
-            strInv[len(nums)-1 - i ] = nums[i]
-        return list(strInv)
+            str_inv[len(nums)-1 - i ] = nums[i]
+        return list(str_inv)
 
     def base_fract_str_to_float(self, base_fracs, base):
         """
